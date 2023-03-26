@@ -11,7 +11,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
@@ -26,12 +25,9 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 import pt.ulisboa.tecnico.withoutnet.databinding.ActivityDebugBinding;
-import pt.ulisboa.tecnico.withoutnet.ui.login.Node;
 
 public class DebugActivity extends AppCompatActivity {
     public final static int REQUEST_ENABLE_BT = 123;
@@ -48,7 +44,7 @@ public class DebugActivity extends AppCompatActivity {
     private Handler handler = new Handler();
 
     // Stops scanning after 100 seconds.
-    private static final long SCAN_PERIOD = 100000;
+    private static final long SCAN_PERIOD = 10000;
 
     private boolean scanning = false;
 
@@ -96,15 +92,7 @@ public class DebugActivity extends AppCompatActivity {
                             return;
                         }
 
-                        Node newNode;
-
-                        if(device.getUuids() != null) {
-                            newNode = new Node(device.getAddress(),
-                                    device.getUuids().toString());
-                        } else {
-                            newNode = new Node(device.getAddress(),
-                                    device.getName());
-                        }
+                        Node newNode = new Node(device);
 
                         nearbyNodesByName.put(newNode.getCommonName(), newNode);
 
@@ -189,6 +177,25 @@ public class DebugActivity extends AppCompatActivity {
 
     }
 
+    private void scanForBLEDevicesRecurr() {
+        if (!scanning) {
+            // Stops scanning after a predefined scan period.
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    scanning = false;
+                    bluetoothLeScanner.stopScan(leScanCallback);
+                }
+            }, SCAN_PERIOD);
+
+            scanning = true;
+            bluetoothLeScanner.startScan(leScanCallback);
+        } else {
+            scanning = false;
+            bluetoothLeScanner.stopScan(leScanCallback);
+        }
+    }
+
     private void scanForBLEDevices() {
         if (Build.VERSION.SDK_INT >= 31
                 && ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
@@ -224,24 +231,6 @@ public class DebugActivity extends AppCompatActivity {
                 scanning = false;
             }
         }, SCAN_PERIOD);
-
-        /*if (!scanning) {
-            // Stops scanning after a predefined scan period.
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    scanning = false;
-                    bluetoothLeScanner.stopScan(leScanCallback);
-                }
-            }, SCAN_PERIOD);
-
-            scanning = true;
-
-            bluetoothLeScanner.startScan(leScanCallback);
-        } else {
-            scanning = false;
-            bluetoothLeScanner.stopScan(leScanCallback);
-        }*/
 
     }
 

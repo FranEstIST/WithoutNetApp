@@ -1,21 +1,17 @@
 package pt.ulisboa.tecnico.withoutnet;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
-import pt.ulisboa.tecnico.withoutnet.ui.login.Node;
-
-public class NearbyNodesAdapter  extends RecyclerView.Adapter<NearbyNodesAdapter.ViewHolder>{
+public class NearbyNodesAdapter extends RecyclerView.Adapter<NearbyNodesAdapter.ViewHolder> {
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         // Your holder should contain a member variable
         // for any view that will be set as you render a row
@@ -80,6 +76,7 @@ public class NearbyNodesAdapter  extends RecyclerView.Adapter<NearbyNodesAdapter
 
         // Set item views based on your views and data model
         TextView nameTextView = holder.nameTextView;
+
         nameTextView.setText(node.getCommonName());
 
         TextView UUIDTextView = holder.UUIDTextView;
