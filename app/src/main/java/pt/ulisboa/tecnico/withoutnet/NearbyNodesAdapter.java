@@ -81,6 +81,7 @@ public class NearbyNodesAdapter extends RecyclerView.Adapter<NearbyNodesAdapter.
 
         TextView UUIDTextView = holder.UUIDTextView;
         UUIDTextView.setText(String.valueOf(node.getUUID()));
+        //UUIDTextView.setText(String.valueOf(node.getServiceUUID()));
     }
 
     // Returns the total count of items in the list

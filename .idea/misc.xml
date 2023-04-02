@@ -5,12 +5,13 @@
       <map>
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/drawable/ic_launcher_background.xml" value="0.206" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/activity_debug.xml" value="0.264" />
+        <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/activity_debug_node.xml" value="0.25416666666666665" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/activity_login.xml" value="0.11302083333333333" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/activity_main.xml" value="0.22780797101449277" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/activity_main2.xml" value="0.22780797101449277" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/content_main.xml" value="0.22780797101449277" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/fragment_first.xml" value="0.22780797101449277" />
-        <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/item_node.xml" value="0.264" />
+        <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/item_node.xml" value="0.536" />
       </map>
     </option>
   </component>

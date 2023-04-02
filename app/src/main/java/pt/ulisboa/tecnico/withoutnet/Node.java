@@ -7,11 +7,13 @@ import android.content.pm.PackageManager;
 
 import androidx.core.app.ActivityCompat;
 
+import java.util.Arrays;
 import java.util.UUID;
 
 public class Node {
     private String commonName;
     private String UUID;
+    private String serviceUUID;
     private BluetoothDevice BLDevice;
 
     /**
@@ -25,6 +27,7 @@ public class Node {
     public Node(BluetoothDevice BLDevice) {
         this.setCommonName(BLDevice.getName());
         this.setUUID(BLDevice.getAddress());
+        this.setServiceUUID("");
         this.BLDevice = BLDevice;
     }
 
@@ -58,6 +61,17 @@ public class Node {
         } else {
             this.UUID = UUID;
         }
+    }
 
+    public String getServiceUUID() {
+        return serviceUUID;
+    }
+
+    public void setServiceUUID(String serviceUUID) {
+        if(serviceUUID == null) {
+            this.serviceUUID = "N/A";
+        } else {
+            this.serviceUUID = serviceUUID;
+        }
     }
 }

@@ -12,22 +12,34 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
+import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
+import android.bluetooth.le.ScanSettings;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.ParcelUuid;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.UUID;
 
 import pt.ulisboa.tecnico.withoutnet.databinding.ActivityDebugBinding;
+import pt.ulisboa.tecnico.withoutnet.databinding.ActivityDebugNodeBinding;
 
 public class DebugActivity extends AppCompatActivity {
     public final static int REQUEST_ENABLE_BT = 123;
@@ -48,12 +60,33 @@ public class DebugActivity extends AppCompatActivity {
 
     private boolean scanning = false;
 
+    private int connectionState = BluetoothProfile.STATE_DISCONNECTED;
+
     private LinkedHashMap<String, Node> nearbyNodesByName = new LinkedHashMap<String, Node>();
 
+    private BluetoothGatt BLEGatt;
+
     private NearbyNodesAdapter.OnNearbyNodeListener onNearbyNodeListener = new NearbyNodesAdapter.OnNearbyNodeListener() {
+        @SuppressLint("MissingPermission")
         @Override
         public void onNearbyNodeClick(int position) {
             Log.d("DEBUG", "Clicked on node " + position + "\n");
+            Toast.makeText(DebugActivity.this, "Click!", Toast.LENGTH_SHORT).show();
+            Node clickedNode = new ArrayList<>(nearbyNodesByName.values()).get(position);
+            BluetoothDevice BLEDevice = clickedNode.getBLDevice();
+            /*Intent intent = new Intent(DebugActivity.this, DebugNodeActivity.class);
+            getIntent().putExtra("BLEDevice", clickedNode.getBLDevice());
+            startActivity(intent);*/
+            if(connectionState == BluetoothProfile.STATE_DISCONNECTED) {
+                DebugActivity.this.BLEGatt = BLEDevice.connectGatt(DebugActivity.this, false, bluetoothGattCallback);
+                BLEGatt.readCharacteristic
+                        (new BluetoothGattCharacteristic
+                                (UUID.fromString("beb5483e-36e1-4688-b7f5-ea07361b26a8"),
+                                        BluetoothGattCharacteristic.PROPERTY_READ,
+                                        BluetoothGattCharacteristic.PERMISSION_READ));
+            } else {
+                DebugActivity.this.BLEGatt.close();
+            }
         }
     };
 
@@ -61,6 +94,8 @@ public class DebugActivity extends AppCompatActivity {
 
     // Device scan callback.
     private ScanCallback leScanCallback;
+
+    private BluetoothGattCallback bluetoothGattCallback;
 
     private RecyclerView rvNearbyNodes;
 
@@ -81,7 +116,7 @@ public class DebugActivity extends AppCompatActivity {
                     public void onScanResult(int callbackType, ScanResult result) {
                         super.onScanResult(callbackType, result);
 
-                        Log.d("DEBUG", "Found BLE device\n");
+                        //Log.d("DEBUG", "Found BLE device\n");
 
                         BluetoothDevice device = result.getDevice();
 
@@ -92,6 +127,13 @@ public class DebugActivity extends AppCompatActivity {
                             return;
                         }
 
+                       /*Log.d("DEBUG", "BLE device services UUIDs: \n");
+                        List<ParcelUuid> serviceUUIDs = result.getScanRecord().getServiceUuids();
+
+                        for(ParcelUuid serviceUUID : serviceUUIDs) {
+                            Log.d("DEBUG", "    " + serviceUUID.toString() + "\n");
+                        }*/
+
                         Node newNode = new Node(device);
 
                         nearbyNodesByName.put(newNode.getCommonName(), newNode);
@@ -99,6 +141,39 @@ public class DebugActivity extends AppCompatActivity {
                         nearbyNodesAdapter.notifyDataSetChanged();
                     }
                 };
+
+        bluetoothGattCallback = new BluetoothGattCallback() {
+            @Override
+            public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+                if (newState == BluetoothProfile.STATE_CONNECTED) {
+                    // successfully connected to the GATT Server
+                    connectionState = BluetoothProfile.STATE_CONNECTED;
+                    DebugActivity.this.runOnUiThread(() -> {
+                        Toast.makeText(DebugActivity.this, "Connected to node", Toast.LENGTH_SHORT).show();
+                    });
+                } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                    // disconnected from the GATT Server
+                    connectionState = BluetoothProfile.STATE_DISCONNECTED;
+                    DebugActivity.this.runOnUiThread(() -> {
+                            Toast.makeText(DebugActivity.this, "Disconnected from node", Toast.LENGTH_SHORT).show();
+                    });
+                }
+            }
+
+            @Override
+            public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+                super.onCharacteristicRead(gatt, characteristic, status);
+                Log.d("DEBUG", characteristic.getStringValue(0));
+                DebugActivity.this.runOnUiThread(() -> {
+                    Toast.makeText(DebugActivity.this, "Read characteristic", Toast.LENGTH_SHORT).show();
+                });
+            }
+
+            @Override
+            public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+                super.onCharacteristicWrite(gatt, characteristic, status);
+            }
+        };
 
         rvNearbyNodes = binding.nearbyNodes;
         rvNearbyNodes.setAdapter(nearbyNodesAdapter);
@@ -177,7 +252,7 @@ public class DebugActivity extends AppCompatActivity {
 
     }
 
-    private void scanForBLEDevicesRecurr() {
+    /*private void scanForBLEDevicesRecurr() {
         if (!scanning) {
             // Stops scanning after a predefined scan period.
             handler.postDelayed(new Runnable() {
@@ -194,7 +269,7 @@ public class DebugActivity extends AppCompatActivity {
             scanning = false;
             bluetoothLeScanner.stopScan(leScanCallback);
         }
-    }
+    }*/
 
     private void scanForBLEDevices() {
         if (Build.VERSION.SDK_INT >= 31
@@ -214,11 +289,26 @@ public class DebugActivity extends AppCompatActivity {
             return;
         }
 
+        ScanSettings settings = new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build();
+        ArrayList<ScanFilter> filters = new ArrayList();
+        ScanFilter filter = new ScanFilter
+                .Builder()
+                .setServiceUuid(ParcelUuid
+                        .fromString("4fafc201-1fb5-459e-8fcc-c5c9c331914b"))
+                .build();
+
+        ScanFilter filter2 = new ScanFilter
+                .Builder()
+                .setDeviceName("MyESP32")
+                .build();
+
+        filters.add(filter);
+
         if(scanning) {
             bluetoothLeScanner.stopScan(leScanCallback);
         }
 
-        bluetoothLeScanner.startScan(leScanCallback);
+        bluetoothLeScanner.startScan(filters, settings, leScanCallback);
         Log.d("DEBUG", "Scanning for BLE devices...\n");
         scanning = true;
 
