@@ -24,4 +24,10 @@
     <string name="stop_participating">Stop participating</string>
     <string name="available_nodes">Available nodes:</string>
     <string name="Scan_for_nearby_nodes">Scan for nearby nodes (debug)</string>
+
+    <string name="Connect">Connect</string>
+    <string name="Disconnect">Disconnect</string>
+
+    <string name="the_update_read_will_appear_here">The update read will appear here</string>
+
 </resources>

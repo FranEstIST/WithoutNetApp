@@ -17,6 +17,8 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import java.util.UUID;
@@ -36,6 +38,10 @@ public class DebugNodeActivity extends AppCompatActivity {
 
     private String bleDeviceAddress = null;
 
+    private Button connectButton;
+
+    //private View.OnClickListener connectOnClickListener
+
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -47,8 +53,11 @@ public class DebugNodeActivity extends AppCompatActivity {
                 }
 
                 // perform device connection
-                final boolean result = bleService.connect(bleDeviceAddress);
-                Log.d(TAG, "Connect request result=" + result);
+                connectButton.setOnClickListener(v -> {
+                    final boolean result = bleService.connect(bleDeviceAddress);
+                    Log.d(TAG, "Connect request result=" + result);
+                });
+
             }
             Log.d(TAG, "bleService is null.");
         }
@@ -68,11 +77,23 @@ public class DebugNodeActivity extends AppCompatActivity {
                 //updateConnectionState(R.string.connected);
                 Log.d(TAG, "Connected to node");
                 Toast.makeText(DebugNodeActivity.this, "Connected to node", Toast.LENGTH_SHORT).show();
+
+                connectButton.setText(R.string.Disconnect);
+                connectButton.setOnClickListener(v -> {
+                    final boolean result = bleService.disconnect();
+                    Log.d(TAG, "Connect request result=" + result);
+                });
             } else if (BleService.ACTION_GATT_DISCONNECTED.equals(action)) {
                 connected = false;
                 //updateConnectionState(R.string.disconnected);
                 Log.d(TAG, "Disconnected from node");
                 Toast.makeText(DebugNodeActivity.this, "Disconnected from node", Toast.LENGTH_SHORT).show();
+
+                connectButton.setText(R.string.Connect);
+                connectButton.setOnClickListener(v -> {
+                    final boolean result = bleService.connect(bleDeviceAddress);
+                    Log.d(TAG, "Disconnect request result=" + result);
+                });
             }
         }
     };
@@ -85,14 +106,14 @@ public class DebugNodeActivity extends AppCompatActivity {
         ActivityDebugNodeBinding binding = ActivityDebugNodeBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        connectButton = binding.connectButton;
+
         bleDeviceAddress = getIntent().getStringExtra("Address");
 
         Log.d(TAG, "Received addressed: " + bleDeviceAddress);
 
         Intent gattServiceIntent = new Intent(this, BleService.class);
         bindService(gattServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
-
-
     }
 
     @Override

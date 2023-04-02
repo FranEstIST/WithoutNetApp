@@ -102,6 +102,23 @@ public class BleService extends Service {
         }
     }
 
+    @SuppressLint("MissingPermission")
+    public boolean disconnect() {
+        if(bluetoothGatt == null) {
+            Log.d(TAG, "BLGATT is null.");
+        }
+
+        if(connectionState != STATE_CONNECTED) {
+            Log.d(TAG, "Can't close connection because device is not connected.");
+        }
+
+        if (bluetoothGatt == null || connectionState != STATE_CONNECTED) {
+            return false;
+        }
+        bluetoothGatt.disconnect();
+        return true;
+    }
+
     private void broadcastUpdate(final String action) {
         final Intent intent = new Intent(action);
         sendBroadcast(intent);
