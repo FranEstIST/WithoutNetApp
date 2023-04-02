@@ -74,10 +74,11 @@ public class DebugActivity extends AppCompatActivity {
             Toast.makeText(DebugActivity.this, "Click!", Toast.LENGTH_SHORT).show();
             Node clickedNode = new ArrayList<>(nearbyNodesByName.values()).get(position);
             BluetoothDevice BLEDevice = clickedNode.getBLDevice();
-            /*Intent intent = new Intent(DebugActivity.this, DebugNodeActivity.class);
-            getIntent().putExtra("BLEDevice", clickedNode.getBLDevice());
-            startActivity(intent);*/
-            if(connectionState == BluetoothProfile.STATE_DISCONNECTED) {
+            Intent intent = new Intent(DebugActivity.this, DebugNodeActivity.class);
+            Log.d("DEBUG", "Address: " + BLEDevice.getAddress());
+            intent.putExtra("Address", BLEDevice.getAddress());
+            startActivity(intent);
+            /*if(connectionState == BluetoothProfile.STATE_DISCONNECTED) {
                 DebugActivity.this.BLEGatt = BLEDevice.connectGatt(DebugActivity.this, false, bluetoothGattCallback);
                 BLEGatt.readCharacteristic
                         (new BluetoothGattCharacteristic
@@ -86,7 +87,7 @@ public class DebugActivity extends AppCompatActivity {
                                         BluetoothGattCharacteristic.PERMISSION_READ));
             } else {
                 DebugActivity.this.BLEGatt.close();
-            }
+            }*/
         }
     };
 
@@ -95,7 +96,7 @@ public class DebugActivity extends AppCompatActivity {
     // Device scan callback.
     private ScanCallback leScanCallback;
 
-    private BluetoothGattCallback bluetoothGattCallback;
+    // private BluetoothGattCallback bluetoothGattCallback;
 
     private RecyclerView rvNearbyNodes;
 
@@ -142,7 +143,7 @@ public class DebugActivity extends AppCompatActivity {
                     }
                 };
 
-        bluetoothGattCallback = new BluetoothGattCallback() {
+        /*bluetoothGattCallback = new BluetoothGattCallback() {
             @Override
             public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
                 if (newState == BluetoothProfile.STATE_CONNECTED) {
@@ -173,7 +174,7 @@ public class DebugActivity extends AppCompatActivity {
             public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
                 super.onCharacteristicWrite(gatt, characteristic, status);
             }
-        };
+        };*/
 
         rvNearbyNodes = binding.nearbyNodes;
         rvNearbyNodes.setAdapter(nearbyNodesAdapter);
@@ -308,7 +309,8 @@ public class DebugActivity extends AppCompatActivity {
             bluetoothLeScanner.stopScan(leScanCallback);
         }
 
-        bluetoothLeScanner.startScan(filters, settings, leScanCallback);
+        //bluetoothLeScanner.startScan(filters, settings, leScanCallback);
+        bluetoothLeScanner.startScan(leScanCallback);
         Log.d("DEBUG", "Scanning for BLE devices...\n");
         scanning = true;
 

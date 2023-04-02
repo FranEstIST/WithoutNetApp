@@ -8,61 +8,114 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothProfile;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.util.UUID;
 
-import pt.ulisboa.tecnico.withoutnet.databinding.ActivityDebugBinding;
+import pt.ulisboa.tecnico.withoutnet.databinding.ActivityDebugNodeBinding;
 
 public class DebugNodeActivity extends AppCompatActivity {
+
+    private static final String TAG = "DebugNodeActivity";
 
     private BluetoothGattCallback bluetoothGattCallback;
 
     private int connectionState = BluetoothProfile.STATE_DISCONNECTED;
+    private boolean connected = false;
+
+    private BleService bleService;
+
+    private String bleDeviceAddress = null;
+
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            bleService = ((BleService.LocalBinder) service).getService();
+            if (bleService != null) {
+                if (!bleService.initialize()) {
+                    Log.e(TAG, "Unable to initialize Bluetooth");
+                    finish();
+                }
+
+                // perform device connection
+                final boolean result = bleService.connect(bleDeviceAddress);
+                Log.d(TAG, "Connect request result=" + result);
+            }
+            Log.d(TAG, "bleService is null.");
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            bleService = null;
+        }
+    };
+
+    private final BroadcastReceiver gattUpdateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+            if (BleService.ACTION_GATT_CONNECTED.equals(action)) {
+                connected = true;
+                //updateConnectionState(R.string.connected);
+                Log.d(TAG, "Connected to node");
+                Toast.makeText(DebugNodeActivity.this, "Connected to node", Toast.LENGTH_SHORT).show();
+            } else if (BleService.ACTION_GATT_DISCONNECTED.equals(action)) {
+                connected = false;
+                //updateConnectionState(R.string.disconnected);
+                Log.d(TAG, "Disconnected from node");
+                Toast.makeText(DebugNodeActivity.this, "Disconnected from node", Toast.LENGTH_SHORT).show();
+            }
+        }
+    };
 
     @SuppressLint("MissingPermission")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        ActivityDebugBinding binding = ActivityDebugBinding.inflate(getLayoutInflater());
+        ActivityDebugNodeBinding binding = ActivityDebugNodeBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        BluetoothDevice BLEDevice = (BluetoothDevice)getIntent().getParcelableExtra("BLEDevice");
+        bleDeviceAddress = getIntent().getStringExtra("Address");
 
-        bluetoothGattCallback = new BluetoothGattCallback() {
-            @Override
-            public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-                if (newState == BluetoothProfile.STATE_CONNECTED) {
-                    // successfully connected to the GATT Server
-                    connectionState = BluetoothProfile.STATE_CONNECTED;
-                } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                    // disconnected from the GATT Server
-                    connectionState = BluetoothProfile.STATE_DISCONNECTED;
-                }
-            }
+        Log.d(TAG, "Received addressed: " + bleDeviceAddress);
 
-            @Override
-            public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-                super.onCharacteristicRead(gatt, characteristic, status);
-                Log.d("DEBUG", characteristic.getStringValue(0));
-            }
-
-            @Override
-            public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-                super.onCharacteristicWrite(gatt, characteristic, status);
-            }
-        };
-
-        // TODO: Check if permissions have been granted
-        BluetoothGatt BLEGatt = BLEDevice.connectGatt(this, false, bluetoothGattCallback);
-        BLEGatt.readCharacteristic
-                (new BluetoothGattCharacteristic
-                        (UUID.fromString("beb5483e-36e1-4688-b7f5-ea07361b26a8"),
-                                BluetoothGattCharacteristic.PROPERTY_READ,
-                                BluetoothGattCharacteristic.PERMISSION_READ));
+        Intent gattServiceIntent = new Intent(this, BleService.class);
+        bindService(gattServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
 
 
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        registerReceiver(gattUpdateReceiver, makeGattUpdateIntentFilter());
+        if (bleService != null) {
+            final boolean result = bleService.connect(bleDeviceAddress);
+            Log.d(TAG, "Connect request result=" + result);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(gattUpdateReceiver);
+    }
+
+    private static IntentFilter makeGattUpdateIntentFilter() {
+        final IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(BleService.ACTION_GATT_CONNECTED);
+        intentFilter.addAction(BleService.ACTION_GATT_DISCONNECTED);
+        return intentFilter;
     }
 }

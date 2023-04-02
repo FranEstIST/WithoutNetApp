@@ -1,12 +1,12 @@
 package pt.ulisboa.tecnico.withoutnet;
 
-
 import android.annotation.SuppressLint;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
+import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothProfile;
 import android.content.Intent;
 import android.os.Binder;
@@ -18,7 +18,7 @@ import androidx.annotation.Nullable;
 public class BleService extends Service {
     private Binder binder = new LocalBinder();
     private BluetoothAdapter bluetoothAdapter;
-    public static final String TAG = "BluetoothLeService";
+    public static final String TAG = "BleService";
     private BluetoothGatt bluetoothGatt;
 
     public final static String ACTION_GATT_CONNECTED =
@@ -28,6 +28,8 @@ public class BleService extends Service {
 
     private static final int STATE_DISCONNECTED = 0;
     private static final int STATE_CONNECTED = 2;
+    private static final int STATE_CHAR_READ = 3;
+    private static final int STATE_CHAR_WRITTEN = 4;
 
     private int connectionState;
 
@@ -37,12 +39,26 @@ public class BleService extends Service {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 // successfully connected to the GATT Server
                 connectionState = STATE_CONNECTED;
+                Log.d(TAG, "Connected to node");
                 broadcastUpdate(ACTION_GATT_CONNECTED);
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 // disconnected from the GATT Server
                 connectionState = STATE_DISCONNECTED;
+                Log.d(TAG, "Disconnected from node");
                 broadcastUpdate(ACTION_GATT_DISCONNECTED);
             }
+        }
+
+        @Override
+        public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            super.onCharacteristicRead(gatt, characteristic, status);
+            Log.d(TAG, characteristic.getStringValue(0));
+        }
+
+        @Override
+        public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            super.onCharacteristicWrite(gatt, characteristic, status);
+            Log.d(TAG, characteristic.getStringValue(0));
         }
     };
 
@@ -64,6 +80,7 @@ public class BleService extends Service {
             Log.e(TAG, "Unable to obtain a BluetoothAdapter.");
             return false;
         }
+        Log.d(TAG, "Initialized ble service.");
         return true;
     }
 
