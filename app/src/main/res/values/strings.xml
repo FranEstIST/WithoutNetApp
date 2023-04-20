@@ -30,4 +30,7 @@
 
     <string name="the_update_read_will_appear_here">The update read will appear here</string>
 
+    <string name="battery_reading">Battery Reading</string>
+    <string name="unknown_type">Unknown Type</string>
+
 </resources>
