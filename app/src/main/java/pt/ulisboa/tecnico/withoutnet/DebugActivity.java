@@ -295,7 +295,7 @@ public class DebugActivity extends AppCompatActivity {
         ScanFilter filter = new ScanFilter
                 .Builder()
                 .setServiceUuid(ParcelUuid
-                        .fromString("4fafc201-1fb5-459e-8fcc-c5c9c331914b"))
+                        .fromString("b19fbebe-dbd4-11ed-afa1-0242ac120002"))
                 .build();
 
         ScanFilter filter2 = new ScanFilter
@@ -309,8 +309,8 @@ public class DebugActivity extends AppCompatActivity {
             bluetoothLeScanner.stopScan(leScanCallback);
         }
 
-        //bluetoothLeScanner.startScan(filters, settings, leScanCallback);
-        bluetoothLeScanner.startScan(leScanCallback);
+        bluetoothLeScanner.startScan(filters, settings, leScanCallback);
+        //bluetoothLeScanner.startScan(leScanCallback);
         Log.d("DEBUG", "Scanning for BLE devices...\n");
         scanning = true;
 

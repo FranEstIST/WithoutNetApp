@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -19,8 +20,11 @@ import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.UUID;
 
 import pt.ulisboa.tecnico.withoutnet.databinding.ActivityDebugNodeBinding;
@@ -39,6 +43,7 @@ public class DebugNodeActivity extends AppCompatActivity {
     private String bleDeviceAddress = null;
 
     private Button connectButton;
+    private TextView updateTextView;
 
     //private View.OnClickListener connectOnClickListener
 
@@ -72,6 +77,9 @@ public class DebugNodeActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
+
+            Log.d(TAG, "Broadcast received");
+
             if (BleService.ACTION_GATT_CONNECTED.equals(action)) {
                 connected = true;
                 //updateConnectionState(R.string.connected);
@@ -94,6 +102,34 @@ public class DebugNodeActivity extends AppCompatActivity {
                     final boolean result = bleService.connect(bleDeviceAddress);
                     Log.d(TAG, "Disconnect request result=" + result);
                 });
+            } else if (BleService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
+                Log.d(TAG, "GATT Services discovered");
+
+                List<BluetoothGattService> gattServiceList = bleService.getSupportedGattServices();
+
+                for (BluetoothGattService service : gattServiceList) {
+                    Log.d(TAG, "GATT Service: " + service.getUuid().toString());
+                    if (service.getUuid().toString().equals("b19fbebe-dbd4-11ed-afa1-0242ac120002")) {
+                        List<BluetoothGattCharacteristic> updateCharacteristics = service.getCharacteristics();
+                        for (BluetoothGattCharacteristic characteristic : updateCharacteristics) {
+                            Log.d(TAG, "GATT Characteristic:" + characteristic.getUuid());
+                        }
+
+                        BluetoothGattCharacteristic updateCharacteristic = service.getCharacteristic(UUID.fromString("c6283536-dbd5-11ed-afa1-0242ac120002"));
+
+                        bleService.readCharacteristic(updateCharacteristic);
+                    }
+                }
+            } else if (BleService.ACTION_CHARACTERISTIC_READ.equals(action)) {
+                Log.d(TAG, "Characteristic Read");
+
+                String updateValue = intent.getStringExtra("value");
+                Log.d(TAG, "Characteristic value:" + updateValue);
+
+                updateTextView.setText(updateValue);
+
+            } else {
+                Log.d(TAG, "Unknown action received by broadcast receiver");
             }
         }
     };
@@ -107,6 +143,7 @@ public class DebugNodeActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         connectButton = binding.connectButton;
+        updateTextView = binding.charText;
 
         bleDeviceAddress = getIntent().getStringExtra("Address");
 
@@ -137,6 +174,8 @@ public class DebugNodeActivity extends AppCompatActivity {
         final IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(BleService.ACTION_GATT_CONNECTED);
         intentFilter.addAction(BleService.ACTION_GATT_DISCONNECTED);
+        intentFilter.addAction(BleService.ACTION_GATT_SERVICES_DISCOVERED);
+        intentFilter.addAction(BleService.ACTION_CHARACTERISTIC_READ);
         return intentFilter;
     }
 }
