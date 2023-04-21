@@ -73,10 +73,11 @@ public class DebugActivity extends AppCompatActivity {
             Log.d("DEBUG", "Clicked on node " + position + "\n");
             Toast.makeText(DebugActivity.this, "Click!", Toast.LENGTH_SHORT).show();
             Node clickedNode = new ArrayList<>(nearbyNodesByName.values()).get(position);
-            BluetoothDevice BLEDevice = clickedNode.getBLDevice();
+            // TODO: Does it make sense to have a node's id being its physical address?
+            //BluetoothDevice BLEDevice = clickedNode.getBLDevice();
             Intent intent = new Intent(DebugActivity.this, DebugNodeActivity.class);
-            Log.d("DEBUG", "Address: " + BLEDevice.getAddress());
-            intent.putExtra("Address", BLEDevice.getAddress());
+            Log.d("DEBUG", "Address: " + clickedNode.getId());
+            intent.putExtra("Address", clickedNode.getId());
             startActivity(intent);
             /*if(connectionState == BluetoothProfile.STATE_DISCONNECTED) {
                 DebugActivity.this.BLEGatt = BLEDevice.connectGatt(DebugActivity.this, false, bluetoothGattCallback);

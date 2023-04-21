@@ -80,7 +80,7 @@ public class NearbyNodesAdapter extends RecyclerView.Adapter<NearbyNodesAdapter.
         nameTextView.setText(node.getCommonName());
 
         TextView UUIDTextView = holder.UUIDTextView;
-        UUIDTextView.setText(String.valueOf(node.getUUID()));
+        UUIDTextView.setText(String.valueOf(node.getId()));
         //UUIDTextView.setText(String.valueOf(node.getServiceUUID()));
     }
 

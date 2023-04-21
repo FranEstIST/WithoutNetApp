@@ -45,6 +45,8 @@ public class DebugNodeActivity extends AppCompatActivity {
     private Button connectButton;
     private TextView updateTextView;
 
+    private GlobalClass globalClass;
+
     //private View.OnClickListener connectOnClickListener
 
     private ServiceConnection serviceConnection = new ServiceConnection() {
@@ -126,8 +128,11 @@ public class DebugNodeActivity extends AppCompatActivity {
                 String updateValue = intent.getStringExtra("value");
                 Log.d(TAG, "Characteristic value:" + updateValue);
 
-                updateTextView.setText(updateValue);
+                Update update = new Update(updateValue);
 
+                globalClass.addUpdate(update);
+
+                updateTextView.setText(updateValue);
             } else {
                 Log.d(TAG, "Unknown action received by broadcast receiver");
             }
@@ -141,6 +146,8 @@ public class DebugNodeActivity extends AppCompatActivity {
 
         ActivityDebugNodeBinding binding = ActivityDebugNodeBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
+        globalClass = (GlobalClass) getApplicationContext();
 
         connectButton = binding.connectButton;
         updateTextView = binding.charText;

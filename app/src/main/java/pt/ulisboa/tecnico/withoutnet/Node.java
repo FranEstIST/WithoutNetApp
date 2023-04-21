@@ -11,10 +11,9 @@ import java.util.Arrays;
 import java.util.UUID;
 
 public class Node {
+    private String id;
     private String commonName;
-    private String UUID;
-    private String serviceUUID;
-    private BluetoothDevice BLDevice;
+    private String readingType;
 
     /**
      * Returns a Node object, as long as the necessary permissions for accessing BL devices
@@ -25,18 +24,16 @@ public class Node {
     // TODO: Check if BL permissions have been granted
     @SuppressLint("MissingPermission")
     public Node(BluetoothDevice BLDevice) {
+        this.setId(BLDevice.getAddress());
         this.setCommonName(BLDevice.getName());
-        this.setUUID(BLDevice.getAddress());
-        this.setServiceUUID("");
-        this.BLDevice = BLDevice;
+        // TODO: Get the reading type to be part of the advertising package
+        this.readingType = "";
     }
 
-    public BluetoothDevice getBLDevice() {
-        return BLDevice;
-    }
-
-    public void setBLDevice(BluetoothDevice BLDevice) {
-        this.BLDevice = BLDevice;
+    public Node(String id, String commonName, String readingType) {
+        this.setId(id);
+        this.setCommonName(commonName);
+        this.readingType = readingType;
     }
 
     public String getCommonName() {
@@ -51,27 +48,15 @@ public class Node {
         }
     }
 
-    public String getUUID() {
-        return UUID;
+    public String getId() {
+        return this.id;
     }
 
-    public void setUUID(String UUID) {
-        if(UUID == null) {
-            this.UUID = "N/A";
+    public void setId(String id) {
+        if(id == null) {
+            this.id = "N/A";
         } else {
-            this.UUID = UUID;
-        }
-    }
-
-    public String getServiceUUID() {
-        return serviceUUID;
-    }
-
-    public void setServiceUUID(String serviceUUID) {
-        if(serviceUUID == null) {
-            this.serviceUUID = "N/A";
-        } else {
-            this.serviceUUID = serviceUUID;
+            this.id = id;
         }
     }
 }
