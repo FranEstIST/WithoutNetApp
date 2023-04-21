@@ -3,29 +3,30 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".DebugNodeActivity">
+    android:layout_height="60dp">
 
-    <Button
-        android:id="@+id/connect_button"
+    <TextView
+        android:id="@+id/field_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/Connect"
+        android:text="field_name"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.067"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.976" />
+        app:layout_constraintVertical_bias="0.30" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/update_field_list"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginBottom="16dp"
-        app:layout_constraintBottom_toTopOf="@+id/connect_button"
+    <TextView
+        android:id="@+id/field_value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="field_value"
+        android:textSize="10sp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.065"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0" />
-
+        app:layout_constraintTop_toBottomOf="@+id/field_name"
+        app:layout_constraintVertical_bias="0.500" />
 </androidx.constraintlayout.widget.ConstraintLayout>

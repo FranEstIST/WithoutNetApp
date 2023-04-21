@@ -33,4 +33,10 @@
     <string name="battery_reading">Battery Reading</string>
     <string name="unknown_type">Unknown Type</string>
 
+    <string name="timestamp">Timestamp</string>
+    <string name="node_id">Node ID</string>
+    <string name="common_name">Common Name</string>
+    <string name="reading_type">Reading Type</string>
+    <string name="reading_value">Reading Value</string>
+
 </resources>

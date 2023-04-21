@@ -15,7 +15,7 @@ public class Update {
     }
 
     public Update(String updateString) {
-        String updateStringComponents[] = updateString.split(":");
+        String updateStringComponents[] = updateString.split("#");
 
         if(updateStringComponents.length != 6) {
             //TODO: Throw an exception here

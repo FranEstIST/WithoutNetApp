@@ -37,7 +37,7 @@ public class Node {
     }
 
     public String getCommonName() {
-        return commonName;
+        return this.commonName;
     }
 
     public void setCommonName(String commonName) {
@@ -58,5 +58,13 @@ public class Node {
         } else {
             this.id = id;
         }
+    }
+
+    public String getReadingType() {
+        return this.readingType;
+    }
+
+    public void setReadingType(String readingType) {
+        this.readingType = readingType;
     }
 }

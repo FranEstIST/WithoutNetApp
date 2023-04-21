@@ -1,6 +1,9 @@
 package pt.ulisboa.tecnico.withoutnet;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
@@ -43,7 +46,8 @@ public class DebugNodeActivity extends AppCompatActivity {
     private String bleDeviceAddress = null;
 
     private Button connectButton;
-    private TextView updateTextView;
+    private RecyclerView updateFieldsRV;
+    private UpdateFieldsAdapter updateFieldsAdapter;
 
     private GlobalClass globalClass;
 
@@ -132,7 +136,11 @@ public class DebugNodeActivity extends AppCompatActivity {
 
                 globalClass.addUpdate(update);
 
-                updateTextView.setText(updateValue);
+                //updateTextView.setText(updateValue);
+
+                updateFieldsAdapter.setUpdate(update);
+                updateFieldsAdapter.notifyDataSetChanged();
+
             } else {
                 Log.d(TAG, "Unknown action received by broadcast receiver");
             }
@@ -150,7 +158,16 @@ public class DebugNodeActivity extends AppCompatActivity {
         globalClass = (GlobalClass) getApplicationContext();
 
         connectButton = binding.connectButton;
-        updateTextView = binding.charText;
+        updateFieldsRV = binding.updateFieldList;
+
+        updateFieldsAdapter = new UpdateFieldsAdapter();
+
+        updateFieldsRV.setAdapter(updateFieldsAdapter);
+
+        updateFieldsRV.setLayoutManager(new LinearLayoutManager(this));
+
+        updateFieldsRV.addItemDecoration(new DividerItemDecoration(this,
+                DividerItemDecoration.VERTICAL));
 
         bleDeviceAddress = getIntent().getStringExtra("Address");
 
