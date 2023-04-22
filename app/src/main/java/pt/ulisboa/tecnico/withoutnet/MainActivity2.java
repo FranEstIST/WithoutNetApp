@@ -1,6 +1,9 @@
 package pt.ulisboa.tecnico.withoutnet;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkRequest;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -32,6 +35,10 @@ public class MainActivity2 extends AppCompatActivity {
                 //Toast.makeText(getApplicationContext(), "Button pressed", Toast.LENGTH_LONG).show();
                 /*Intent intent = new Intent(getApplicationContext(), MainActivity2.class);
                 startActivity(intent);*/
+
+                /*WorkRequest receiveAndPropagateUpdatesWorkReq = new OneTimeWorkRequest
+                        .Builder(ReceiveAndPropagateUpdatesWorker.class)
+                        .build();*/
 
                 Button button = (Button) view;
 
