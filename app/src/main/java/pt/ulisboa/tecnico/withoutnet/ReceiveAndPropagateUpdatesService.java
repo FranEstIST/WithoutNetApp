@@ -153,6 +153,8 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
                 if(updateCharacteristic == null) {
                     // TODO: Throw an exception here
+                    Log.d(TAG, "GATT Characteristic is null");
+                    return;
                 }
 
                 // Read the update characteristic

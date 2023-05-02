@@ -1,5 +1,7 @@
 package pt.ulisboa.tecnico.withoutnet;
 
+import androidx.annotation.NonNull;
+
 public class Update {
     private long timestamp;
 
@@ -56,5 +58,9 @@ public class Update {
         this.reading = reading;
     }
 
-
+    @NonNull
+    @Override
+    public String toString() {
+        return "" + this.timestamp + " : " + this.sender + " : " + this.reading;
+    }
 }

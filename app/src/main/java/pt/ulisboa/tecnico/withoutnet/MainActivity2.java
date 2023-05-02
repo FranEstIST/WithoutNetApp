@@ -90,6 +90,14 @@ public class MainActivity2 extends AppCompatActivity {
             }
         });
 
+        binding.cachedUpdatesButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(getApplicationContext(), CachedUpdatesActivity.class);
+                startActivity(intent);
+            }
+        });
+
         Intent receiveAndPropagateUpdatesServiceIntent = new Intent(this, ReceiveAndPropagateUpdatesService.class);
         bindService(receiveAndPropagateUpdatesServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
 

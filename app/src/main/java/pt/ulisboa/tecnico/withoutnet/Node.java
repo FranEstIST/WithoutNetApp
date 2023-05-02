@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 import android.content.pm.PackageManager;
 
+import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 
 import java.util.Arrays;
@@ -66,5 +67,11 @@ public class Node {
 
     public void setReadingType(String readingType) {
         this.readingType = readingType;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "" + this.getId() + " : " + this.getCommonName() + " : " + this.getReadingType();
     }
 }

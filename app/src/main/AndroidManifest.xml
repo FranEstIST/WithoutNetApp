@@ -36,6 +36,9 @@
         android:theme="@style/Theme.WithoutNet"
         tools:targetApi="31">
         <activity
+            android:name=".CachedUpdatesActivity"
+            android:exported="false" />
+        <activity
             android:name=".DebugNodeActivity"
             android:exported="false" />
         <activity
@@ -59,10 +62,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service
-            android:name=".BleService" />
-        <service
-            android:name=".ReceiveAndPropagateUpdatesService" />
+
+        <service android:name=".BleService" />
+        <service android:name=".ReceiveAndPropagateUpdatesService" />
     </application>
 
 </manifest>
