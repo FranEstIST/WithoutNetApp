@@ -46,10 +46,13 @@ public class DebugNodeActivity extends AppCompatActivity {
     private String bleDeviceAddress = null;
 
     private Button connectButton;
+    private Button readUpdateButton;
     private RecyclerView updateFieldsRV;
     private UpdateFieldsAdapter updateFieldsAdapter;
 
     private GlobalClass globalClass;
+
+    private BluetoothGattCharacteristic updateCharacteristic;
 
     //private View.OnClickListener connectOnClickListener
 
@@ -90,18 +93,20 @@ public class DebugNodeActivity extends AppCompatActivity {
                 connected = true;
                 //updateConnectionState(R.string.connected);
                 Log.d(TAG, "Connected to node");
-                Toast.makeText(DebugNodeActivity.this, "Connected to node", Toast.LENGTH_SHORT).show();
+                //.makeText(DebugNodeActivity.this, "Connected to node", Toast.LENGTH_SHORT).show();
 
                 connectButton.setText(R.string.Disconnect);
                 connectButton.setOnClickListener(v -> {
                     final boolean result = bleService.disconnect();
                     Log.d(TAG, "Connect request result=" + result);
                 });
+
+
             } else if (BleService.ACTION_GATT_DISCONNECTED.equals(action)) {
                 connected = false;
                 //updateConnectionState(R.string.disconnected);
                 Log.d(TAG, "Disconnected from node");
-                Toast.makeText(DebugNodeActivity.this, "Disconnected from node", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(DebugNodeActivity.this, "Disconnected from node", Toast.LENGTH_SHORT).show();
 
                 connectButton.setText(R.string.Connect);
                 connectButton.setOnClickListener(v -> {
@@ -113,6 +118,8 @@ public class DebugNodeActivity extends AppCompatActivity {
 
                 List<BluetoothGattService> gattServiceList = bleService.getSupportedGattServices();
 
+                BluetoothGattCharacteristic updateCharacteristic = null;
+
                 for (BluetoothGattService service : gattServiceList) {
                     Log.d(TAG, "GATT Service: " + service.getUuid().toString());
                     if (service.getUuid().toString().equals("b19fbebe-dbd4-11ed-afa1-0242ac120002")) {
@@ -121,11 +128,21 @@ public class DebugNodeActivity extends AppCompatActivity {
                             Log.d(TAG, "GATT Characteristic:" + characteristic.getUuid());
                         }
 
-                        BluetoothGattCharacteristic updateCharacteristic = service.getCharacteristic(UUID.fromString("c6283536-dbd5-11ed-afa1-0242ac120002"));
-
-                        bleService.readCharacteristic(updateCharacteristic);
+                        updateCharacteristic = service
+                                .getCharacteristic(UUID.fromString("c6283536-dbd5-11ed-afa1-0242ac120002"));
+                        //bleService.readCharacteristic(updateCharacteristic);
                     }
                 }
+
+                if(updateCharacteristic == null) {
+                    // TODO: Throw an exception here
+                }
+
+                BluetoothGattCharacteristic finalUpdateCharacteristic = updateCharacteristic;
+                readUpdateButton.setVisibility(View.VISIBLE);
+                readUpdateButton.setOnClickListener(v -> {
+                    bleService.readCharacteristic(finalUpdateCharacteristic);
+                });
             } else if (BleService.ACTION_CHARACTERISTIC_READ.equals(action)) {
                 Log.d(TAG, "Characteristic Read");
 
@@ -158,6 +175,7 @@ public class DebugNodeActivity extends AppCompatActivity {
         globalClass = (GlobalClass) getApplicationContext();
 
         connectButton = binding.connectButton;
+        readUpdateButton = binding.readUpdateButton;
         updateFieldsRV = binding.updateFieldList;
 
         updateFieldsAdapter = new UpdateFieldsAdapter();

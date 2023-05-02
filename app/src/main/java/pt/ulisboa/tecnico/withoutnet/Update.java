@@ -29,7 +29,7 @@ public class Update {
 
         this.sender = new Node(updateStringComponents[2], updateStringComponents[3], updateStringComponents[4]);
 
-        this.reading = updateStringComponents[4];
+        this.reading = updateStringComponents[5];
     }
 
     public long getTimestamp() {

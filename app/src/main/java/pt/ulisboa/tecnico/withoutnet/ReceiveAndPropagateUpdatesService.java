@@ -2,43 +2,39 @@ package pt.ulisboa.tecnico.withoutnet;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.Service;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
-import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
-import android.view.View;
-import android.widget.Button;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.work.PeriodicWorkRequest;
-import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 import java.util.List;
 import java.util.UUID;
 
-public class ReceiveAndPropagateUpdatesWorker extends Worker {
+public class ReceiveAndPropagateUpdatesService extends Service {
     private static final long SCAN_PERIOD = 10000;
+
+    private Activity activity;
 
     private BleScanner scanner;
     private ScanCallback scanCallback;
 
-    private static final String TAG = "ReceiveAndPropagateUpdatesWorker";
+    private static final String TAG = "ReceiveAndPropagateUpdatesService";
 
     private boolean connected = false;
 
@@ -127,12 +123,12 @@ public class ReceiveAndPropagateUpdatesWorker extends Worker {
         }
     };
 
-    public ReceiveAndPropagateUpdatesWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
-        super(context, workerParams);
+    public ReceiveAndPropagateUpdatesService(Activity activity) {
+        this.activity = activity;
 
-        this.globalClass = (GlobalClass) getApplicationContext();
+        this.globalClass = (GlobalClass) this.activity.getApplicationContext();
 
-        this.scanner = new BleScanner(getApplicationContext());
+        this.scanner = new BleScanner(this.activity);
 
         this.scanCallback = new ScanCallback() {
             @Override
@@ -149,7 +145,7 @@ public class ReceiveAndPropagateUpdatesWorker extends Worker {
                 }
 
                 // Connect to node
-                final boolean connectResult = bleService.connect(device.getAddress());
+                final boolean connectResult = bleService.connect(bleDeviceAddress);
                 Log.d(TAG, "Disconnect request result = " + connectResult);
             }
 
@@ -164,38 +160,13 @@ public class ReceiveAndPropagateUpdatesWorker extends Worker {
             }
         };
 
-        getApplicationContext().registerReceiver(gattUpdateReceiver, makeGattUpdateIntentFilter());
-
-        /*Intent gattServiceIntent = new Intent(getApplicationContext(), BleService.class);
-        getApplicationContext().startService(gattServiceIntent);*/
-
-        // TODO: Should the service be started instead of being bound to the context?
-        Intent gattServiceIntent = new Intent(getApplicationContext(), BleService.class);
-        getApplicationContext().bindService(gattServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+        Intent gattServiceIntent = new Intent(this.activity, BleService.class);
+        this.activity.startService(gattServiceIntent);
     }
 
-    private static IntentFilter makeGattUpdateIntentFilter() {
-        final IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(BleService.ACTION_GATT_CONNECTED);
-        intentFilter.addAction(BleService.ACTION_GATT_DISCONNECTED);
-        intentFilter.addAction(BleService.ACTION_GATT_SERVICES_DISCOVERED);
-        intentFilter.addAction(BleService.ACTION_CHARACTERISTIC_READ);
-        return intentFilter;
-    }
-
-    @NonNull
+    @Nullable
     @Override
-    public Result doWork() {
-        this.scanner.scan(SCAN_PERIOD, this.scanCallback);
-
-        synchronized (this.scanner) {
-            try {
-                this.scanner.wait();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
-        return Result.success();
+    public IBinder onBind(Intent intent) {
+        return null;
     }
 }

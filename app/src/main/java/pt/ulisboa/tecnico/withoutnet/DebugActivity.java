@@ -71,7 +71,7 @@ public class DebugActivity extends AppCompatActivity {
         @Override
         public void onNearbyNodeClick(int position) {
             Log.d("DEBUG", "Clicked on node " + position + "\n");
-            Toast.makeText(DebugActivity.this, "Click!", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(DebugActivity.this, "Click!", Toast.LENGTH_SHORT).show();
             Node clickedNode = new ArrayList<>(nearbyNodesByName.values()).get(position);
             // TODO: Does it make sense to have a node's id being its physical address?
             //BluetoothDevice BLEDevice = clickedNode.getBLDevice();

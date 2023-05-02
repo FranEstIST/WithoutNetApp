@@ -27,6 +27,7 @@
 
     <string name="Connect">Connect</string>
     <string name="Disconnect">Disconnect</string>
+    <string name="read_update">Read update</string>
 
     <string name="the_update_read_will_appear_here">The update read will appear here</string>
 
