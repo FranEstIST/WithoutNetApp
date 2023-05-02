@@ -61,6 +61,8 @@
         </activity>
         <service
             android:name=".BleService" />
+        <service
+            android:name=".ReceiveAndPropagateUpdatesService" />
     </application>
 
 </manifest>

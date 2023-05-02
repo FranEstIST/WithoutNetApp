@@ -43,6 +43,7 @@ public class BleScanner {
     private Context context;
     private BluetoothLeScanner bluetoothLeScanner;
     private boolean scanning;
+    private ScanCallback scanCallback;
     //private Handler handler;
 
     public BleScanner(Context context) {
@@ -74,6 +75,8 @@ public class BleScanner {
             //ActivityCompat.requestPermissions(activity, new String[]{ Manifest.permission.ACCESS_FINE_LOCATION }, REQUEST_ACCESS_FINE_LOCATION);
             return;
         }
+
+        this.scanCallback = scanCallback;
 
         ScanSettings settings = new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build();
         ArrayList<ScanFilter> filters = new ArrayList();
@@ -117,8 +120,15 @@ public class BleScanner {
             }
         };
 
-        Timer timer = new Timer("Timer");
-        timer.schedule(task, scanPeriod);
+        /*Timer timer = new Timer("Timer");
+        timer.schedule(task, scanPeriod);*/
 
+    }
+
+    @SuppressLint("MissingPermission")
+    public void stopScanning() {
+        Log.d("DEBUG", "Bluetooth scan stopping (manually)...\n");
+        bluetoothLeScanner.stopScan(this.scanCallback);
+        scanning = false;
     }
 }

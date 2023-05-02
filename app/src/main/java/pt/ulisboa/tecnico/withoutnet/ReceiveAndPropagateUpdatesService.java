@@ -3,6 +3,7 @@ package pt.ulisboa.tecnico.withoutnet;
 import android.Manifest;
 import android.app.Activity;
 import android.app.Service;
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
@@ -12,8 +13,10 @@ import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
@@ -29,6 +32,8 @@ import java.util.UUID;
 public class ReceiveAndPropagateUpdatesService extends Service {
     private static final long SCAN_PERIOD = 10000;
 
+    private LocalBinder binder = new LocalBinder();
+
     private Activity activity;
 
     private BleScanner scanner;
@@ -40,8 +45,6 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
     private BleService bleService;
 
-    private String bleDeviceAddress = null;
-
     private GlobalClass globalClass;
 
     private ServiceConnection serviceConnection = new ServiceConnection() {
@@ -51,7 +54,40 @@ public class ReceiveAndPropagateUpdatesService extends Service {
             if (bleService != null) {
                 if (!bleService.initialize()) {
                     Log.e(TAG, "Unable to initialize Bluetooth");
+                    return;
                 }
+
+                ReceiveAndPropagateUpdatesService.this.scanCallback = new ScanCallback() {
+                    @Override
+                    public void onScanResult(int callbackType, ScanResult result) {
+                        super.onScanResult(callbackType, result);
+
+                        BluetoothDevice device = result.getDevice();
+
+                        if (Build.VERSION.SDK_INT >= 31
+                                && ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                            // TODO: Consider calling
+                            //    ActivityCompat#requestPermissions
+                            return;
+                        }
+
+                        // Connect to node
+                        final boolean connectResult = bleService.connect(device.getAddress());
+                        Log.d(TAG, "Connect request result = " + connectResult);
+                    }
+
+                    @Override
+                    public void onBatchScanResults(List<ScanResult> results) {
+                        super.onBatchScanResults(results);
+                    }
+
+                    @Override
+                    public void onScanFailed(int errorCode) {
+                        super.onScanFailed(errorCode);
+                    }
+                };
+
+                ReceiveAndPropagateUpdatesService.this.scanner.scan(SCAN_PERIOD, ReceiveAndPropagateUpdatesService.this.scanCallback);
 
             }
             Log.d(TAG, "bleService is null.");
@@ -60,6 +96,24 @@ public class ReceiveAndPropagateUpdatesService extends Service {
         @Override
         public void onServiceDisconnected(ComponentName name) {
             bleService = null;
+            ReceiveAndPropagateUpdatesService.this.scanner.stopScanning();
+            /*ReceiveAndPropagateUpdatesService.this.scanCallback = new ScanCallback() {
+                @Override
+                public void onScanResult(int callbackType, ScanResult result) {
+                    super.onScanResult(callbackType, result);
+                    Log.d(TAG, "Found device but BleService is not yet initialized");
+                }
+
+                @Override
+                public void onBatchScanResults(List<ScanResult> results) {
+                    super.onBatchScanResults(results);
+                }
+
+                @Override
+                public void onScanFailed(int errorCode) {
+                    super.onScanFailed(errorCode);
+                }
+            };*/
         }
     };
 
@@ -116,37 +170,33 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
                 // Disconnect from node
                 final boolean result = bleService.disconnect();
-                Log.d(TAG, "Connect request result = " + result);
+                Log.d(TAG, "Disconnect request result = " + result);
+
             } else {
                 Log.d(TAG, "Unknown action received by broadcast receiver");
             }
         }
     };
 
-    public ReceiveAndPropagateUpdatesService(Activity activity) {
-        this.activity = activity;
+    private static IntentFilter makeGattUpdateIntentFilter() {
+        final IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(BleService.ACTION_GATT_CONNECTED);
+        intentFilter.addAction(BleService.ACTION_GATT_DISCONNECTED);
+        intentFilter.addAction(BleService.ACTION_GATT_SERVICES_DISCOVERED);
+        intentFilter.addAction(BleService.ACTION_CHARACTERISTIC_READ);
+        return intentFilter;
+    }
 
-        this.globalClass = (GlobalClass) this.activity.getApplicationContext();
+    public void initialize() {
+        this.globalClass = (GlobalClass) getApplicationContext();
 
-        this.scanner = new BleScanner(this.activity);
+        this.scanner = new BleScanner(getApplicationContext());
 
         this.scanCallback = new ScanCallback() {
             @Override
             public void onScanResult(int callbackType, ScanResult result) {
                 super.onScanResult(callbackType, result);
-
-                BluetoothDevice device = result.getDevice();
-
-                if (Build.VERSION.SDK_INT >= 31
-                        && ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                    // TODO: Consider calling
-                    //    ActivityCompat#requestPermissions
-                    return;
-                }
-
-                // Connect to node
-                final boolean connectResult = bleService.connect(bleDeviceAddress);
-                Log.d(TAG, "Disconnect request result = " + connectResult);
+                Log.d(TAG, "Found device but BleService is not yet initialized");
             }
 
             @Override
@@ -159,14 +209,41 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                 super.onScanFailed(errorCode);
             }
         };
-
-        Intent gattServiceIntent = new Intent(this.activity, BleService.class);
-        this.activity.startService(gattServiceIntent);
     }
 
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+        return binder;
+    }
+
+    class LocalBinder extends Binder {
+        public ReceiveAndPropagateUpdatesService getService() {
+            return ReceiveAndPropagateUpdatesService.this;
+        }
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent) {
+        getApplicationContext().unbindService(serviceConnection);
+        return super.onUnbind(intent);
+    }
+
+    public boolean start() {
+        registerReceiver(gattUpdateReceiver, makeGattUpdateIntentFilter());
+
+        // TODO: Should the service be started instead of being bound to the context?
+        Intent gattServiceIntent = new Intent(getApplicationContext(), BleService.class);
+        getApplicationContext().bindService(gattServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+
+        return true;
+    }
+
+    public boolean stop() {
+        unregisterReceiver(gattUpdateReceiver);
+
+        getApplicationContext().unbindService(serviceConnection);
+
+        return true;
     }
 }

@@ -39,8 +39,9 @@ public class BleService extends Service {
     private static final int STATE_CHAR_READ = 3;
     private static final int STATE_CHAR_WRITTEN = 4;
 
-
     private int connectionState;
+
+    private String currentConnectionAddress = null;
 
     private final BluetoothGattCallback bluetoothGattCallback = new BluetoothGattCallback() {
         // TODO: Check if the necessary permissions have been granted
@@ -119,6 +120,10 @@ public class BleService extends Service {
     public boolean connect(final String address) {
         if (bluetoothAdapter == null || address == null) {
             Log.w(TAG, "BluetoothAdapter not initialized or unspecified address.");
+            return false;
+        }
+        if(connectionState == STATE_CONNECTED) {
+            Log.w(TAG, "Already connected to a node.");
             return false;
         }
         try {
