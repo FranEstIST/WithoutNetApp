@@ -4,8 +4,10 @@ import android.app.Application;
 
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Set;
 import java.util.TreeSet;
+
+import pt.ulisboa.tecnico.withoutnet.models.Node;
+import pt.ulisboa.tecnico.withoutnet.models.Update;
 
 public class GlobalClass extends Application {
     // Map for the updates, with the sender as the key
