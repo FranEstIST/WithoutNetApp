@@ -9,24 +9,24 @@ import android.view.View;
 
 import androidx.navigation.ui.AppBarConfiguration;
 
-import pt.ulisboa.tecnico.withoutnet.activities.Main.MainActivity2;
+import pt.ulisboa.tecnico.withoutnet.activities.Main.MainActivity;
 import pt.ulisboa.tecnico.withoutnet.R;
-import pt.ulisboa.tecnico.withoutnet.databinding.ActivityMainBinding;
+import pt.ulisboa.tecnico.withoutnet.databinding.ActivityLoginBinding;
 
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
 
-public class MainActivity extends AppCompatActivity {
+public class LoginActivity extends AppCompatActivity {
 
     private AppBarConfiguration appBarConfiguration;
-    private ActivityMainBinding binding;
+    private ActivityLoginBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        binding = ActivityLoginBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
         //setSupportActionBar(binding.toolbar);
@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
                 /*NavHostFragment.findNavController(FirstFragment.this)
                         .navigate(R.id.action_FirstFragment_to_SecondFragment);*/
                 //Toast.makeText(getApplicationContext(), "Button pressed", Toast.LENGTH_LONG).show();
-                Intent intent = new Intent(getApplicationContext(), MainActivity2.class);
+                Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                 startActivity(intent);
             }
         });

@@ -17,14 +17,14 @@ import android.widget.Button;
 import pt.ulisboa.tecnico.withoutnet.activities.Debug.CachedUpdatesActivity;
 import pt.ulisboa.tecnico.withoutnet.activities.Debug.DebugActivity;
 import pt.ulisboa.tecnico.withoutnet.R;
+import pt.ulisboa.tecnico.withoutnet.databinding.ActivityMainBinding;
 import pt.ulisboa.tecnico.withoutnet.services.ble.ReceiveAndPropagateUpdatesService;
-import pt.ulisboa.tecnico.withoutnet.databinding.ActivityMain2Binding;
 
-public class MainActivity2 extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity2";
 
-    private ActivityMain2Binding binding;
+    private ActivityMainBinding binding;
     private boolean isParticipating;
     private ReceiveAndPropagateUpdatesService receiveAndPropagateUpdatesService;
 
@@ -76,7 +76,7 @@ public class MainActivity2 extends AppCompatActivity {
         //setContentView(R.layout.activity_main2);
         WorkManager.getInstance(getApplicationContext()).cancelAllWork();
 
-        binding = ActivityMain2Binding.inflate(getLayoutInflater());
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
         isParticipating = false;
