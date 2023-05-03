@@ -43,6 +43,9 @@ public class BleService extends Service {
 
     private String currentConnectionAddress = null;
 
+    // TODO: There might be a better way to store this variable
+    private BluetoothGattCharacteristic writeUpdateCharacteristic = null;
+
     private final BluetoothGattCallback bluetoothGattCallback = new BluetoothGattCallback() {
         // TODO: Check if the necessary permissions have been granted
         @SuppressLint("MissingPermission")
@@ -169,6 +172,24 @@ public class BleService extends Service {
         bluetoothGatt.readCharacteristic(characteristic);
     }
 
+    public BluetoothGattCharacteristic getWriteUpdateCharacteristic() {
+        return writeUpdateCharacteristic;
+    }
+
+    public void setWriteUpdateCharacteristic(BluetoothGattCharacteristic writeUpdateCharacteristic) {
+        this.writeUpdateCharacteristic = writeUpdateCharacteristic;
+    }
+
+    // TODO: Check if user has granted the necessary permissions
+    @SuppressLint("MissingPermission")
+    public void writeCharacteristic(BluetoothGattCharacteristic characteristic) {
+        if (bluetoothGatt == null) {
+            Log.w(TAG, "BluetoothGatt not initialized");
+            return;
+        }
+        bluetoothGatt.writeCharacteristic(characteristic);
+    }
+
     private void broadcastUpdate(final String action) {
         Log.d(TAG, "Broadcast sent");
         final Intent intent = new Intent(action);
@@ -178,6 +199,7 @@ public class BleService extends Service {
     private void broadcastUpdate(final String action, final BluetoothGattCharacteristic characteristic) {
         Log.d(TAG, "Broadcast sent");
         final Intent intent = new Intent(action);
+        intent.putExtra("id", characteristic.getUuid().toString());
         intent.putExtra("value", characteristic.getStringValue(0));
         sendBroadcast(intent);
     }

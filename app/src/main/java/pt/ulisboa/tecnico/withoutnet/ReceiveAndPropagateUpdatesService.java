@@ -50,7 +50,9 @@ public class ReceiveAndPropagateUpdatesService extends Service {
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            bleService = ((BleService.LocalBinder) service).getService();
+            if(bleService == null) {
+                bleService = ((BleService.LocalBinder) service).getService();
+            }
             if (bleService != null) {
                 if (!bleService.initialize()) {
                     Log.e(TAG, "Unable to initialize Bluetooth");
@@ -136,39 +138,78 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
                 List<BluetoothGattService> gattServiceList = bleService.getSupportedGattServices();
 
-                BluetoothGattCharacteristic updateCharacteristic = null;
+                BluetoothGattCharacteristic readCharacteristic = null;
+                BluetoothGattCharacteristic writeCharacteristic = null;
+                BluetoothGattCharacteristic interestedSensorCharacteristic = null;
 
                 for (BluetoothGattService service : gattServiceList) {
                     Log.d(TAG, "GATT Service: " + service.getUuid().toString());
                     if (service.getUuid().toString().equals("b19fbebe-dbd4-11ed-afa1-0242ac120002")) {
                         List<BluetoothGattCharacteristic> updateCharacteristics = service.getCharacteristics();
                         for (BluetoothGattCharacteristic characteristic : updateCharacteristics) {
-                            Log.d(TAG, "GATT Characteristic:" + characteristic.getUuid());
+                            Log.d(TAG, "GATT Read Characteristic: " + characteristic.getUuid());
                         }
 
-                        updateCharacteristic = service
-                                .getCharacteristic(UUID.fromString("c6283536-dbd5-11ed-afa1-0242ac120002"));
+                        readCharacteristic = service
+                                .getCharacteristic(UUID.fromString(BleGattIDs.READ_UPDATE_CHARACTERISTIC_ID));
+
+                        writeCharacteristic = service
+                                .getCharacteristic(UUID.fromString(BleGattIDs.WRITE_UPDATE_CHARACTERISTIC_ID));
+
+                        interestedSensorCharacteristic = service
+                                .getCharacteristic(UUID.fromString(BleGattIDs.RELEVANT_NODE_CHARACTERISTIC_ID));
                     }
                 }
 
-                if(updateCharacteristic == null) {
-                    // TODO: Throw an exception here
-                    Log.d(TAG, "GATT Characteristic is null");
-                    return;
+                if(readCharacteristic != null) {
+                    Log.d(TAG, "Read characteristic is not null");
+                    bleService.readCharacteristic(readCharacteristic);
                 }
 
-                // Read the update characteristic
-                bleService.readCharacteristic(updateCharacteristic);
+                if(writeCharacteristic != null) {
+                    // Discover which sensors the actuator is interested in, and then write the most recent
+                    // cached update from that sensor
+                    Log.d(TAG, "Write characteristic is not null");
+
+                    if(interestedSensorCharacteristic != null) {
+                        bleService.setWriteUpdateCharacteristic(writeCharacteristic);
+                        bleService.readCharacteristic(interestedSensorCharacteristic);
+                    } else {
+                        // TODO: Throw exception
+                    }
+
+                    //bleService.writeCharacteristic(writeCharacteristic);
+                }
 
             } else if (BleService.ACTION_CHARACTERISTIC_READ.equals(action)) {
                 Log.d(TAG, "Characteristic Read");
 
-                String updateValue = intent.getStringExtra("value");
-                Log.d(TAG, "Characteristic value:" + updateValue);
+                String characteristicId = intent.getStringExtra("id");
 
-                Update update = new Update(updateValue);
+                if(characteristicId.equals(BleGattIDs.READ_UPDATE_CHARACTERISTIC_ID)) {
+                    String updateValue = intent.getStringExtra("value");
+                    Log.d(TAG, "Characteristic value:" + updateValue);
 
-                globalClass.addUpdate(update);
+                    Update update = new Update(updateValue);
+
+                    globalClass.addUpdate(update);
+                } else if(characteristicId.equals(BleGattIDs.RELEVANT_NODE_CHARACTERISTIC_ID)) {
+                    String relevantNodeValue = intent.getStringExtra("value");
+                    Log.d(TAG, "Characteristic value:" + relevantNodeValue);
+
+                    Node node = new Node(relevantNodeValue);
+
+                    Update updateToBeWritten = globalClass.getMostRecentUpdate(node);
+
+                    BluetoothGattCharacteristic writeUpdateCharacteristic = bleService.getWriteUpdateCharacteristic();
+
+                    writeUpdateCharacteristic.setValue(updateToBeWritten.toString());
+
+                    bleService.writeCharacteristic(writeUpdateCharacteristic);
+                } else {
+                    // TODO: Throw an exception
+                    Log.d(TAG, "Unknown characteristic id:" + characteristicId);
+                }
 
                 // Disconnect from node
                 final boolean result = bleService.disconnect();

@@ -37,6 +37,19 @@ public class Node {
         this.readingType = readingType;
     }
 
+    public Node(String relevantNodeValue) {
+        String[] relevantNodeValueComponents = relevantNodeValue.split("#");
+
+        if(relevantNodeValueComponents.length != 3) {
+            // TODO: Throw an exception
+            return;
+        }
+
+        this.setId(relevantNodeValueComponents[0]);
+        this.setCommonName(relevantNodeValueComponents[1]);
+        this.setReadingType(relevantNodeValueComponents[2]);
+    }
+
     public String getCommonName() {
         return this.commonName;
     }
@@ -72,6 +85,6 @@ public class Node {
     @NonNull
     @Override
     public String toString() {
-        return "" + this.getId() + " : " + this.getCommonName() + " : " + this.getReadingType();
+        return "" + this.getId() + "#" + this.getCommonName() + "#" + this.getReadingType();
     }
 }

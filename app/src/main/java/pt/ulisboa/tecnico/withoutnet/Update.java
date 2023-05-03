@@ -61,6 +61,6 @@ public class Update {
     @NonNull
     @Override
     public String toString() {
-        return "" + this.timestamp + " : " + this.sender + " : " + this.reading;
+        return "" + this.timestamp + "#" + this.sender + "#" + this.reading;
     }
 }
