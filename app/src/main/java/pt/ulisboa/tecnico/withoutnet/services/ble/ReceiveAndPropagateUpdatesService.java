@@ -2,6 +2,9 @@ package pt.ulisboa.tecnico.withoutnet.services.ble;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.Service;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -26,6 +29,7 @@ import androidx.core.app.ActivityCompat;
 import java.util.List;
 import java.util.UUID;
 
+import pt.ulisboa.tecnico.withoutnet.R;
 import pt.ulisboa.tecnico.withoutnet.constants.BleGattIDs;
 import pt.ulisboa.tecnico.withoutnet.utils.ble.BleScanner;
 import pt.ulisboa.tecnico.withoutnet.GlobalClass;
@@ -255,6 +259,34 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                 super.onScanFailed(errorCode);
             }
         };
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        this.initialize();
+
+        this.start();
+
+        final String CHANNELID = "Foreground Service ID";
+        NotificationChannel channel = new NotificationChannel(
+                CHANNELID,
+                CHANNELID,
+                NotificationManager.IMPORTANCE_LOW
+        );
+
+        getSystemService(NotificationManager.class).createNotificationChannel(channel);
+        Notification.Builder notification = new Notification.Builder(this, CHANNELID)
+                .setContentText("Service is running")
+                .setContentTitle("Service enabled")
+                .setSmallIcon(R.drawable.ic_launcher_background);
+
+        startForeground(1001, notification.build());
+        return super.onStartCommand(intent, flags, startId);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
     }
 
     @Nullable

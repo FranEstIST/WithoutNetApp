@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.work.WorkManager;
 import androidx.work.WorkRequest;
 
+import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -19,6 +20,7 @@ import pt.ulisboa.tecnico.withoutnet.activities.Debug.DebugActivity;
 import pt.ulisboa.tecnico.withoutnet.R;
 import pt.ulisboa.tecnico.withoutnet.databinding.ActivityMainBinding;
 import pt.ulisboa.tecnico.withoutnet.services.ble.ReceiveAndPropagateUpdatesService;
+import pt.ulisboa.tecnico.withoutnet.services.ble.TestService;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -26,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
     private boolean isParticipating;
+    private boolean testServiceIsOn;
     private ReceiveAndPropagateUpdatesService receiveAndPropagateUpdatesService;
 
     private ServiceConnection serviceConnection = new ServiceConnection() {
@@ -81,6 +84,8 @@ public class MainActivity extends AppCompatActivity {
 
         isParticipating = false;
 
+        testServiceIsOn = false;
+
         binding.debugButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -97,9 +102,46 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Intent receiveAndPropagateUpdatesServiceIntent = new Intent(this, ReceiveAndPropagateUpdatesService.class);
-        bindService(receiveAndPropagateUpdatesServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+        /*
+        //Intent receiveAndPropagateUpdatesServiceIntent = new Intent(this, ReceiveAndPropagateUpdatesService.class);
+        //bindService(receiveAndPropagateUpdatesServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+        */
 
-        Log.d(TAG, "Started service");
+        //Log.d(TAG, "Started service");
+
+
+
+        binding.startStopTestService.setOnClickListener(v -> {
+            Button button = (Button) v;
+
+            if(testServiceIsOn) {
+                testServiceIsOn = false;
+                button.setText(R.string.start_test_service);
+
+                if(isServiceRunning(TestService.class)) {
+                    Intent intent = new Intent(this, TestService.class);
+                    stopService(intent);
+                }
+            } else {
+                testServiceIsOn = true;
+                button.setText(R.string.stop_test_service);
+
+                if(!isServiceRunning(TestService.class)) {
+                    Intent intent = new Intent(this, TestService.class);
+                    startService(intent);
+                }
+            }
+
+        });
+    }
+
+    public boolean isServiceRunning(Class<?> cls){
+        ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for(ActivityManager.RunningServiceInfo service: activityManager.getRunningServices(Integer.MAX_VALUE)) {
+            if(cls.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -26,6 +26,9 @@
     <string name="Scan_for_nearby_nodes">Scan for nearby nodes (debug)</string>
     <string name="see_cached_updates">See cached updates</string>
 
+    <string name="start_test_service">Start test service</string>
+    <string name="stop_test_service">Stop test service</string>
+
     <string name="Connect">Connect</string>
     <string name="Disconnect">Disconnect</string>
     <string name="read_update">Read update</string>

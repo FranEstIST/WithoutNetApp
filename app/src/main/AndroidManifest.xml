@@ -24,6 +24,8 @@
     -->
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
 
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
     <application
         android:name=".GlobalClass"
         android:allowBackup="true"
@@ -61,6 +63,7 @@
 
         <service android:name=".services.ble.BleService" />
         <service android:name=".services.ble.ReceiveAndPropagateUpdatesService" />
+        <service android:name=".services.ble.TestService" />
     </application>
 
 </manifest>
