@@ -23,8 +23,7 @@ import pt.ulisboa.tecnico.withoutnet.services.ble.ReceiveAndPropagateUpdatesServ
 import pt.ulisboa.tecnico.withoutnet.services.ble.TestService;
 
 public class MainActivity extends AppCompatActivity {
-
-    private static final String TAG = "MainActivity2";
+    private static final String TAG = "MainActivity";
 
     private ActivityMainBinding binding;
     private boolean isParticipating;
@@ -39,8 +38,6 @@ public class MainActivity extends AppCompatActivity {
             receiveAndPropagateUpdatesService = ((ReceiveAndPropagateUpdatesService.LocalBinder) service).getService();
 
             if (receiveAndPropagateUpdatesService != null) {
-
-                receiveAndPropagateUpdatesService.initialize();
 
                 binding.startStopParticipatingButton.setOnClickListener(v -> {
                     Button button = (Button) v;
@@ -86,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
 
         testServiceIsOn = false;
 
+
         binding.debugButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -109,7 +107,28 @@ public class MainActivity extends AppCompatActivity {
 
         //Log.d(TAG, "Started service");
 
+        binding.startStopParticipatingButton.setOnClickListener(v -> {
+            Button button = (Button) v;
 
+            if(isParticipating) {
+                isParticipating = false;
+                button.setText(R.string.start_participating);
+
+                if(isServiceRunning(ReceiveAndPropagateUpdatesService.class)) {
+                    Intent intent = new Intent(this, ReceiveAndPropagateUpdatesService.class);
+                    stopService(intent);
+                }
+            } else {
+                isParticipating = true;
+                button.setText(R.string.stop_participating);
+
+                if(!isServiceRunning(ReceiveAndPropagateUpdatesService.class)) {
+                    Intent intent = new Intent(this, ReceiveAndPropagateUpdatesService.class);
+                    startService(intent);
+                }
+            }
+
+        });
 
         binding.startStopTestService.setOnClickListener(v -> {
             Button button = (Button) v;

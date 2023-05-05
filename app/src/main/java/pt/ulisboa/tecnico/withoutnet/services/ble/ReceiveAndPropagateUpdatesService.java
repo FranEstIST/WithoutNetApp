@@ -37,92 +37,75 @@ import pt.ulisboa.tecnico.withoutnet.models.Node;
 import pt.ulisboa.tecnico.withoutnet.models.Update;
 
 public class ReceiveAndPropagateUpdatesService extends Service {
+    private static final String TAG = "ReceiveAndPropagateUpdatesService";
+
     private static final long SCAN_PERIOD = 10000;
 
     private LocalBinder binder = new LocalBinder();
 
-    private Activity activity;
-
     private BleScanner scanner;
-    private ScanCallback scanCallback;
-
-    private static final String TAG = "ReceiveAndPropagateUpdatesService";
-
-    private boolean connected = false;
 
     private BleService bleService;
 
     private GlobalClass globalClass;
 
+    private boolean connected = false;
+
+    private ScanCallback scanCallback  = new ScanCallback() {
+        @Override
+        public void onScanResult(int callbackType, ScanResult result) {
+            super.onScanResult(callbackType, result);
+
+            BluetoothDevice device = result.getDevice();
+
+            if (Build.VERSION.SDK_INT >= 31
+                    && ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                return;
+            }
+
+            // Connect to node
+            final boolean connectResult = bleService.connect(device.getAddress());
+            Log.d(TAG, "Connect request result = " + connectResult);
+        }
+
+        @Override
+        public void onBatchScanResults(List<ScanResult> results) {
+            super.onBatchScanResults(results);
+        }
+
+        @Override
+        public void onScanFailed(int errorCode) {
+            super.onScanFailed(errorCode);
+        }
+    };
+
+
+
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            if(bleService == null) {
-                bleService = ((BleService.LocalBinder) service).getService();
-            }
+            bleService = ((BleService.LocalBinder) service).getService();
+
             if (bleService != null) {
                 if (!bleService.initialize()) {
                     Log.e(TAG, "Unable to initialize Bluetooth");
                     return;
                 }
 
-                ReceiveAndPropagateUpdatesService.this.scanCallback = new ScanCallback() {
-                    @Override
-                    public void onScanResult(int callbackType, ScanResult result) {
-                        super.onScanResult(callbackType, result);
-
-                        BluetoothDevice device = result.getDevice();
-
-                        if (Build.VERSION.SDK_INT >= 31
-                                && ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                            // TODO: Consider calling
-                            //    ActivityCompat#requestPermissions
-                            return;
-                        }
-
-                        // Connect to node
-                        final boolean connectResult = bleService.connect(device.getAddress());
-                        Log.d(TAG, "Connect request result = " + connectResult);
-                    }
-
-                    @Override
-                    public void onBatchScanResults(List<ScanResult> results) {
-                        super.onBatchScanResults(results);
-                    }
-
-                    @Override
-                    public void onScanFailed(int errorCode) {
-                        super.onScanFailed(errorCode);
-                    }
-                };
-
                 ReceiveAndPropagateUpdatesService.this.scanner.scan(SCAN_PERIOD, ReceiveAndPropagateUpdatesService.this.scanCallback);
 
+                Log.d(TAG, "bleService successfully initialized.");
+
             }
-            Log.d(TAG, "bleService is null.");
+            //Log.d(TAG, "bleService is null.");
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
             bleService = null;
             ReceiveAndPropagateUpdatesService.this.scanner.stopScanning();
-            /*ReceiveAndPropagateUpdatesService.this.scanCallback = new ScanCallback() {
-                @Override
-                public void onScanResult(int callbackType, ScanResult result) {
-                    super.onScanResult(callbackType, result);
-                    Log.d(TAG, "Found device but BleService is not yet initialized");
-                }
-
-                @Override
-                public void onBatchScanResults(List<ScanResult> results) {
-                    super.onBatchScanResults(results);
-                }
-
-                @Override
-                public void onScanFailed(int errorCode) {
-                    super.onScanFailed(errorCode);
-                }
-            };*/
         }
     };
 
@@ -237,37 +220,18 @@ public class ReceiveAndPropagateUpdatesService extends Service {
         return intentFilter;
     }
 
-    public void initialize() {
+    @Override
+    public void onCreate() {
+        super.onCreate();
         this.globalClass = (GlobalClass) getApplicationContext();
-
         this.scanner = new BleScanner(getApplicationContext());
-
-        this.scanCallback = new ScanCallback() {
-            @Override
-            public void onScanResult(int callbackType, ScanResult result) {
-                super.onScanResult(callbackType, result);
-                Log.d(TAG, "Found device but BleService is not yet initialized");
-            }
-
-            @Override
-            public void onBatchScanResults(List<ScanResult> results) {
-                super.onBatchScanResults(results);
-            }
-
-            @Override
-            public void onScanFailed(int errorCode) {
-                super.onScanFailed(errorCode);
-            }
-        };
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        this.initialize();
-
         this.start();
 
-        final String CHANNELID = "Foreground Service ID";
+        final String CHANNELID = TAG;
         NotificationChannel channel = new NotificationChannel(
                 CHANNELID,
                 CHANNELID,
@@ -276,16 +240,17 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
         getSystemService(NotificationManager.class).createNotificationChannel(channel);
         Notification.Builder notification = new Notification.Builder(this, CHANNELID)
-                .setContentText("Service is running")
-                .setContentTitle("Service enabled")
+                .setContentTitle(getApplicationContext().getString(R.string.withoutnet_participation_enabled))
+                .setContentText(getApplicationContext().getString(R.string.withoutnet_is_scanning_for_and_connecting_to_nodes))
                 .setSmallIcon(R.drawable.ic_launcher_background);
 
-        startForeground(1001, notification.build());
+        startForeground(123, notification.build());
         return super.onStartCommand(intent, flags, startId);
     }
 
     @Override
     public void onDestroy() {
+        this.stop();
         super.onDestroy();
     }
 
@@ -309,19 +274,16 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
     public boolean start() {
         registerReceiver(gattUpdateReceiver, makeGattUpdateIntentFilter());
-
         // TODO: Should the service be started instead of being bound to the context?
         Intent gattServiceIntent = new Intent(getApplicationContext(), BleService.class);
         getApplicationContext().bindService(gattServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
-
         return true;
     }
 
     public boolean stop() {
+        this.scanner.stopScanning();
         unregisterReceiver(gattUpdateReceiver);
-
         getApplicationContext().unbindService(serviceConnection);
-
         return true;
     }
 }

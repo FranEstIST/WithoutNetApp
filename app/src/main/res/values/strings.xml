@@ -44,4 +44,7 @@
     <string name="reading_type">Reading Type</string>
     <string name="reading_value">Reading Value</string>
 
+    <string name="withoutnet_participation_enabled">WithoutNet participation enabled</string>
+    <string name="withoutnet_is_scanning_for_and_connecting_to_nodes">WithoutNet is scanning for and connecting to nodes</string>
+
 </resources>

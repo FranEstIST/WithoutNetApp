@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.TimerTask;
 
 public class BleScanner {
+    private static final String TAG = "BleScanner";
+
     private Context context;
     private BluetoothLeScanner bluetoothLeScanner;
     private boolean scanning;
@@ -78,7 +80,7 @@ public class BleScanner {
 
         bluetoothLeScanner.startScan(filters, settings, scanCallback);
         //bluetoothLeScanner.startScan(leScanCallback);
-        Log.d("DEBUG", "Scanning for BLE devices...\n");
+        Log.d(TAG, "Scanning for BLE devices...\n");
         scanning = true;
 
         /*handler.postDelayed(new Runnable() {
@@ -94,7 +96,7 @@ public class BleScanner {
         TimerTask task = new TimerTask() {
             @SuppressLint("MissingPermission")
             public void run() {
-                Log.d("DEBUG", "Bluetooth scan stopping...\n");
+                Log.d(TAG, "Bluetooth scan stopping...\n");
                 bluetoothLeScanner.stopScan(scanCallback);
                 scanning = false;
             }
@@ -107,7 +109,7 @@ public class BleScanner {
 
     @SuppressLint("MissingPermission")
     public void stopScanning() {
-        Log.d("DEBUG", "Bluetooth scan stopping (manually)...\n");
+        Log.d(TAG, "Bluetooth scan stopping (manually)...\n");
         bluetoothLeScanner.stopScan(this.scanCallback);
         scanning = false;
     }
