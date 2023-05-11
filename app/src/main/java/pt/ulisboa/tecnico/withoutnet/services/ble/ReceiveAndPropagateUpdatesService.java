@@ -1,6 +1,7 @@
 package pt.ulisboa.tecnico.withoutnet.services.ble;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -26,7 +27,10 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
 
 import pt.ulisboa.tecnico.withoutnet.R;
@@ -41,6 +45,8 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
     private static final long SCAN_PERIOD = 10000;
 
+    private static final long CONNECTION_INTERVAL = 1000;
+
     private LocalBinder binder = new LocalBinder();
 
     private BleScanner scanner;
@@ -50,6 +56,8 @@ public class ReceiveAndPropagateUpdatesService extends Service {
     private GlobalClass globalClass;
 
     private boolean connected = false;
+
+    private HashMap<String, Long> lastConnectionTimesByAddress = new HashMap<>();
 
     private ScanCallback scanCallback  = new ScanCallback() {
         @Override
@@ -65,9 +73,23 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                 return;
             }
 
-            // Connect to node
-            final boolean connectResult = bleService.connect(device.getAddress());
-            Log.d(TAG, "Connect request result = " + connectResult);
+            // Stop scanning while a connection is ongoing
+            //ReceiveAndPropagateUpdatesService.this.scanner.stopScanning();
+
+            String address = device.getAddress();
+
+            Log.d(TAG, "Found ble device with address: " + address);
+
+            if(enoughTimeHasPassedSinceLastConnection(address)) {
+                // Connect to node
+                final boolean connectResult = bleService.connect(address);
+                Log.d(TAG, "Connect request result = " + connectResult);
+
+                ReceiveAndPropagateUpdatesService.this.lastConnectionTimesByAddress.put(address, System.currentTimeMillis());
+            } else {
+                Log.d(TAG, "Can't connect to a device because not enough time between connections has passed");
+            }
+
         }
 
         @Override
@@ -81,8 +103,6 @@ public class ReceiveAndPropagateUpdatesService extends Service {
         }
     };
 
-
-
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -94,7 +114,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                     return;
                 }
 
-                ReceiveAndPropagateUpdatesService.this.scanner.scan(SCAN_PERIOD, ReceiveAndPropagateUpdatesService.this.scanCallback);
+                ReceiveAndPropagateUpdatesService.this.scanner.scan();
 
                 Log.d(TAG, "bleService successfully initialized.");
 
@@ -105,7 +125,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
         @Override
         public void onServiceDisconnected(ComponentName name) {
             bleService = null;
-            ReceiveAndPropagateUpdatesService.this.scanner.stopScanning();
+            //ReceiveAndPropagateUpdatesService.this.scanner.stopScanning();
         }
     };
 
@@ -114,13 +134,17 @@ public class ReceiveAndPropagateUpdatesService extends Service {
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
 
-            Log.d(TAG, "Broadcast received");
-
             if (BleService.ACTION_GATT_CONNECTED.equals(action)) {
+                // Stop scanning while a connection is ongoing
+                // ReceiveAndPropagateUpdatesService.this.scanner.stopScanning();
+
                 connected = true;
                 Log.d(TAG, "Connected to node");
 
             } else if (BleService.ACTION_GATT_DISCONNECTED.equals(action)) {
+                // Resume scanning after a connection is closed
+                //ReceiveAndPropagateUpdatesService.this.scanner.scan();
+
                 connected = false;
                 Log.d(TAG, "Disconnected from node");
             } else if (BleService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
@@ -133,11 +157,11 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                 BluetoothGattCharacteristic interestedSensorCharacteristic = null;
 
                 for (BluetoothGattService service : gattServiceList) {
-                    Log.d(TAG, "GATT Service: " + service.getUuid().toString());
+                    //Log.d(TAG, "GATT Service: " + service.getUuid().toString());
                     if (service.getUuid().toString().equals("b19fbebe-dbd4-11ed-afa1-0242ac120002")) {
                         List<BluetoothGattCharacteristic> updateCharacteristics = service.getCharacteristics();
                         for (BluetoothGattCharacteristic characteristic : updateCharacteristics) {
-                            Log.d(TAG, "GATT Read Characteristic: " + characteristic.getUuid());
+                            //Log.d(TAG, "GATT Read Characteristic: " + characteristic.getUuid());
                         }
 
                         readCharacteristic = service
@@ -152,14 +176,14 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                 }
 
                 if(readCharacteristic != null) {
-                    Log.d(TAG, "Read characteristic is not null");
+                    //Log.d(TAG, "Read characteristic is not null");
                     bleService.readCharacteristic(readCharacteristic);
                 }
 
                 if(writeCharacteristic != null) {
                     // Discover which sensors the actuator is interested in, and then write the most recent
                     // cached update from that sensor
-                    Log.d(TAG, "Write characteristic is not null");
+                    //Log.d(TAG, "Write characteristic is not null");
 
                     if(interestedSensorCharacteristic != null) {
                         bleService.setWriteUpdateCharacteristic(writeCharacteristic);
@@ -191,11 +215,13 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
                     Update updateToBeWritten = globalClass.getMostRecentUpdate(node);
 
-                    BluetoothGattCharacteristic writeUpdateCharacteristic = bleService.getWriteUpdateCharacteristic();
+                    if (updateToBeWritten != null) {
+                        BluetoothGattCharacteristic writeUpdateCharacteristic = bleService.getWriteUpdateCharacteristic();
+                        writeUpdateCharacteristic.setValue(updateToBeWritten.toString());
+                        bleService.writeCharacteristic(writeUpdateCharacteristic);
 
-                    writeUpdateCharacteristic.setValue(updateToBeWritten.toString());
-
-                    bleService.writeCharacteristic(writeUpdateCharacteristic);
+                        return;
+                    }
                 } else {
                     // TODO: Throw an exception
                     Log.d(TAG, "Unknown characteristic id:" + characteristicId);
@@ -205,6 +231,10 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                 final boolean result = bleService.disconnect();
                 Log.d(TAG, "Disconnect request result = " + result);
 
+            } else if (BleService.ACTION_CHARACTERISTIC_WRITTEN.equals(action)) {
+                // Disconnect from node
+                final boolean result = bleService.disconnect();
+                Log.d(TAG, "Disconnect request result = " + result);
             } else {
                 Log.d(TAG, "Unknown action received by broadcast receiver");
             }
@@ -217,6 +247,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
         intentFilter.addAction(BleService.ACTION_GATT_DISCONNECTED);
         intentFilter.addAction(BleService.ACTION_GATT_SERVICES_DISCOVERED);
         intentFilter.addAction(BleService.ACTION_CHARACTERISTIC_READ);
+        intentFilter.addAction(BleService.ACTION_CHARACTERISTIC_WRITTEN);
         return intentFilter;
     }
 
@@ -224,7 +255,26 @@ public class ReceiveAndPropagateUpdatesService extends Service {
     public void onCreate() {
         super.onCreate();
         this.globalClass = (GlobalClass) getApplicationContext();
-        this.scanner = new BleScanner(getApplicationContext());
+        this.scanner = new BleScanner(getApplicationContext(), this.scanCallback, SCAN_PERIOD);
+        /*handler.postDelayed(new Runnable() {
+            @SuppressLint("MissingPermission")
+            @Override
+            public void run() {
+                Log.d("DEBUG", "Bluetooth scan stopping...\n");
+                bluetoothLeScanner.stopScan(scanCallback);
+                scanning = false;
+            }
+        }, scanPeriod);*/
+
+        /*TimerTask task = new TimerTask() {
+            @SuppressLint("MissingPermission")
+            public void run() {
+                ReceiveAndPropagateUpdatesService.this.scanner.stopScanning();
+            }
+        };
+
+        Timer timer = new Timer("Timer");
+        timer.scheduleAtFixedRate(task, SCAN_PERIOD, SCAN_PERIOD);*/
     }
 
     @Override
@@ -281,9 +331,19 @@ public class ReceiveAndPropagateUpdatesService extends Service {
     }
 
     public boolean stop() {
-        this.scanner.stopScanning();
+        this.scanner.stopScanningDefinitely();
         unregisterReceiver(gattUpdateReceiver);
         getApplicationContext().unbindService(serviceConnection);
         return true;
+    }
+
+    private boolean enoughTimeHasPassedSinceLastConnection(String address) {
+        Long lastConnectionTime = this.lastConnectionTimesByAddress.get(address);
+
+        if(lastConnectionTime == null) {
+            return true;
+        }
+
+        return (System.currentTimeMillis() - lastConnectionTime) >= CONNECTION_INTERVAL;
     }
 }

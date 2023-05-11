@@ -17,7 +17,10 @@ import android.util.Log;
 import androidx.core.app.ActivityCompat;
 
 import java.util.ArrayList;
+import java.util.Timer;
 import java.util.TimerTask;
+
+import pt.ulisboa.tecnico.withoutnet.services.ble.ReceiveAndPropagateUpdatesService;
 
 public class BleScanner {
     private static final String TAG = "BleScanner";
@@ -26,20 +29,21 @@ public class BleScanner {
     private BluetoothLeScanner bluetoothLeScanner;
     private boolean scanning;
     private ScanCallback scanCallback;
-    //private Handler handler;
+    private long scanPeriod;
 
-    public BleScanner(Context context) {
+    public BleScanner(Context context, ScanCallback scanCallback, long scanPeriod) {
         this.context = context;
+        this.scanCallback = scanCallback;
         this.scanning = false;
+        this.scanPeriod = scanPeriod;
 
         BluetoothManager bluetoothManager = this.context.getSystemService(BluetoothManager.class);
         BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
         bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
-        //this.handler = new Handler();
     }
 
     // TODO: Is scan required to be synchronized?
-    public synchronized void scan(long scanPeriod, ScanCallback scanCallback) {
+    public synchronized void scan() {
         if (Build.VERSION.SDK_INT >= 31
                 && ActivityCompat.checkSelfPermission(this.context, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
@@ -58,9 +62,7 @@ public class BleScanner {
             return;
         }
 
-        this.scanCallback = scanCallback;
-
-        ScanSettings settings = new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build();
+        ScanSettings settings = new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_POWER).build();
         ArrayList<ScanFilter> filters = new ArrayList();
 
         ScanFilter filter = new ScanFilter
@@ -79,36 +81,40 @@ public class BleScanner {
         }
 
         bluetoothLeScanner.startScan(filters, settings, scanCallback);
-        //bluetoothLeScanner.startScan(leScanCallback);
         Log.d(TAG, "Scanning for BLE devices...\n");
         scanning = true;
-
-        /*handler.postDelayed(new Runnable() {
-            @SuppressLint("MissingPermission")
-            @Override
-            public void run() {
-                Log.d("DEBUG", "Bluetooth scan stopping...\n");
-                bluetoothLeScanner.stopScan(scanCallback);
-                scanning = false;
-            }
-        }, scanPeriod);*/
 
         TimerTask task = new TimerTask() {
             @SuppressLint("MissingPermission")
             public void run() {
-                Log.d(TAG, "Bluetooth scan stopping...\n");
-                bluetoothLeScanner.stopScan(scanCallback);
-                scanning = false;
+                BleScanner.this.stopScanning();
             }
         };
 
-        /*Timer timer = new Timer("Timer");
-        timer.schedule(task, scanPeriod);*/
+        Timer timer = new Timer("Timer");
+        timer.schedule(task, this.scanPeriod);
 
     }
 
     @SuppressLint("MissingPermission")
     public void stopScanning() {
+        Log.d(TAG, "Bluetooth scan stopping (manually)...\n");
+        bluetoothLeScanner.stopScan(this.scanCallback);
+        scanning = false;
+
+        TimerTask task = new TimerTask() {
+            @SuppressLint("MissingPermission")
+            public void run() {
+                BleScanner.this.scan();
+            }
+        };
+
+        Timer timer = new Timer("Timer");
+        timer.schedule(task, this.scanPeriod);
+    }
+
+    @SuppressLint("MissingPermission")
+    public void stopScanningDefinitely() {
         Log.d(TAG, "Bluetooth scan stopping (manually)...\n");
         bluetoothLeScanner.stopScan(this.scanCallback);
         scanning = false;

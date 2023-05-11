@@ -14,11 +14,24 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.PriorityQueue;
+import java.util.Queue;
+import java.util.Timer;
+import java.util.TimerTask;
+
+import pt.ulisboa.tecnico.withoutnet.utils.ble.BleScanner;
 
 public class BleService extends Service {
+    // Connections can last at most 10s
+    private static final long CONNECTION_TIMEOUT = 10000;
 
     private Binder binder = new LocalBinder();
     private BluetoothAdapter bluetoothAdapter;
@@ -33,6 +46,8 @@ public class BleService extends Service {
             "com.example.bluetooth.le.ACTION_GATT_SERVICES_DISCOVERED";
     public final static String ACTION_CHARACTERISTIC_READ =
             "com.example.bluetooth.le.ACTION_CHARACTERISTIC_READ";
+    public final static String ACTION_CHARACTERISTIC_WRITTEN =
+            "com.example.bluetooth.le.ACTION_CHARACTERISTIC_WRITTEN";
 
     private static final int STATE_DISCONNECTED = 0;
     private static final int STATE_CONNECTED = 2;
@@ -41,10 +56,16 @@ public class BleService extends Service {
 
     private int connectionState;
 
+    private boolean hasAttemptedToConnect = false;
+
     private String currentConnectionAddress = null;
 
     // TODO: There might be a better way to store this variable
     private BluetoothGattCharacteristic writeUpdateCharacteristic = null;
+
+    private Queue<String> addressQueue = new LinkedList<>();
+
+    Timer connectionTimeoutTimer = new Timer("connectionTimeoutTimer");
 
     private final BluetoothGattCallback bluetoothGattCallback = new BluetoothGattCallback() {
         // TODO: Check if the necessary permissions have been granted
@@ -63,6 +84,16 @@ public class BleService extends Service {
                 connectionState = STATE_DISCONNECTED;
                 Log.d(TAG, "Disconnected from node");
                 broadcastUpdate(ACTION_GATT_DISCONNECTED);
+
+                //BleService.this.close();
+
+                //BleService.this.hasAttemptedToConnect = false;
+
+                String nextAddress = addressQueue.poll();
+
+                if(nextAddress != null) {
+                    BleService.this.connect(nextAddress);
+                }
             }
         }
 
@@ -92,7 +123,13 @@ public class BleService extends Service {
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicWrite(gatt, characteristic, status);
-            Log.d(TAG, characteristic.getStringValue(0));
+            Log.w(TAG, "onCharacteristicWrite received: " + status);
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                broadcastUpdate(ACTION_CHARACTERISTIC_WRITTEN, characteristic);
+            } else {
+                // TODO
+            }
+
         }
     };
 
@@ -118,6 +155,10 @@ public class BleService extends Service {
         return true;
     }
 
+    /*private boolean isConnected(final String address) {
+        bluetoothAdapter.getBondedDevices()
+    }*/
+
     // TODO: Check if permission is granted
     @SuppressLint("MissingPermission")
     public boolean connect(final String address) {
@@ -125,10 +166,29 @@ public class BleService extends Service {
             Log.w(TAG, "BluetoothAdapter not initialized or unspecified address.");
             return false;
         }
-        if(connectionState == STATE_CONNECTED) {
+
+        /*if(connectionState == STATE_CONNECTED) {
             Log.w(TAG, "Already connected to a node.");
+            addressQueue.add(address);
+            return false;
+        }*/
+
+        if(hasAttemptedToConnect) {
+            addressQueue.add(address);
             return false;
         }
+
+        hasAttemptedToConnect = true;
+
+        TimerTask task = new TimerTask() {
+            public void run() {
+                BleService.this.disconnect();
+            }
+        };
+
+        this.connectionTimeoutTimer = new Timer("connectionTimeoutTimer");
+        this.connectionTimeoutTimer.schedule(task, CONNECTION_TIMEOUT);
+
         try {
             final BluetoothDevice device = bluetoothAdapter.getRemoteDevice(address);
             // connect to the GATT server on the device
@@ -140,8 +200,12 @@ public class BleService extends Service {
         }
     }
 
+    // TODO: Should this method really be synchronized?
     @SuppressLint("MissingPermission")
-    public boolean disconnect() {
+    public synchronized boolean disconnect() {
+        this.hasAttemptedToConnect = false;
+        this.connectionTimeoutTimer.cancel();
+
         if(bluetoothGatt == null) {
             Log.d(TAG, "BLGATT is null.");
         }
@@ -154,6 +218,8 @@ public class BleService extends Service {
             return false;
         }
         bluetoothGatt.disconnect();
+        bluetoothGatt.close();
+
         return true;
     }
 
@@ -191,13 +257,11 @@ public class BleService extends Service {
     }
 
     private void broadcastUpdate(final String action) {
-        Log.d(TAG, "Broadcast sent");
         final Intent intent = new Intent(action);
         sendBroadcast(intent);
     }
 
     private void broadcastUpdate(final String action, final BluetoothGattCharacteristic characteristic) {
-        Log.d(TAG, "Broadcast sent");
         final Intent intent = new Intent(action);
         intent.putExtra("id", characteristic.getUuid().toString());
         intent.putExtra("value", characteristic.getStringValue(0));
@@ -213,6 +277,8 @@ public class BleService extends Service {
     // TODO: Check if permission is granted
     @SuppressLint("MissingPermission")
     private void close() {
+        this.connectionTimeoutTimer.cancel();
+
         if (bluetoothGatt == null) {
             return;
         }

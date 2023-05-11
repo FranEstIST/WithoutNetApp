@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothDevice;
 import android.content.pm.PackageManager;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 
 import java.util.Arrays;
@@ -86,5 +87,23 @@ public class Node {
     @Override
     public String toString() {
         return "" + this.getId() + "#" + this.getCommonName() + "#" + this.getReadingType();
+    }
+
+    @Override
+    public boolean equals(@Nullable Object obj) {
+        if(obj != null && obj instanceof Node) {
+            Node node = (Node) obj;
+            return node.getId().equals(this.getId())
+                    && node.getCommonName().equals(this.getCommonName())
+                    && node.getReadingType().equals(this.getReadingType());
+        }
+
+        return false;
+    }
+
+    // TODO: Check if this method is correctly overridden
+    @Override
+    public int hashCode() {
+        return (this.getId()+this.getCommonName()+this.getReadingType()).hashCode();
     }
 }

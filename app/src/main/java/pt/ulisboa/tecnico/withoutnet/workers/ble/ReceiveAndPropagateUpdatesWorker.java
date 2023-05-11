@@ -130,8 +130,6 @@ public class ReceiveAndPropagateUpdatesWorker extends Worker {
 
         this.globalClass = (GlobalClass) getApplicationContext();
 
-        this.scanner = new BleScanner(getApplicationContext());
-
         this.scanCallback = new ScanCallback() {
             @Override
             public void onScanResult(int callbackType, ScanResult result) {
@@ -162,6 +160,8 @@ public class ReceiveAndPropagateUpdatesWorker extends Worker {
             }
         };
 
+        this.scanner = new BleScanner(getApplicationContext(), this.scanCallback, SCAN_PERIOD);
+
         getApplicationContext().registerReceiver(gattUpdateReceiver, makeGattUpdateIntentFilter());
 
         /*Intent gattServiceIntent = new Intent(getApplicationContext(), BleService.class);
@@ -184,7 +184,7 @@ public class ReceiveAndPropagateUpdatesWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-        this.scanner.scan(SCAN_PERIOD, this.scanCallback);
+        this.scanner.scan();
 
         synchronized (this.scanner) {
             try {
