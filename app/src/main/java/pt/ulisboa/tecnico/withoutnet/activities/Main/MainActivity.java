@@ -11,19 +11,25 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
+import pt.ulisboa.tecnico.withoutnet.GlobalClass;
 import pt.ulisboa.tecnico.withoutnet.activities.Debug.CachedUpdatesActivity;
 import pt.ulisboa.tecnico.withoutnet.activities.Debug.DebugActivity;
 import pt.ulisboa.tecnico.withoutnet.R;
 import pt.ulisboa.tecnico.withoutnet.databinding.ActivityMainBinding;
+import pt.ulisboa.tecnico.withoutnet.models.Node;
+import pt.ulisboa.tecnico.withoutnet.models.Update;
 import pt.ulisboa.tecnico.withoutnet.services.ble.ReceiveAndPropagateUpdatesService;
 import pt.ulisboa.tecnico.withoutnet.services.ble.TestService;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
+
+    private GlobalClass globalClass;
 
     private ActivityMainBinding binding;
     private boolean isParticipating;
@@ -75,6 +81,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         //setContentView(R.layout.activity_main2);
         WorkManager.getInstance(getApplicationContext()).cancelAllWork();
+
+        globalClass = (GlobalClass) getApplicationContext();
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -151,6 +159,31 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
+        });
+
+        binding.uploadUpdatesButton.setOnClickListener(v -> {
+            new Thread(() -> {
+                GlobalClass globalClass = MainActivity.this.globalClass;
+                for (Node node : globalClass.getAllUpdates().keySet()) {
+                    int status = globalClass.getFrontend().sendUpdateToServer(globalClass.getMostRecentUpdate(node));
+                    Log.d(TAG, "Upload updates status: " + status);
+                }
+            }).start();
+        });
+
+        binding.downloadUpdatesButton.setOnClickListener(v -> {
+            new Thread(() -> {
+                GlobalClass globalClass = MainActivity.this.globalClass;
+                for (Node node : globalClass.getAllUpdates().keySet()) {
+                    Update update = globalClass.getFrontend().getMostRecentUpdateByNodeFromServer(node);
+                    if(update != null) {
+                        globalClass.addUpdate(update);
+                        Log.d(TAG, "Downloaded update from server: " + update);
+                    } else {
+                        Log.d(TAG, "No update was found on the server for node: " + node);
+                    }
+                }
+            }).start();
         });
     }
 

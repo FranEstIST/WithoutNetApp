@@ -60,8 +60,10 @@ public class BleService extends Service {
 
     private String currentConnectionAddress = null;
 
-    // TODO: There might be a better way to store this variable
+    // TODO: There might be a better way to store these variables
     private BluetoothGattCharacteristic writeUpdateCharacteristic = null;
+    private BluetoothGattCharacteristic incomingMessageCharacteristic = null;
+    private BluetoothGattCharacteristic outgoingMessageCharacteristic = null;
 
     private Queue<String> addressQueue = new LinkedList<>();
 
@@ -242,8 +244,24 @@ public class BleService extends Service {
         return writeUpdateCharacteristic;
     }
 
+    public BluetoothGattCharacteristic getIncomingMessageCharacteristic() {
+        return incomingMessageCharacteristic;
+    }
+
+    public BluetoothGattCharacteristic getOutgoingMessageCharacteristic() {
+        return outgoingMessageCharacteristic;
+    }
+
     public void setWriteUpdateCharacteristic(BluetoothGattCharacteristic writeUpdateCharacteristic) {
         this.writeUpdateCharacteristic = writeUpdateCharacteristic;
+    }
+
+    public void setIncomingMessageCharacteristic(BluetoothGattCharacteristic incomingMessageCharacteristic) {
+        this.incomingMessageCharacteristic = incomingMessageCharacteristic;
+    }
+
+    public void setOutgoingMessageCharacteristic(BluetoothGattCharacteristic outgoingMessageCharacteristic) {
+        this.outgoingMessageCharacteristic = outgoingMessageCharacteristic;
     }
 
     // TODO: Check if user has granted the necessary permissions

@@ -20,14 +20,20 @@
     <string name="login_failed">"Login failed"</string>
     <string name="continue_as_a_regular_user">Continue as a regular user</string>
     <string name="withoutnet">WithoutNet</string>
-    <string name="start_participating">Start participating</string>
-    <string name="stop_participating">Stop participating</string>
+
     <string name="available_nodes">Available nodes:</string>
+
     <string name="Scan_for_nearby_nodes">Scan for nearby nodes (debug)</string>
     <string name="see_cached_updates">See cached updates</string>
 
     <string name="start_test_service">Start test service</string>
     <string name="stop_test_service">Stop test service</string>
+
+    <string name="start_participating">Start participating</string>
+    <string name="stop_participating">Stop participating</string>
+
+    <string name="upload_updates">Upload updates</string>
+    <string name="download_updates">Download updates</string>
 
     <string name="Connect">Connect</string>
     <string name="Disconnect">Disconnect</string>
