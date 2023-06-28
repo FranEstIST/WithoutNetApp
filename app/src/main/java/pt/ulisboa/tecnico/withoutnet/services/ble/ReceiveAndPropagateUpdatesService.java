@@ -167,7 +167,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                     if (service.getUuid().toString().equals("b19fbebe-dbd4-11ed-afa1-0242ac120002")) {
                         List<BluetoothGattCharacteristic> updateCharacteristics = service.getCharacteristics();
                         for (BluetoothGattCharacteristic characteristic : updateCharacteristics) {
-                            //Log.d(TAG, "GATT Read Characteristic: " + characteristic.getUuid());
+                            Log.d(TAG, "GATT Read Characteristic: " + characteristic.getUuid());
                         }
 
                         nodeUuidCharacteristic = service
@@ -192,87 +192,52 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                     //  the incoming and outgoing message characteristics to be set at the ble service?
                     bleService.setIncomingMessageCharacteristic(incomingMessageCharacteristic);
                     bleService.setOutgoingMessageCharacteristic(outgoingMessageCharacteristic);
+                    // TODO: Why isn't this characteristic being read alongside with the one above?
                     bleService.readCharacteristic(nodeUuidCharacteristic);
                     bleService.readCharacteristic(outgoingMessageCharacteristic);
                 } else {
                     // Error
+                    Log.d(TAG, "Protocol error: Expected characteristics not present in node");
                 }
-
-                /*if(readCharacteristic != null) {
-                    //Log.d(TAG, "Read characteristic is not null");
-                    bleService.readCharacteristic(readCharacteristic);
-                }
-
-                if(writeCharacteristic != null) {
-                    // Discover which sensors the actuator is interested in, and then write the most recent
-                    // cached update from that sensor
-                    //Log.d(TAG, "Write characteristic is not null");
-
-                    if(interestedSensorCharacteristic != null) {
-                        bleService.setWriteUpdateCharacteristic(writeCharacteristic);
-                        bleService.readCharacteristic(interestedSensorCharacteristic);
-                    } else {
-                        // TODO: Throw exception
-                    }
-
-                    //bleService.writeCharacteristic(writeCharacteristic);
-                }*/
-
             } else if (BleService.ACTION_CHARACTERISTIC_READ.equals(action)) {
-                Log.d(TAG, "Characteristic Read");
+                Log.d(TAG, "Characteristic read");
 
                 String characteristicId = intent.getStringExtra("id");
 
-                if(characteristicId.equals(BleGattIDs.READ_UPDATE_CHARACTERISTIC_ID)) {
-                    String updateValue = intent.getStringExtra("value");
-                    Log.d(TAG, "Characteristic value:" + updateValue);
+                if(characteristicId.equals(BleGattIDs.NODE_UUID_CHARACTERISTIC_ID)) {
+                    Log.d(TAG, "Node UUID read");
 
-                    Update update = new Update(updateValue);
-
-                    globalClass.addUpdate(update);
-
-                    if(updateValue.equals("")) {
-                        // Disconnect from node
-                        final boolean result = bleService.disconnect();
-                        Log.d(TAG, "Disconnect request result = " + result);
-                    }
-                } else if(characteristicId.equals(BleGattIDs.RELEVANT_NODE_CHARACTERISTIC_ID)) {
-                    String relevantNodeValue = intent.getStringExtra("value");
-                    Log.d(TAG, "Characteristic value:" + relevantNodeValue);
-
-                    Node node = new Node(relevantNodeValue);
-
-                    Update updateToBeWritten = globalClass.getMostRecentUpdate(node);
-
-                    if (updateToBeWritten != null) {
-                        BluetoothGattCharacteristic writeUpdateCharacteristic = bleService.getWriteUpdateCharacteristic();
-                        writeUpdateCharacteristic.setValue(updateToBeWritten.toString());
-                        bleService.writeCharacteristic(writeUpdateCharacteristic);
-
-                        return;
-                    }
-                } else if(characteristicId.equals(BleGattIDs.NODE_UUID_CHARACTERISTIC_ID)) {
                     String nodeUuid = intent.getStringExtra("value");
-                    Log.d(TAG, "Characteristic value:" + nodeUuid);
+
+                    Log.d(TAG, "Node UUID: " + nodeUuid);
 
                     bleService.setCurrentNodeUuid(nodeUuid);
 
                     writeNextMessage();
                 } else if(characteristicId.equals(BleGattIDs.OUTGOING_MESSAGE_CHARACTERISTIC_ID)) {
+                    Log.d(TAG, "Message read");
+
                     String messageString = intent.getStringExtra("value");
 
+                    Log.d(TAG, "Message: " + messageString);
+
                     if(messageString.equals("")) {
+                        Log.d(TAG, "No more messages to be read from node");
+
                         // All pending messages have been read
                         // If all messages meant for the node have been written, then
                         // disconnect from the node
-                        allOutgoingMessagesRead = true;
+                        //allOutgoingMessagesRead = true;
 
-                        if(allIncomingMessagesWritten) {
+                        //if(allIncomingMessagesWritten) {
+                            Log.d(TAG, "Session with node complete. Disconnecting...");
+
                             final boolean result = bleService.disconnect();
                             Log.d(TAG, "Disconnect request result = " + result);
-                            allIncomingMessagesWritten = false;
-                            allOutgoingMessagesRead = false;
-                        }
+
+                            //allIncomingMessagesWritten = false;
+                            //allOutgoingMessagesRead = false;
+                        //}
                     }
 
                     // Add the current message to the cache
@@ -309,25 +274,35 @@ public class ReceiveAndPropagateUpdatesService extends Service {
             // "Pop" a message from this set
             Message message = messagesToBeWritten.first();
             incomingMessageCharacteristic.setValue(message.toString());
-            bleService.writeCharacteristic(incomingMessageCharacteristic);
-            messagesToBeWritten.remove(incomingMessageCharacteristic);
 
-                        /*for(Message message : messagesToBeWritten) {
-                            incomingMessageCharacteristic.setValue(message.toString());
-                            bleService.writeCharacteristic(incomingMessageCharacteristic);
-                        }*/
+            Log.d(TAG, "Next message to be written to node: " + message.toString());
+
+            bleService.writeCharacteristic(incomingMessageCharacteristic);
+            messagesToBeWritten.remove(message);
+
             return;
         }
 
-        allIncomingMessagesWritten = true;
+        Log.d(TAG, "No more messages to be written to node");
 
-        if(allOutgoingMessagesRead) {
+        // All messages meant for the node have been written
+        // Time to read the node's pending messages
+        BluetoothGattCharacteristic outgoingMessageCharacteristic = bleService.getOutgoingMessageCharacteristic();
+        bleService.readCharacteristic(outgoingMessageCharacteristic);
+
+        //allIncomingMessagesWritten = true;
+
+
+        /*if(allOutgoingMessagesRead) {
+            Log.d(TAG, "Session with node complete. Disconnecting...");
+
             // Disconnect from node
             final boolean result = bleService.disconnect();
             Log.d(TAG, "Disconnect request result = " + result);
+
             allIncomingMessagesWritten = false;
             allOutgoingMessagesRead = false;
-        }
+        }*/
     }
 
     private static IntentFilter makeGattUpdateIntentFilter() {

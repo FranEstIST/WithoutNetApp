@@ -69,13 +69,13 @@ public class GlobalClass extends Application {
 
     // TODO
     public void addMessage(Message message) {
-        String sender = message.getSender();
+        String receiver = message.getReceiver();
 
-        if(!this.messagesByReceiver.containsKey(sender)) {
-            this.messagesByReceiver.put(sender, new TreeSet<Message>(new MessageTimestampComparator()));
+        if(!this.messagesByReceiver.containsKey(receiver)) {
+            this.messagesByReceiver.put(receiver, new TreeSet<Message>(new MessageTimestampComparator()));
         }
 
-        this.messagesByReceiver.get(sender).add(message);
+        this.messagesByReceiver.get(receiver).add(message);
     }
 
     //public void getUpdate

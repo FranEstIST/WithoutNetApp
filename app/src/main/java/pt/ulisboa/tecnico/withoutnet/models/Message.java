@@ -97,7 +97,7 @@ public class Message {
     @Override
     public String toString() {
         return "" + this.id
-                + "#" + this.messageType
+                + "#" + this.messageType.ordinal()
                 + "#" + this.timestamp
                 + "#" + this.sender
                 + "#" + this.receiver
