@@ -69,6 +69,8 @@ public class BleService extends Service {
 
     Timer connectionTimeoutTimer = new Timer("connectionTimeoutTimer");
 
+    private String currentNodeUuid = "";
+
     private final BluetoothGattCallback bluetoothGattCallback = new BluetoothGattCallback() {
         // TODO: Check if the necessary permissions have been granted
         @SuppressLint("MissingPermission")
@@ -252,6 +254,10 @@ public class BleService extends Service {
         return outgoingMessageCharacteristic;
     }
 
+    public String getCurrentNodeUuid() {
+        return currentNodeUuid;
+    }
+
     public void setWriteUpdateCharacteristic(BluetoothGattCharacteristic writeUpdateCharacteristic) {
         this.writeUpdateCharacteristic = writeUpdateCharacteristic;
     }
@@ -262,6 +268,10 @@ public class BleService extends Service {
 
     public void setOutgoingMessageCharacteristic(BluetoothGattCharacteristic outgoingMessageCharacteristic) {
         this.outgoingMessageCharacteristic = outgoingMessageCharacteristic;
+    }
+
+    public void setCurrentNodeUuid(String currentNodeUuid) {
+        this.currentNodeUuid = currentNodeUuid;
     }
 
     // TODO: Check if user has granted the necessary permissions
