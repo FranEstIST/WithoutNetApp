@@ -71,6 +71,10 @@ public class BleService extends Service {
 
     private String currentNodeUuid = "";
 
+    private boolean mtuSet = false;
+
+    private Runnable ongoingOperation;
+
     private final BluetoothGattCallback bluetoothGattCallback = new BluetoothGattCallback() {
         // TODO: Check if the necessary permissions have been granted
         @SuppressLint("MissingPermission")
@@ -134,6 +138,16 @@ public class BleService extends Service {
                 // TODO
             }
 
+        }
+
+        @Override
+        public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
+            super.onMtuChanged(gatt, mtu, status);
+
+            Log.d(TAG, "MTU set to " + mtu);
+
+            mtuSet = true;
+            ongoingOperation.run();
         }
     };
 
@@ -224,6 +238,8 @@ public class BleService extends Service {
         bluetoothGatt.disconnect();
         bluetoothGatt.close();
 
+        mtuSet = false;
+
         return true;
     }
 
@@ -239,6 +255,20 @@ public class BleService extends Service {
             Log.w(TAG, "BluetoothGatt not initialized");
             return;
         }
+
+        if(!mtuSet) {
+            ongoingOperation = new Runnable() {
+                @Override
+                public void run() {
+                    readCharacteristic(characteristic);
+                }
+            };
+
+            bluetoothGatt.requestMtu(200);
+
+            return;
+        }
+
         bluetoothGatt.readCharacteristic(characteristic);
     }
 

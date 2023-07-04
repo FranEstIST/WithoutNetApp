@@ -221,7 +221,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
                     Log.d(TAG, "Message: " + messageString);
 
-                    if(messageString.equals("")) {
+                    if(messageString.equals("0")) {
                         Log.d(TAG, "No more messages to be read from node");
 
                         // All pending messages have been read
@@ -238,6 +238,8 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                             //allIncomingMessagesWritten = false;
                             //allOutgoingMessagesRead = false;
                         //}
+
+                        return;
                     }
 
                     // Add the current message to the cache

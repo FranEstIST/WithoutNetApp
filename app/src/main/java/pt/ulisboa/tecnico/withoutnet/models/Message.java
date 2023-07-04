@@ -1,5 +1,7 @@
 package pt.ulisboa.tecnico.withoutnet.models;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
 public class Message {
@@ -38,6 +40,10 @@ public class Message {
             this.timestamp = Long.valueOf(messageStringComponents[2]);
         } catch (NumberFormatException e) {
             //TODO: Throw an exception here
+            e.printStackTrace();
+        } catch (ArrayIndexOutOfBoundsException e1) {
+            //TODO: Throw an exception here
+            e1.printStackTrace();
         }
 
         this.sender = messageStringComponents[3];
