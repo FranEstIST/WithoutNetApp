@@ -194,7 +194,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                     bleService.setOutgoingMessageCharacteristic(outgoingMessageCharacteristic);
                     // TODO: Why isn't this characteristic being read alongside with the one above?
                     bleService.readCharacteristic(nodeUuidCharacteristic);
-                    bleService.readCharacteristic(outgoingMessageCharacteristic);
+                    //bleService.readCharacteristic(outgoingMessageCharacteristic);
                 } else {
                     // Error
                     Log.d(TAG, "Protocol error: Expected characteristics not present in node");
@@ -276,8 +276,11 @@ public class ReceiveAndPropagateUpdatesService extends Service {
             // "Pop" a message from this set
             Message message = messagesToBeWritten.first();
             incomingMessageCharacteristic.setValue(message.toString());
+            //incomingMessageCharacteristic.setValue("12345678901111111111111111111111111111111111111111111111111");
 
             Log.d(TAG, "Next message to be written to node: " + message.toString());
+
+            Log.d(TAG, "Characteristic ID: " + incomingMessageCharacteristic.getUuid());
 
             bleService.writeCharacteristic(incomingMessageCharacteristic);
             messagesToBeWritten.remove(message);

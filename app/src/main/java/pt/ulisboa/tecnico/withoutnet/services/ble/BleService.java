@@ -73,6 +73,8 @@ public class BleService extends Service {
 
     private boolean mtuSet = false;
 
+    private boolean firstWrite = true;
+
     private Runnable ongoingOperation;
 
     private final BluetoothGattCallback bluetoothGattCallback = new BluetoothGattCallback() {
@@ -149,6 +151,7 @@ public class BleService extends Service {
             mtuSet = true;
             ongoingOperation.run();
         }
+
     };
 
     @Nullable
@@ -239,6 +242,7 @@ public class BleService extends Service {
         bluetoothGatt.close();
 
         mtuSet = false;
+        firstWrite = true;
 
         return true;
     }
@@ -264,7 +268,7 @@ public class BleService extends Service {
                 }
             };
 
-            bluetoothGatt.requestMtu(200);
+            bluetoothGatt.requestMtu(512);
 
             return;
         }
@@ -304,6 +308,10 @@ public class BleService extends Service {
         this.currentNodeUuid = currentNodeUuid;
     }
 
+    public void isMtuSet(boolean mtuSet) {
+        this.mtuSet = mtuSet;
+    }
+
     // TODO: Check if user has granted the necessary permissions
     @SuppressLint("MissingPermission")
     public void writeCharacteristic(BluetoothGattCharacteristic characteristic) {
@@ -311,6 +319,21 @@ public class BleService extends Service {
             Log.w(TAG, "BluetoothGatt not initialized");
             return;
         }
+
+        if(firstWrite) {
+            ongoingOperation = new Runnable() {
+                @Override
+                public void run() {
+                    BleService.this.firstWrite = false;
+                    writeCharacteristic(characteristic);
+                }
+            };
+
+            bluetoothGatt.requestMtu(23);
+
+            return;
+        }
+
         bluetoothGatt.writeCharacteristic(characteristic);
     }
 
