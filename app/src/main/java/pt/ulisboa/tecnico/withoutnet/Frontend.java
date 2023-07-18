@@ -23,14 +23,18 @@ import java.net.HttpURLConnection;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
 
 import pt.ulisboa.tecnico.withoutnet.constants.StatusCodes;
+import pt.ulisboa.tecnico.withoutnet.models.Message;
 import pt.ulisboa.tecnico.withoutnet.models.Node;
 import pt.ulisboa.tecnico.withoutnet.models.Update;
 
 public class Frontend {
     //private String serverURL = "http://10.0.2.2:8080/";     // change accordingly
-    private String serverURL = "http://192.168.1.94:8080/";
+    //private String serverURL = "http://192.168.1.102:8081/";
+    private String serverURL = "http://sigma01.ist.utl.pt:50012/";
+    //private String serverURL = "http://10.5.192.102:8081/";
 
     private String token;
     private GlobalClass globalClass;
@@ -41,6 +45,61 @@ public class Frontend {
         this.globalClass = globalClass;
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
+    }
+
+    public int sendMessageToServer(Message message) {
+        // This should check whether or not the smartphone is connected to the internet
+        if (getConnectionType() == -1) return -1;
+
+        // Create the update's json object
+        JsonObject sendMessageJson = JsonParser.parseString("{}").getAsJsonObject();
+        sendMessageJson.addProperty("localId", message.getId());
+        sendMessageJson.addProperty("messageType", message.getMessageTypeAsInt());
+        sendMessageJson.addProperty("timestamp", message.getTimestamp());
+        sendMessageJson.addProperty("sender", message.getSender());
+        sendMessageJson.addProperty("receiver", message.getReceiver());
+        sendMessageJson.addProperty("content", message.getContent());
+
+        // Send request and extract status code
+        JsonObject response = postRequest("add-message", sendMessageJson.toString());
+
+        return response.get("status").getAsInt();
+    }
+
+    public List<Message> getAllMessagesInServer() {
+        //if (getConnectionType() == -1) return -1;
+
+        // Send request and extract status code
+        JsonObject response = postRequest("get-all-messages", "");
+
+        int statusCode = response.get("status").getAsInt();
+
+        List<Message> receivedMessages = null;
+
+        // if status is OK, create an ArrayList with all the acl users
+        if (statusCode == StatusCodes.OK) {
+            JsonArray messagesJsonArray = response.get("messages").getAsJsonArray();
+
+            if (messagesJsonArray == null) return receivedMessages;  // avoids empty jsons
+
+            receivedMessages = new ArrayList<>();
+
+            for(int i = 0; i < messagesJsonArray.size(); i++) {
+                JsonObject messageJson = messagesJsonArray.get(i).getAsJsonObject();
+                long id = messageJson.get("id").getAsLong();
+                long timestamp = messageJson.get("timestamp").getAsLong();
+                int messageType = messageJson.get("messageType").getAsInt();
+                String sender = messageJson.get("sender").getAsString();
+                String receiver = messageJson.get("receiver").getAsString();
+                String content = messageJson.get("content").getAsString();
+
+                Message receivedMessage = new Message(id, timestamp, messageType, sender, receiver, content);
+
+                receivedMessages.add(receivedMessage);
+            }
+        }
+
+        return receivedMessages;
     }
 
     public int sendUpdateToServer(Update update) {

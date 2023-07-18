@@ -23,10 +23,12 @@ import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Timer;
@@ -34,6 +36,7 @@ import java.util.TimerTask;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import pt.ulisboa.tecnico.withoutnet.Frontend;
 import pt.ulisboa.tecnico.withoutnet.R;
 import pt.ulisboa.tecnico.withoutnet.constants.BleGattIDs;
 import pt.ulisboa.tecnico.withoutnet.models.Message;
@@ -262,6 +265,21 @@ public class ReceiveAndPropagateUpdatesService extends Service {
         }
     };
 
+    private Thread exchangeMessagesWithServerThread = new Thread(new Runnable() {
+        @Override
+        public void run() {
+            while(true) {
+                ReceiveAndPropagateUpdatesService.this.exchangeMessagesWithServer();
+                try {
+                    Thread.sleep(10000);
+                } catch (InterruptedException e) {
+                    // TODO: Handle this exception properly
+                    e.printStackTrace();
+                }
+            }
+        }
+    });
+
     private void writeNextMessage() {
         String receiverUuid = bleService.getCurrentNodeUuid();
 
@@ -308,6 +326,33 @@ public class ReceiveAndPropagateUpdatesService extends Service {
             allIncomingMessagesWritten = false;
             allOutgoingMessagesRead = false;
         }*/
+    }
+
+    private void exchangeMessagesWithServer() {
+        Frontend frontend = globalClass.getFrontend();
+
+        // Read the messages in the server
+        List<Message> messagesInServer = frontend.getAllMessagesInServer();
+
+        if(messagesInServer != null) {
+            for(Message message : messagesInServer) {
+                globalClass.addMessage(message);
+            }
+        }
+
+        // Write the messages in cache to the server
+        // TODO: Messages should be sent to the server in bulk
+        HashMap<String, TreeSet<Message>> messagesByReceiver = globalClass.getAllMessages();
+
+        List<String> receivers = new ArrayList<>(messagesByReceiver.keySet());
+
+        for(String receiver : receivers) {
+            TreeSet<Message> messages = messagesByReceiver.get(receiver);
+
+            for(Message message : messages) {
+                frontend.sendMessageToServer(message);
+            }
+        }
     }
 
     private static IntentFilter makeGattUpdateIntentFilter() {
@@ -387,7 +432,8 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
     @Override
     public boolean onUnbind(Intent intent) {
-        getApplicationContext().unbindService(serviceConnection);
+        this.stop();
+        //getApplicationContext().unbindService(serviceConnection);
         return super.onUnbind(intent);
     }
 
@@ -396,6 +442,8 @@ public class ReceiveAndPropagateUpdatesService extends Service {
         // TODO: Should the service be started instead of being bound to the context?
         Intent gattServiceIntent = new Intent(getApplicationContext(), BleService.class);
         getApplicationContext().bindService(gattServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+        // TODO: Start uploading and downloading messages to the central server
+        this.exchangeMessagesWithServerThread.start();
         return true;
     }
 
@@ -403,6 +451,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
         this.scanner.stopScanningDefinitely();
         unregisterReceiver(gattUpdateReceiver);
         getApplicationContext().unbindService(serviceConnection);
+        this.exchangeMessagesWithServerThread.interrupt();
         return true;
     }
 

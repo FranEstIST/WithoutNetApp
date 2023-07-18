@@ -18,6 +18,21 @@ public class Message {
     // TODO: Change this type to a more appropriate one (maybe use reflection)
     private String content;
 
+    public Message(long id, long timestamp, int messageTypeInt, String sender, String receiver, String content) {
+        this.id = id;
+        this.timestamp = timestamp;
+
+        try {
+            this.messageType = MessageType.values()[Integer.valueOf(messageTypeInt)];
+        } catch (NumberFormatException e) {
+            // TODO: Treat this exception
+        }
+
+        this.sender = sender;
+        this.receiver = receiver;
+        this.content = content;
+    }
+
     public Message(long id, long timestamp, MessageType messageType, String sender, String receiver, String content) {
         this.id = id;
         this.timestamp = timestamp;
@@ -61,6 +76,10 @@ public class Message {
 
     public MessageType getMessageType() {
         return messageType;
+    }
+
+    public int getMessageTypeAsInt() {
+        return messageType.ordinal();
     }
 
     public String getSender() {

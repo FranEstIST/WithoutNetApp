@@ -49,8 +49,26 @@ public class GlobalClass extends Application {
         return this.updatesByNode.get(node);
     }
 
-    public TreeSet<Message> getAllMessagesForReceiver(String receiver) {
+    public synchronized TreeSet<Message> getAllMessagesForReceiver(String receiver) {
         return this.messagesByReceiver.get(receiver);
+    }
+
+    public synchronized HashMap<String, TreeSet<Message>> getAllMessages() {
+        HashMap<String, TreeSet<Message>> messagesByReceiverCopy = new HashMap<>();
+
+        for(String receiver : messagesByReceiver.keySet()) {
+            TreeSet<Message> messages = messagesByReceiver.get(receiver);
+            TreeSet<Message> messagesCopy = new TreeSet<Message>(new TreeSet<Message>(new MessageTimestampComparator()));
+
+            for(Message message : messages) {
+                // TODO: Should each message be cloned as well?
+                messagesCopy.add(message);
+            }
+
+            messagesByReceiverCopy.put(receiver, messagesCopy);
+        }
+
+        return messagesByReceiverCopy;
     }
 
     public HashMap<Node, TreeSet<Update>> getAllUpdates() {
@@ -68,14 +86,30 @@ public class GlobalClass extends Application {
     }
 
     // TODO
-    public void addMessage(Message message) {
+    public synchronized void addMessage(Message message) {
         String receiver = message.getReceiver();
 
         if(!this.messagesByReceiver.containsKey(receiver)) {
             this.messagesByReceiver.put(receiver, new TreeSet<Message>(new MessageTimestampComparator()));
         }
 
-        this.messagesByReceiver.get(receiver).add(message);
+        // TODO: It should be checked if the message to be added is a duplicate -V
+
+        TreeSet<Message> messageTreeSet = this.messagesByReceiver.get(receiver);
+
+        if(!containsMessage(messageTreeSet, message)) {
+            messageTreeSet.add(message);
+        }
+    }
+
+    private boolean containsMessage(TreeSet<Message> messageTreeSet, Message message) {
+        for(Message messageInTreeSet : messageTreeSet) {
+            if(messageInTreeSet.getId() == message.getId()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     //public void getUpdate
