@@ -24,7 +24,6 @@ public class Message {
 
     private int receiver;
 
-    // TODO: Change this type to a more appropriate one (maybe use reflection)
     private byte[] payload;
 
     public Message(long timestamp, int messageTypeInt, int sender, int receiver, byte[] payload) {
@@ -52,6 +51,10 @@ public class Message {
     }
 
     public Message(byte[] messageByteArray) {
+        // Since Arduino Nanos are little endian and Android is big endian
+        // these byte arrays need to be flipped to be stored and flipped again
+        // when being transferred to an Arduino Nano
+
         byte[] lengthByteArray = Arrays.copyOfRange(messageByteArray, 0, 2);
         byte[] timestampByteArray = Arrays.copyOfRange(messageByteArray, 2, 6);
         byte[] messageTypeByteArray = Arrays.copyOfRange(messageByteArray, 6, 7);
@@ -59,15 +62,6 @@ public class Message {
         byte[] receiverByteArray = Arrays.copyOfRange(messageByteArray, 11, 15);
         // The last byte in the message should be 0, therefore it should be excluded from the payload
         byte[] payloadByteArray = Arrays.copyOfRange(messageByteArray, 15, messageByteArray.length - 1);
-
-        // Since Arduino Nanos are little endian and Android is big endian
-        // these byte arrays need to be flipped to be stored and flipped again
-        // when being transferred to an Arduino Nano
-        /*lengthByteArray = ByteBuffer.wrap(lengthByteArray).order(ByteOrder.BIG_ENDIAN).array();
-        timestampByteArray = ByteBuffer.wrap(timestampByteArray).order(ByteOrder.BIG_ENDIAN).array();
-        messageTypeByteArray = ByteBuffer.wrap(messageTypeByteArray).order(ByteOrder.BIG_ENDIAN).array();
-        senderByteArray = ByteBuffer.wrap(senderByteArray).order(ByteOrder.BIG_ENDIAN).array();
-        receiverByteArray = ByteBuffer.wrap(receiverByteArray).order(ByteOrder.BIG_ENDIAN).array();*/
 
         this.length = (short) byteArrayToIntRev(lengthByteArray);
 
@@ -219,20 +213,15 @@ public class Message {
     }
 
     public byte[] toByteArray() {
+        // Since Arduino Nanos are little endian and Android is big endian
+        // these byte arrays need to be flipped to be stored and flipped again
+        // when being transferred to an Arduino Nano
+
         byte[] lengthByteArray = shortToByteArrayRev(this.length);
         byte[] timestampByteArray = intToByteArrayRev((int) this.timestamp);
         byte[] messageTypeByteArray = messageTypeToByteArrayRev(this.messageType);
         byte[] senderByteArray = intToByteArrayRev(this.sender);
         byte[] receiverByteArray = intToByteArrayRev(this.receiver);
-
-        // Since Arduino Nanos are little endian and Android is big endian
-        // these byte arrays need to be flipped to be stored and flipped again
-        // when being transferred to an Arduino Nano
-        /*ByteBuffer.wrap(lengthByteArray).flip();
-        ByteBuffer.wrap(timestampByteArray).flip();
-        ByteBuffer.wrap(messageTypeByteArray).flip();
-        ByteBuffer.wrap(senderByteArray).flip();
-        ByteBuffer.wrap(receiverByteArray).flip();*/
 
         return concatByteArrays(lengthByteArray,
                 timestampByteArray,
@@ -241,28 +230,6 @@ public class Message {
                 receiverByteArray,
                 this.payload);
 
-        /*byte[] messageByteArray = concatByteArrays(lengthByteArray, timestampByteArray);
-        messageByteArray = concatByteArrays(messageByteArray, messageTypeByteArray);
-        messageByteArray = concatByteArrays(messageByteArray, senderByteArray);
-        messageByteArray = concatByteArrays(messageByteArray, receiverByteArray);
-
-        List<Byte> messageByteArrayList = new ArrayList<Byte>(lengthByteArray.length
-                + timestampByteArray.length
-                + messageTypeByteArray.length
-                + senderByteArray.length
-                + receiverByteArray.length);
-
-        Collections.addAll(messageByteArrayList, lengthByteArray);
-        Collections.addAll(messageByteArrayList, timestampByteArray);
-        Collections.addAll(messageByteArrayList, messageTypeByteArray);
-        Collections.addAll(messageByteArrayList, senderByteArray);
-        Collections.addAll(messageByteArrayList, receiverByteArray);
-        Collections.addAll(messageByteArrayList, this.payload);
-
-        @SuppressWarnings("unchecked")
-        //the type cast is safe as the array1 has the type T[]
-        byte[] resultArray = (byte[]) Array.newInstance(lengthByteArray.getClass().getComponentType(), 0);
-        return messageByteArrayList.toArray(resultArray);*/
     }
 
     private byte[] concatByteArrays(byte[]... byteArrays) {
@@ -342,16 +309,6 @@ public class Message {
     }
 
     private byte[] messageTypeToByteArrayRev(MessageType value) {
-        /*int ordinalValue = value.ordinal();
-        byte[] bytes = new byte[1];
-        int length = bytes.length;
-        for (int i = 0; i < length; i++) {
-            bytes[i] = (byte) (ordinalValue & 0xFF);
-            ordinalValue >>= 8;
-        }
-        return bytes;
-        */
-
         switch(value) {
             case DATA:
                 return new byte[] {0};
