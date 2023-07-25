@@ -9,6 +9,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -42,7 +43,24 @@ public class Message {
         this.payload = payload;
     }
 
+    public Message(short length, long timestamp, int messageTypeInt, int sender, int receiver, String payload) {
+        this.length = length;
+
+        this.timestamp = timestamp;
+
+        try {
+            this.messageType = MessageType.values()[Integer.valueOf(messageTypeInt)];
+        } catch (NumberFormatException e) {
+            // TODO: Treat this exception
+        }
+
+        this.sender = sender;
+        this.receiver = receiver;
+        this.payload = Base64.getDecoder().decode(payload);
+    }
+
     public Message(long timestamp, MessageType messageType, int sender, int receiver, byte[] payload) {
+        this.length = (short) (13 + payload.length);
         this.timestamp = timestamp;
         this.messageType = messageType;
         this.sender = sender;
@@ -173,6 +191,10 @@ public class Message {
         return messageType;
     }
 
+    public int getMessageTypeAsInt() {
+        return this.messageType.ordinal();
+    }
+
     public void setMessageType(MessageType messageType) {
         this.messageType = messageType;
     }
@@ -195,6 +217,10 @@ public class Message {
 
     public byte[] getPayload() {
         return payload;
+    }
+
+    public String getPayloadAsByteString() {
+        return Base64.getEncoder().encodeToString(payload);
     }
 
     public void setPayload(byte[] payload) {

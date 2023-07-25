@@ -54,12 +54,12 @@ public class Frontend {
         // Create the update's json object
         JsonObject sendMessageJson = JsonParser.parseString("{}").getAsJsonObject();
         // TODO: Fix this
-        /*sendMessageJson.addProperty("localId", message.getId());
-        sendMessageJson.addProperty("messageType", message.getMessageTypeAsInt());
+        sendMessageJson.addProperty("length", message.getLength());
         sendMessageJson.addProperty("timestamp", message.getTimestamp());
+        sendMessageJson.addProperty("messageType", message.getMessageTypeAsInt());
         sendMessageJson.addProperty("sender", message.getSender());
         sendMessageJson.addProperty("receiver", message.getReceiver());
-        sendMessageJson.addProperty("content", message.getContent());*/
+        sendMessageJson.addProperty("payload", message.getPayloadAsByteString());
 
         // Send request and extract status code
         JsonObject response = postRequest("add-message", sendMessageJson.toString());
@@ -88,17 +88,17 @@ public class Frontend {
             for(int i = 0; i < messagesJsonArray.size(); i++) {
                 // TODO: Fix this
 
-                /*JsonObject messageJson = messagesJsonArray.get(i).getAsJsonObject();
-                long id = messageJson.get("id").getAsLong();
+                JsonObject messageJson = messagesJsonArray.get(i).getAsJsonObject();
+                short length = messageJson.get("length").getAsShort();
                 long timestamp = messageJson.get("timestamp").getAsLong();
                 int messageType = messageJson.get("messageType").getAsInt();
-                String sender = messageJson.get("sender").getAsString();
-                String receiver = messageJson.get("receiver").getAsString();
-                String content = messageJson.get("content").getAsString();
+                int sender = messageJson.get("sender").getAsInt();
+                int receiver = messageJson.get("receiver").getAsInt();
+                String payload = messageJson.get("payload").getAsString();
 
-                Message receivedMessage = new Message(id, timestamp, messageType, sender, receiver, content);
+                Message receivedMessage = new Message(length, timestamp, messageType, sender, receiver, payload);
 
-                receivedMessages.add(receivedMessage);*/
+                receivedMessages.add(receivedMessage);
             }
         }
 

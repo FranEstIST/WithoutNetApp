@@ -449,7 +449,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
         Intent gattServiceIntent = new Intent(getApplicationContext(), BleService.class);
         getApplicationContext().bindService(gattServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
         // TODO: Start uploading and downloading messages to the central server
-        //this.exchangeMessagesWithServerThread.start();
+        this.exchangeMessagesWithServerThread.start();
         return true;
     }
 
@@ -457,7 +457,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
         this.scanner.stopScanningDefinitely();
         unregisterReceiver(gattUpdateReceiver);
         getApplicationContext().unbindService(serviceConnection);
-        //this.exchangeMessagesWithServerThread.interrupt();
+        this.exchangeMessagesWithServerThread.interrupt();
         return true;
     }
 
