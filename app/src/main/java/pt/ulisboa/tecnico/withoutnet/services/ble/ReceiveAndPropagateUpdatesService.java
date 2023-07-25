@@ -1,5 +1,7 @@
 package pt.ulisboa.tecnico.withoutnet.services.ble;
 
+import static pt.ulisboa.tecnico.withoutnet.constants.Responses.EMPTY_BYTE_ARRAY;
+
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -39,6 +41,7 @@ import java.util.UUID;
 import pt.ulisboa.tecnico.withoutnet.Frontend;
 import pt.ulisboa.tecnico.withoutnet.R;
 import pt.ulisboa.tecnico.withoutnet.constants.BleGattIDs;
+import pt.ulisboa.tecnico.withoutnet.constants.Responses;
 import pt.ulisboa.tecnico.withoutnet.models.Message;
 import pt.ulisboa.tecnico.withoutnet.utils.ble.BleScanner;
 import pt.ulisboa.tecnico.withoutnet.GlobalClass;
@@ -210,7 +213,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                 if(characteristicId.equals(BleGattIDs.NODE_UUID_CHARACTERISTIC_ID)) {
                     Log.d(TAG, "Node UUID read");
 
-                    String nodeUuid = intent.getStringExtra("value");
+                    int nodeUuid = intent.getIntExtra("int-value", -1);
 
                     Log.d(TAG, "Node UUID: " + nodeUuid);
 
@@ -220,11 +223,11 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                 } else if(characteristicId.equals(BleGattIDs.OUTGOING_MESSAGE_CHARACTERISTIC_ID)) {
                     Log.d(TAG, "Message read");
 
-                    String messageString = intent.getStringExtra("value");
+                    byte[] messageByteArray = intent.getByteArrayExtra("byte-array-value");
 
-                    Log.d(TAG, "Message: " + messageString);
+                    //Log.d(TAG, "Message: " + messageString);
 
-                    if(messageString.equals("0")) {
+                    if(messageByteArray.length == 1 || messageByteArray.equals(Responses.EMPTY_BYTE_ARRAY)) {
                         Log.d(TAG, "No more messages to be read from node");
 
                         // All pending messages have been read
@@ -246,8 +249,11 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                     }
 
                     // Add the current message to the cache
-                    Message message = new Message(messageString);
+                    Message message = new Message(messageByteArray);
                     globalClass.addMessage(message);
+
+                    Log.d(TAG, "Message added to message list: " + message);
+                    Log.d(TAG, "Message byte array: " + message.byteArrayToString());
 
                     // Read the next message
                     BluetoothGattCharacteristic outgoingMessageCharacteristic = bleService.getOutgoingMessageCharacteristic();
@@ -281,7 +287,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
     });
 
     private void writeNextMessage() {
-        String receiverUuid = bleService.getCurrentNodeUuid();
+        int receiverUuid = bleService.getCurrentNodeUuid();
 
         // Write every message intended for this node
         TreeSet<Message> messagesToBeWritten = globalClass.getAllMessagesForReceiver(receiverUuid);
@@ -293,7 +299,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
             // "Pop" a message from this set
             Message message = messagesToBeWritten.first();
-            incomingMessageCharacteristic.setValue(message.toString());
+            incomingMessageCharacteristic.setValue(message.toByteArray());
             //incomingMessageCharacteristic.setValue("12345678901111111111111111111111111111111111111111111111111");
 
             Log.d(TAG, "Next message to be written to node: " + message.toString());
@@ -342,11 +348,11 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
         // Write the messages in cache to the server
         // TODO: Messages should be sent to the server in bulk
-        HashMap<String, TreeSet<Message>> messagesByReceiver = globalClass.getAllMessages();
+        HashMap<Integer, TreeSet<Message>> messagesByReceiver = globalClass.getAllMessages();
 
-        List<String> receivers = new ArrayList<>(messagesByReceiver.keySet());
+        List<Integer> receivers = new ArrayList<>(messagesByReceiver.keySet());
 
-        for(String receiver : receivers) {
+        for(Integer receiver : receivers) {
             TreeSet<Message> messages = messagesByReceiver.get(receiver);
 
             for(Message message : messages) {
@@ -443,7 +449,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
         Intent gattServiceIntent = new Intent(getApplicationContext(), BleService.class);
         getApplicationContext().bindService(gattServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
         // TODO: Start uploading and downloading messages to the central server
-        this.exchangeMessagesWithServerThread.start();
+        //this.exchangeMessagesWithServerThread.start();
         return true;
     }
 
@@ -451,7 +457,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
         this.scanner.stopScanningDefinitely();
         unregisterReceiver(gattUpdateReceiver);
         getApplicationContext().unbindService(serviceConnection);
-        this.exchangeMessagesWithServerThread.interrupt();
+        //this.exchangeMessagesWithServerThread.interrupt();
         return true;
     }
 

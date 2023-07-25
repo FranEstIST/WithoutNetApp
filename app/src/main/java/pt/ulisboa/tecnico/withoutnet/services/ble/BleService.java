@@ -69,7 +69,7 @@ public class BleService extends Service {
 
     Timer connectionTimeoutTimer = new Timer("connectionTimeoutTimer");
 
-    private String currentNodeUuid = "";
+    private int currentNodeUuid = -1;
 
     private boolean mtuSet = false;
 
@@ -195,7 +195,8 @@ public class BleService extends Service {
         }*/
 
         if(hasAttemptedToConnect) {
-            addressQueue.add(address);
+            // TODO: See if this can be fixed (i.e. if there is a way to stop too many reconnection attempts from happening)
+            //addressQueue.add(address);
             return false;
         }
 
@@ -268,7 +269,7 @@ public class BleService extends Service {
                 }
             };
 
-            bluetoothGatt.requestMtu(512);
+            bluetoothGatt.requestMtu(23);
 
             return;
         }
@@ -288,7 +289,7 @@ public class BleService extends Service {
         return outgoingMessageCharacteristic;
     }
 
-    public String getCurrentNodeUuid() {
+    public int getCurrentNodeUuid() {
         return currentNodeUuid;
     }
 
@@ -304,7 +305,7 @@ public class BleService extends Service {
         this.outgoingMessageCharacteristic = outgoingMessageCharacteristic;
     }
 
-    public void setCurrentNodeUuid(String currentNodeUuid) {
+    public void setCurrentNodeUuid(int currentNodeUuid) {
         this.currentNodeUuid = currentNodeUuid;
     }
 
@@ -345,7 +346,8 @@ public class BleService extends Service {
     private void broadcastUpdate(final String action, final BluetoothGattCharacteristic characteristic) {
         final Intent intent = new Intent(action);
         intent.putExtra("id", characteristic.getUuid().toString());
-        intent.putExtra("value", characteristic.getStringValue(0));
+        intent.putExtra("byte-array-value", characteristic.getValue());
+        intent.putExtra("int-value", characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT16, 0));
         sendBroadcast(intent);
     }
 

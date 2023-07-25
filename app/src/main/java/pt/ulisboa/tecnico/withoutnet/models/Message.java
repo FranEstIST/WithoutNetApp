@@ -4,22 +4,32 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import java.lang.reflect.Array;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+
 public class Message {
-    private long id;
+    private short length;
 
     private long timestamp;
 
     private MessageType messageType;
 
-    private String sender;
+    private int sender;
 
-    private String receiver;
+    private int receiver;
 
     // TODO: Change this type to a more appropriate one (maybe use reflection)
-    private String content;
+    private byte[] payload;
 
-    public Message(long id, long timestamp, int messageTypeInt, String sender, String receiver, String content) {
-        this.id = id;
+    public Message(long timestamp, int messageTypeInt, int sender, int receiver, byte[] payload) {
+        this.length = (short) (13 + payload.length);
+
         this.timestamp = timestamp;
 
         try {
@@ -30,19 +40,52 @@ public class Message {
 
         this.sender = sender;
         this.receiver = receiver;
-        this.content = content;
+        this.payload = payload;
     }
 
-    public Message(long id, long timestamp, MessageType messageType, String sender, String receiver, String content) {
-        this.id = id;
+    public Message(long timestamp, MessageType messageType, int sender, int receiver, byte[] payload) {
         this.timestamp = timestamp;
         this.messageType = messageType;
         this.sender = sender;
         this.receiver = receiver;
-        this.content = content;
+        this.payload = payload;
     }
 
-    public Message(String messageString) {
+    public Message(byte[] messageByteArray) {
+        byte[] lengthByteArray = Arrays.copyOfRange(messageByteArray, 0, 2);
+        byte[] timestampByteArray = Arrays.copyOfRange(messageByteArray, 2, 6);
+        byte[] messageTypeByteArray = Arrays.copyOfRange(messageByteArray, 6, 7);
+        byte[] senderByteArray = Arrays.copyOfRange(messageByteArray, 7, 11);
+        byte[] receiverByteArray = Arrays.copyOfRange(messageByteArray, 11, 15);
+        // The last byte in the message should be 0, therefore it should be excluded from the payload
+        byte[] payloadByteArray = Arrays.copyOfRange(messageByteArray, 15, messageByteArray.length - 1);
+
+        // Since Arduino Nanos are little endian and Android is big endian
+        // these byte arrays need to be flipped to be stored and flipped again
+        // when being transferred to an Arduino Nano
+        /*lengthByteArray = ByteBuffer.wrap(lengthByteArray).order(ByteOrder.BIG_ENDIAN).array();
+        timestampByteArray = ByteBuffer.wrap(timestampByteArray).order(ByteOrder.BIG_ENDIAN).array();
+        messageTypeByteArray = ByteBuffer.wrap(messageTypeByteArray).order(ByteOrder.BIG_ENDIAN).array();
+        senderByteArray = ByteBuffer.wrap(senderByteArray).order(ByteOrder.BIG_ENDIAN).array();
+        receiverByteArray = ByteBuffer.wrap(receiverByteArray).order(ByteOrder.BIG_ENDIAN).array();*/
+
+        this.length = (short) byteArrayToIntRev(lengthByteArray);
+
+        this.timestamp = byteArrayToIntRev(timestampByteArray);
+
+        try {
+            this.messageType = MessageType.values()[Integer.valueOf(byteArrayToIntRev(messageTypeByteArray))];
+        } catch (ArrayIndexOutOfBoundsException e1) {
+            //TODO: Throw an exception here
+            e1.printStackTrace();
+        }
+
+        this.sender = byteArrayToIntRev(senderByteArray);
+        this.receiver = byteArrayToIntRev(receiverByteArray);
+        this.payload = payloadByteArray;
+    }
+
+    /*public Message(String messageString) {
         String messageStringComponents[] = messageString.split("#");
 
         if(messageStringComponents.length != 6) {
@@ -64,69 +107,270 @@ public class Message {
         this.sender = messageStringComponents[3];
         this.receiver = messageStringComponents[4];
         this.content = messageStringComponents[5];
+    }*/
+
+    short byteArrayToShort(byte[] byteArray) {
+        short shortValue = 0;
+        for (byte b : byteArray) {
+            shortValue = (short) ((shortValue << 8) + (b & 0xFF));
+        }
+        return shortValue;
     }
 
-    public long getId() {
-        return id;
+    short byteArrayToShortRev(byte[] byteArray) {
+        short intValue = 0;
+
+        for (int i = byteArray.length - 1; i >= 0 ; i--) {
+            intValue = (short) ((intValue << 8) + (byteArray[i] & 0xFF));
+        }
+        return intValue;
+    }
+
+    int byteArrayToInt(byte[] byteArray) {
+        int intValue = 0;
+        for (byte b : byteArray) {
+            intValue = (intValue << 8) + (b & 0xFF);
+        }
+        return intValue;
+    }
+
+    int byteArrayToIntRev(byte[] byteArray) {
+        int intValue = 0;
+
+        for (int i = byteArray.length - 1; i >= 0 ; i--) {
+            intValue = (intValue << 8) + (byteArray[i] & 0xFF);
+        }
+        return intValue;
+    }
+
+    long byteArrayToLong(byte[] byteArray) {
+        long longValue = 0;
+        for (byte b : byteArray) {
+            longValue = (longValue << 8) + (b & 0xFF);
+        }
+        return longValue;
+    }
+
+    long byteArrayToLongRev(byte[] byteArray) {
+        long longValue = 0;
+        for (int i = byteArray.length - 1; i >= 0 ; i--) {
+            longValue = (longValue << 8) + (byteArray[i] & 0xFF);
+        }
+        return longValue;
+    }
+
+    public short getLength() {
+        return length;
+    }
+
+    public void setLength(short length) {
+        this.length = length;
     }
 
     public long getTimestamp() {
         return timestamp;
     }
 
-    public MessageType getMessageType() {
-        return messageType;
-    }
-
-    public int getMessageTypeAsInt() {
-        return messageType.ordinal();
-    }
-
-    public String getSender() {
-        return sender;
-    }
-
-    public String getReceiver() {
-        return receiver;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
-
     public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public MessageType getMessageType() {
+        return messageType;
     }
 
     public void setMessageType(MessageType messageType) {
         this.messageType = messageType;
     }
 
-    public void setSender(String sender) {
+    public int getSender() {
+        return sender;
+    }
+
+    public void setSender(int sender) {
         this.sender = sender;
     }
 
-    public void setReceiver(String receiver) {
+    public int getReceiver() {
+        return receiver;
+    }
+
+    public void setReceiver(int receiver) {
         this.receiver = receiver;
     }
 
-    public void setContent(String content) {
-        this.content = content;
+    public byte[] getPayload() {
+        return payload;
+    }
+
+    public void setPayload(byte[] payload) {
+        this.payload = payload;
+    }
+
+    public String byteArrayToString() {
+        byte[] messageByteArray = this.toByteArray();
+        String messageByteArrayString = "";
+
+        for(byte messageByte : messageByteArray) {
+            messageByteArrayString += messageByte + " # ";
+        }
+
+        return messageByteArrayString;
+    }
+
+    public byte[] toByteArray() {
+        byte[] lengthByteArray = shortToByteArrayRev(this.length);
+        byte[] timestampByteArray = intToByteArrayRev((int) this.timestamp);
+        byte[] messageTypeByteArray = messageTypeToByteArrayRev(this.messageType);
+        byte[] senderByteArray = intToByteArrayRev(this.sender);
+        byte[] receiverByteArray = intToByteArrayRev(this.receiver);
+
+        // Since Arduino Nanos are little endian and Android is big endian
+        // these byte arrays need to be flipped to be stored and flipped again
+        // when being transferred to an Arduino Nano
+        /*ByteBuffer.wrap(lengthByteArray).flip();
+        ByteBuffer.wrap(timestampByteArray).flip();
+        ByteBuffer.wrap(messageTypeByteArray).flip();
+        ByteBuffer.wrap(senderByteArray).flip();
+        ByteBuffer.wrap(receiverByteArray).flip();*/
+
+        return concatByteArrays(lengthByteArray,
+                timestampByteArray,
+                messageTypeByteArray,
+                senderByteArray,
+                receiverByteArray,
+                this.payload);
+
+        /*byte[] messageByteArray = concatByteArrays(lengthByteArray, timestampByteArray);
+        messageByteArray = concatByteArrays(messageByteArray, messageTypeByteArray);
+        messageByteArray = concatByteArrays(messageByteArray, senderByteArray);
+        messageByteArray = concatByteArrays(messageByteArray, receiverByteArray);
+
+        List<Byte> messageByteArrayList = new ArrayList<Byte>(lengthByteArray.length
+                + timestampByteArray.length
+                + messageTypeByteArray.length
+                + senderByteArray.length
+                + receiverByteArray.length);
+
+        Collections.addAll(messageByteArrayList, lengthByteArray);
+        Collections.addAll(messageByteArrayList, timestampByteArray);
+        Collections.addAll(messageByteArrayList, messageTypeByteArray);
+        Collections.addAll(messageByteArrayList, senderByteArray);
+        Collections.addAll(messageByteArrayList, receiverByteArray);
+        Collections.addAll(messageByteArrayList, this.payload);
+
+        @SuppressWarnings("unchecked")
+        //the type cast is safe as the array1 has the type T[]
+        byte[] resultArray = (byte[]) Array.newInstance(lengthByteArray.getClass().getComponentType(), 0);
+        return messageByteArrayList.toArray(resultArray);*/
+    }
+
+    private byte[] concatByteArrays(byte[]... byteArrays) {
+        Iterator<byte[]> byteArrayIterator = Arrays.stream(byteArrays).iterator();
+
+        if(!byteArrayIterator.hasNext()) {
+            return null;
+        }
+
+        byte[] resultingByteArray = byteArrayIterator.next();
+
+        while(byteArrayIterator.hasNext()) {
+            byte[] arrayToConcatOne = resultingByteArray;
+            byte[] arrayToConcatTwo = byteArrayIterator.next();
+
+            resultingByteArray = Arrays.copyOf(arrayToConcatOne, arrayToConcatOne.length + arrayToConcatTwo.length);
+            System.arraycopy(arrayToConcatTwo, 0, resultingByteArray, arrayToConcatOne.length, arrayToConcatTwo.length);
+        }
+
+        return resultingByteArray;
+    }
+
+    private byte[] messageTypeToByteArray(MessageType value) {
+        int ordinalValue = value.ordinal();
+        byte[] bytes = new byte[1];
+        int length = bytes.length;
+        for (int i = 0; i < length; i++) {
+            bytes[length - i - 1] = (byte) (ordinalValue & 0xFF);
+            ordinalValue >>= 8;
+        }
+
+        return bytes;
+    }
+
+    private byte[] shortToByteArray(short value) {
+        byte[] bytes = new byte[Short.BYTES];
+        int length = bytes.length;
+        for (int i = 0; i < length; i++) {
+            bytes[length - i - 1] = (byte) (value & 0xFF);
+            value >>= 8;
+        }
+
+        return bytes;
+    }
+
+    private byte[] intToByteArray(int value) {
+        byte[] bytes = new byte[Integer.BYTES];
+        int length = bytes.length;
+        for (int i = 0; i < length; i++) {
+            bytes[length - i - 1] = (byte) (value & 0xFF);
+            value >>= 8;
+        }
+
+        return bytes;
+    }
+
+    private byte[] shortToByteArrayRev(short value) {
+        byte[] bytes = new byte[Short.BYTES];
+        int length = bytes.length;
+        for (int i = 0; i < length; i++) {
+            bytes[i] = (byte) (value & 0xFF);
+            value >>= 8;
+        }
+
+        return bytes;
+    }
+
+    private byte[] intToByteArrayRev(int value) {
+        byte[] bytes = new byte[Integer.BYTES];
+        int length = bytes.length;
+        for (int i = 0; i < length; i++) {
+            bytes[i] = (byte) (value & 0xFF);
+            value >>= 8;
+        }
+
+        return bytes;
+    }
+
+    private byte[] messageTypeToByteArrayRev(MessageType value) {
+        /*int ordinalValue = value.ordinal();
+        byte[] bytes = new byte[1];
+        int length = bytes.length;
+        for (int i = 0; i < length; i++) {
+            bytes[i] = (byte) (ordinalValue & 0xFF);
+            ordinalValue >>= 8;
+        }
+        return bytes;
+        */
+
+        switch(value) {
+            case DATA:
+                return new byte[] {0};
+            case ACK:
+                return new byte[] {1};
+            default:
+                return new byte[] {-1};
+        }
     }
 
     @NonNull
     @Override
     public String toString() {
-        return "" + this.id
-                + "#" + this.messageType.ordinal()
+        return "" + this.length
                 + "#" + this.timestamp
+                + "#" + this.messageType.ordinal()
                 + "#" + this.sender
                 + "#" + this.receiver
-                + "#" + this.content;
+                + "#" + byteArrayToIntRev(this.payload);
     }
 }
 

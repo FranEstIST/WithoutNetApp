@@ -16,7 +16,7 @@ public class GlobalClass extends Application {
     // TODO: Change the update collection type to something more appropriate, like a stack
     // private HashMap<Node, ArrayDeque<Update>> updatesByNode;
     private HashMap<Node, TreeSet<Update>> updatesByNode;
-    private HashMap<String, TreeSet<Message>> messagesByReceiver;
+    private HashMap<Integer, TreeSet<Message>> messagesByReceiver;
 
     private Frontend frontend;
 
@@ -49,14 +49,14 @@ public class GlobalClass extends Application {
         return this.updatesByNode.get(node);
     }
 
-    public synchronized TreeSet<Message> getAllMessagesForReceiver(String receiver) {
+    public synchronized TreeSet<Message> getAllMessagesForReceiver(int receiver) {
         return this.messagesByReceiver.get(receiver);
     }
 
-    public synchronized HashMap<String, TreeSet<Message>> getAllMessages() {
-        HashMap<String, TreeSet<Message>> messagesByReceiverCopy = new HashMap<>();
+    public synchronized HashMap<Integer, TreeSet<Message>> getAllMessages() {
+        HashMap<Integer, TreeSet<Message>> messagesByReceiverCopy = new HashMap<>();
 
-        for(String receiver : messagesByReceiver.keySet()) {
+        for(Integer receiver : messagesByReceiver.keySet()) {
             TreeSet<Message> messages = messagesByReceiver.get(receiver);
             TreeSet<Message> messagesCopy = new TreeSet<Message>(new TreeSet<Message>(new MessageTimestampComparator()));
 
@@ -87,7 +87,7 @@ public class GlobalClass extends Application {
 
     // TODO
     public synchronized void addMessage(Message message) {
-        String receiver = message.getReceiver();
+        int receiver = message.getReceiver();
 
         if(!this.messagesByReceiver.containsKey(receiver)) {
             this.messagesByReceiver.put(receiver, new TreeSet<Message>(new MessageTimestampComparator()));
@@ -104,7 +104,7 @@ public class GlobalClass extends Application {
 
     private boolean containsMessage(TreeSet<Message> messageTreeSet, Message message) {
         for(Message messageInTreeSet : messageTreeSet) {
-            if(messageInTreeSet.getId() == message.getId()) {
+            if(messageInTreeSet.getTimestamp() == message.getTimestamp()) {
                 return true;
             }
         }

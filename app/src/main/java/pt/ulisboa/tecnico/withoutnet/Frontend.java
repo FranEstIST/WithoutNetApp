@@ -53,12 +53,13 @@ public class Frontend {
 
         // Create the update's json object
         JsonObject sendMessageJson = JsonParser.parseString("{}").getAsJsonObject();
-        sendMessageJson.addProperty("localId", message.getId());
+        // TODO: Fix this
+        /*sendMessageJson.addProperty("localId", message.getId());
         sendMessageJson.addProperty("messageType", message.getMessageTypeAsInt());
         sendMessageJson.addProperty("timestamp", message.getTimestamp());
         sendMessageJson.addProperty("sender", message.getSender());
         sendMessageJson.addProperty("receiver", message.getReceiver());
-        sendMessageJson.addProperty("content", message.getContent());
+        sendMessageJson.addProperty("content", message.getContent());*/
 
         // Send request and extract status code
         JsonObject response = postRequest("add-message", sendMessageJson.toString());
@@ -85,7 +86,9 @@ public class Frontend {
             receivedMessages = new ArrayList<>();
 
             for(int i = 0; i < messagesJsonArray.size(); i++) {
-                JsonObject messageJson = messagesJsonArray.get(i).getAsJsonObject();
+                // TODO: Fix this
+
+                /*JsonObject messageJson = messagesJsonArray.get(i).getAsJsonObject();
                 long id = messageJson.get("id").getAsLong();
                 long timestamp = messageJson.get("timestamp").getAsLong();
                 int messageType = messageJson.get("messageType").getAsInt();
@@ -95,7 +98,7 @@ public class Frontend {
 
                 Message receivedMessage = new Message(id, timestamp, messageType, sender, receiver, content);
 
-                receivedMessages.add(receivedMessage);
+                receivedMessages.add(receivedMessage);*/
             }
         }
 
