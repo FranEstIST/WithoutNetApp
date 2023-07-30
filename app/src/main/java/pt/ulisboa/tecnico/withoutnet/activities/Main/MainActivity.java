@@ -13,6 +13,8 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 
@@ -91,8 +93,7 @@ public class MainActivity extends AppCompatActivity {
 
         testServiceIsOn = false;
 
-
-        binding.debugButton.setOnClickListener(new View.OnClickListener() {
+        /*binding.debugButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(getApplicationContext(), DebugActivity.class);
@@ -106,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
                 Intent intent = new Intent(getApplicationContext(), CachedUpdatesActivity.class);
                 startActivity(intent);
             }
-        });
+        });*/
 
         /*
         //Intent receiveAndPropagateUpdatesServiceIntent = new Intent(this, ReceiveAndPropagateUpdatesService.class);
@@ -138,7 +139,7 @@ public class MainActivity extends AppCompatActivity {
 
         });
 
-        binding.startStopTestService.setOnClickListener(v -> {
+        /*binding.startStopTestService.setOnClickListener(v -> {
             Button button = (Button) v;
 
             if(testServiceIsOn) {
@@ -184,7 +185,59 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             }).start();
-        });
+        });*/
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        Intent intent;
+
+        switch(item.getItemId()) {
+            case R.id.action_start_test_service:
+                return true;
+            case R.id.action_scan_nodes:
+                intent = new Intent(getApplicationContext(), DebugActivity.class);
+                startActivity(intent);
+                return true;
+            case R.id.action_upload_updates:
+                new Thread(() -> {
+                    GlobalClass globalClass = MainActivity.this.globalClass;
+                    for (Node node : globalClass.getAllUpdates().keySet()) {
+                        int status = globalClass.getFrontend().sendUpdateToServer(globalClass.getMostRecentUpdate(node));
+                        Log.d(TAG, "Upload updates status: " + status);
+                    }
+                }).start();
+                return true;
+            case R.id.action_download_updates:
+                new Thread(() -> {
+                    GlobalClass globalClass = MainActivity.this.globalClass;
+                    for (Node node : globalClass.getAllUpdates().keySet()) {
+                        Update update = globalClass.getFrontend().getMostRecentUpdateByNodeFromServer(node);
+                        if(update != null) {
+                            globalClass.addUpdate(update);
+                            Log.d(TAG, "Downloaded update from server: " + update);
+                        } else {
+                            Log.d(TAG, "No update was found on the server for node: " + node);
+                        }
+                    }
+                }).start();
+                return true;
+            case R.id.action_view_cached_updates:
+                intent = new Intent(getApplicationContext(), CachedUpdatesActivity.class);
+                startActivity(intent);
+                return true;
+            default:
+                return false;
+        }
     }
 
     public boolean isServiceRunning(Class<?> cls){

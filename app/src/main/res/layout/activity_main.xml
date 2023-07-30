@@ -13,12 +13,11 @@
         android:text="@string/start_participating"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.475"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.161" />
+        app:layout_constraintVertical_bias="0.499" />
 
-    <Button
+    <!--<Button
         android:id="@+id/debug_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -75,6 +74,6 @@
         app:layout_constraintBottom_toTopOf="@+id/cached_updates_button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/upload_updates_button" />
+        app:layout_constraintTop_toBottomOf="@+id/upload_updates_button" />-->
 
 </androidx.constraintlayout.widget.ConstraintLayout>

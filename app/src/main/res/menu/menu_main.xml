@@ -7,4 +7,29 @@
         android:orderInCategory="100"
         android:title="@string/action_settings"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/action_start_test_service"
+        android:orderInCategory="100"
+        android:title="@string/start_test_service"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_scan_nodes"
+        android:orderInCategory="100"
+        android:title="@string/Scan_for_nearby_nodes"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_upload_updates"
+        android:orderInCategory="100"
+        android:title="@string/upload_updates"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_download_updates"
+        android:orderInCategory="100"
+        android:title="@string/download_updates"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_view_cached_updates"
+        android:orderInCategory="100"
+        android:title="@string/see_cached_updates"
+        app:showAsAction="never" />
 </menu>
