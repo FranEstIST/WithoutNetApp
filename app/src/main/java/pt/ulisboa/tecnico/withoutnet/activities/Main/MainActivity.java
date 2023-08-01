@@ -17,6 +17,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.TextView;
 
 import pt.ulisboa.tecnico.withoutnet.GlobalClass;
 import pt.ulisboa.tecnico.withoutnet.activities.Debug.CachedUpdatesActivity;
@@ -117,11 +119,16 @@ public class MainActivity extends AppCompatActivity {
         //Log.d(TAG, "Started service");
 
         binding.startStopParticipatingButton.setOnClickListener(v -> {
-            Button button = (Button) v;
+            ImageButton imageButton = (ImageButton) v;
+            TextView participationStatusTextView = (TextView) findViewById(R.id.participation_status_text_view);
+            TextView pressButtonTextView = (TextView) findViewById(R.id.press_button_text_view);
 
             if(isParticipating) {
                 isParticipating = false;
-                button.setText(R.string.start_participating);
+                //button.setText(R.string.start_participating);
+                imageButton.setForeground(getDrawable(R.drawable.ic_wn_switch_off));
+                participationStatusTextView.setText(R.string.not_participating);
+                pressButtonTextView.setText(R.string.press_to_start_participating);
 
                 if(isServiceRunning(ReceiveAndPropagateUpdatesService.class)) {
                     Intent intent = new Intent(this, ReceiveAndPropagateUpdatesService.class);
@@ -129,7 +136,10 @@ public class MainActivity extends AppCompatActivity {
                 }
             } else {
                 isParticipating = true;
-                button.setText(R.string.stop_participating);
+                //button.setText(R.string.stop_participating);
+                imageButton.setForeground(getDrawable(R.drawable.ic_wn_switch_on));
+                participationStatusTextView.setText(R.string.participating);
+                pressButtonTextView.setText(R.string.press_to_stop_participating);
 
                 if(!isServiceRunning(ReceiveAndPropagateUpdatesService.class)) {
                     Intent intent = new Intent(this, ReceiveAndPropagateUpdatesService.class);

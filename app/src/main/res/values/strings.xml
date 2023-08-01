@@ -32,6 +32,12 @@
     <string name="start_participating">Start participating</string>
     <string name="stop_participating">Stop participating</string>
 
+    <string name="not_participating">Not participating</string>
+    <string name="participating">Participating</string>
+
+    <string name="press_to_start_participating">Press the button to start participating</string>
+    <string name="press_to_stop_participating">Press the button to stop participating</string>
+
     <string name="upload_updates">Upload updates</string>
     <string name="download_updates">Download updates</string>
 
