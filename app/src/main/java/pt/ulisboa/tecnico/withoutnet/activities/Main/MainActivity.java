@@ -95,27 +95,6 @@ public class MainActivity extends AppCompatActivity {
 
         testServiceIsOn = false;
 
-        /*binding.debugButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(getApplicationContext(), DebugActivity.class);
-                startActivity(intent);
-            }
-        });
-
-        binding.cachedUpdatesButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(getApplicationContext(), CachedUpdatesActivity.class);
-                startActivity(intent);
-            }
-        });*/
-
-        /*
-        //Intent receiveAndPropagateUpdatesServiceIntent = new Intent(this, ReceiveAndPropagateUpdatesService.class);
-        //bindService(receiveAndPropagateUpdatesServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
-        */
-
         //Log.d(TAG, "Started service");
 
         binding.startStopParticipatingButton.setOnClickListener(v -> {
@@ -148,54 +127,6 @@ public class MainActivity extends AppCompatActivity {
             }
 
         });
-
-        /*binding.startStopTestService.setOnClickListener(v -> {
-            Button button = (Button) v;
-
-            if(testServiceIsOn) {
-                testServiceIsOn = false;
-                button.setText(R.string.start_test_service);
-
-                if(isServiceRunning(TestService.class)) {
-                    Intent intent = new Intent(this, TestService.class);
-                    stopService(intent);
-                }
-            } else {
-                testServiceIsOn = true;
-                button.setText(R.string.stop_test_service);
-
-                if(!isServiceRunning(TestService.class)) {
-                    Intent intent = new Intent(this, TestService.class);
-                    startService(intent);
-                }
-            }
-
-        });
-
-        binding.uploadUpdatesButton.setOnClickListener(v -> {
-            new Thread(() -> {
-                GlobalClass globalClass = MainActivity.this.globalClass;
-                for (Node node : globalClass.getAllUpdates().keySet()) {
-                    int status = globalClass.getFrontend().sendUpdateToServer(globalClass.getMostRecentUpdate(node));
-                    Log.d(TAG, "Upload updates status: " + status);
-                }
-            }).start();
-        });
-
-        binding.downloadUpdatesButton.setOnClickListener(v -> {
-            new Thread(() -> {
-                GlobalClass globalClass = MainActivity.this.globalClass;
-                for (Node node : globalClass.getAllUpdates().keySet()) {
-                    Update update = globalClass.getFrontend().getMostRecentUpdateByNodeFromServer(node);
-                    if(update != null) {
-                        globalClass.addUpdate(update);
-                        Log.d(TAG, "Downloaded update from server: " + update);
-                    } else {
-                        Log.d(TAG, "No update was found on the server for node: " + node);
-                    }
-                }
-            }).start();
-        });*/
     }
 
     @Override

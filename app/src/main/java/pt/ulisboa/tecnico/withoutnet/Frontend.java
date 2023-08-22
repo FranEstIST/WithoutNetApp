@@ -229,8 +229,7 @@ public class Frontend {
             System.out.println("RESPONSE: " + responseString);
             return JsonParser.parseString(responseString).getAsJsonObject();
         } catch (IOException e) {
-            System.out.println(String.format("Failed to write to the connection"));
-            e.printStackTrace();
+            Log.d(TAG, "Error: Failed to write to the connection\nServer URL: " + serverURL);
         }
 
         return JsonParser.parseString("{status:-1}").getAsJsonObject();
@@ -279,8 +278,7 @@ public class Frontend {
             System.out.println("RESPONSE: " + responseString);
             return JsonParser.parseString(responseString).getAsJsonObject();
         } catch (IOException e) {
-            System.out.println(String.format("Failed to write to the connection"));
-            e.printStackTrace();
+            Log.d(TAG, "Error: Failed to write to the connection\nServer URL: " + serverURL);
         }
 
         return JsonParser.parseString("{status:-1}").getAsJsonObject();
