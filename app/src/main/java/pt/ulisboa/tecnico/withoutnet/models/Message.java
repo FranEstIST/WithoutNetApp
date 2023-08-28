@@ -27,6 +27,8 @@ public class Message {
 
     private byte[] payload;
 
+    private boolean inServer;
+
     public Message(long timestamp, int messageTypeInt, int sender, int receiver, byte[] payload) {
         this.length = (short) (13 + payload.length);
 
@@ -57,6 +59,8 @@ public class Message {
         this.sender = sender;
         this.receiver = receiver;
         this.payload = Base64.getDecoder().decode(payload);
+
+        this.inServer = false;
     }
 
     public Message(long timestamp, MessageType messageType, int sender, int receiver, byte[] payload) {
@@ -95,6 +99,8 @@ public class Message {
         this.sender = byteArrayToIntRev(senderByteArray);
         this.receiver = byteArrayToIntRev(receiverByteArray);
         this.payload = payloadByteArray;
+
+        this.inServer = false;
     }
 
     /*public Message(String messageString) {
@@ -225,6 +231,14 @@ public class Message {
 
     public void setPayload(byte[] payload) {
         this.payload = payload;
+    }
+
+    public boolean isInServer() {
+        return inServer;
+    }
+
+    public void setInServer(boolean inServer) {
+        this.inServer = inServer;
     }
 
     public String byteArrayToString() {

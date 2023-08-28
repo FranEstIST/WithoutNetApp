@@ -42,6 +42,7 @@ import pt.ulisboa.tecnico.withoutnet.Frontend;
 import pt.ulisboa.tecnico.withoutnet.R;
 import pt.ulisboa.tecnico.withoutnet.constants.BleGattIDs;
 import pt.ulisboa.tecnico.withoutnet.constants.Responses;
+import pt.ulisboa.tecnico.withoutnet.constants.StatusCodes;
 import pt.ulisboa.tecnico.withoutnet.models.Message;
 import pt.ulisboa.tecnico.withoutnet.utils.ble.BleScanner;
 import pt.ulisboa.tecnico.withoutnet.GlobalClass;
@@ -356,7 +357,13 @@ public class ReceiveAndPropagateUpdatesService extends Service {
             TreeSet<Message> messages = messagesByReceiver.get(receiver);
 
             for(Message message : messages) {
-                frontend.sendMessageToServer(message);
+                if(!message.isInServer()) {
+                    int status = frontend.sendMessageToServer(message);
+
+                    if(status == StatusCodes.OK) {
+                        message.setInServer(true);
+                    }
+                }
             }
         }
     }
