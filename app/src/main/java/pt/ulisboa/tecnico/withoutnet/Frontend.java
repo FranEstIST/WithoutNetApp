@@ -67,6 +67,27 @@ public class Frontend {
         return response.get("status").getAsInt();
     }
 
+    public int sendMessageBatchToServer(List<Message> messageBatch) {
+        // This should check whether or not the smartphone is connected to the internet
+        if (getConnectionType() == -1) return -1;
+
+        // Create the send message batch request's json object
+        JsonObject sendMessageBatchRequestJson = JsonParser.parseString("{}").getAsJsonObject();
+
+        JsonArray messageBatchJson = new JsonArray();
+
+        for(Message message : messageBatch) {
+            messageBatchJson.add(getMessageJson(message));
+        }
+
+        sendMessageBatchRequestJson.add("messageBatch", messageBatchJson);
+
+        // Send request and extract status code
+        JsonObject response = postRequest("add-message-batch", sendMessageBatchRequestJson.toString());
+
+        return response.get("status").getAsInt();
+    }
+
     public List<Message> getAllMessagesInServer() {
         //if (getConnectionType() == -1) return -1;
 
@@ -177,6 +198,17 @@ public class Frontend {
         nodeJson.addProperty("common-name", node.getCommonName());
         nodeJson.addProperty("reading-type", node.getReadingType());
         return nodeJson;
+    }
+
+    private JsonObject getMessageJson(Message message) {
+        JsonObject messageJson = JsonParser.parseString("{}").getAsJsonObject();
+        messageJson.addProperty("length", message.getLength());
+        messageJson.addProperty("timestamp", message.getTimestamp());
+        messageJson.addProperty("messageType", message.getMessageTypeAsInt());
+        messageJson.addProperty("sender", message.getSender());
+        messageJson.addProperty("receiver", message.getReceiver());
+        messageJson.addProperty("payload", message.getPayloadAsByteString());
+        return messageJson;
     }
 
     private Node buildNodefromJson(JsonObject nodeJson) {
