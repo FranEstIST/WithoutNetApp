@@ -343,6 +343,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
         if(messagesInServer != null) {
             for(Message message : messagesInServer) {
+                message.setInServer(true);
                 globalClass.addMessage(message);
             }
         }
