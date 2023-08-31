@@ -1,5 +1,6 @@
 package pt.ulisboa.tecnico.withoutnet.services.ble;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
@@ -10,12 +11,15 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -88,6 +92,10 @@ public class BleService extends Service {
                 Log.d(TAG, "Connected to node");
                 broadcastUpdate(ACTION_GATT_CONNECTED);
 
+                if(!checkBLPermissions()) {
+                    return;
+                }
+
                 bluetoothGatt.discoverServices();
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 // disconnected from the GATT Server
@@ -101,7 +109,7 @@ public class BleService extends Service {
 
                 String nextAddress = addressQueue.poll();
 
-                if(nextAddress != null) {
+                if (nextAddress != null) {
                     BleService.this.connect(nextAddress);
                 }
             }
@@ -194,7 +202,7 @@ public class BleService extends Service {
             return false;
         }*/
 
-        if(hasAttemptedToConnect) {
+        if (hasAttemptedToConnect) {
             // TODO: See if this can be fixed (i.e. if there is a way to stop too many reconnection attempts from happening)
             //addressQueue.add(address);
             return false;
@@ -214,6 +222,9 @@ public class BleService extends Service {
         try {
             final BluetoothDevice device = bluetoothAdapter.getRemoteDevice(address);
             // connect to the GATT server on the device
+            if(!checkBLPermissions()) {
+                return false;
+            }
             bluetoothGatt = device.connectGatt(this, false, bluetoothGattCallback);
             return true;
         } catch (IllegalArgumentException exception) {
@@ -228,17 +239,22 @@ public class BleService extends Service {
         this.hasAttemptedToConnect = false;
         this.connectionTimeoutTimer.cancel();
 
-        if(bluetoothGatt == null) {
+        if (bluetoothGatt == null) {
             Log.d(TAG, "BLGATT is null.");
         }
 
-        if(connectionState != STATE_CONNECTED) {
+        if (connectionState != STATE_CONNECTED) {
             Log.d(TAG, "Can't close connection because device is not connected.");
         }
 
         if (bluetoothGatt == null || connectionState != STATE_CONNECTED) {
             return false;
         }
+
+        if(!checkBLPermissions()) {
+            return false;
+        }
+
         bluetoothGatt.disconnect();
         bluetoothGatt.close();
 
@@ -256,12 +272,16 @@ public class BleService extends Service {
     // TODO: Check if user has granted the necessary permissions
     @SuppressLint("MissingPermission")
     public void readCharacteristic(BluetoothGattCharacteristic characteristic) {
+        if(!checkBLPermissions()) {
+            return;
+        }
+
         if (bluetoothGatt == null) {
             Log.w(TAG, "BluetoothGatt not initialized");
             return;
         }
 
-        if(!mtuSet) {
+        if (!mtuSet) {
             ongoingOperation = new Runnable() {
                 @Override
                 public void run() {
@@ -321,7 +341,11 @@ public class BleService extends Service {
             return;
         }
 
-        if(firstWrite) {
+        if(!checkBLPermissions()) {
+            return;
+        }
+
+        if (firstWrite) {
             ongoingOperation = new Runnable() {
                 @Override
                 public void run() {
@@ -365,7 +389,26 @@ public class BleService extends Service {
         if (bluetoothGatt == null) {
             return;
         }
+
+        if(!checkBLPermissions()) {
+            return;
+        }
+
         bluetoothGatt.close();
         bluetoothGatt = null;
+    }
+
+    private boolean checkBLPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+                && ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+            Log.e(TAG, "Bluetooth connect permissions not granted");
+            return false;
+        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S
+                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Log.e(TAG, "Access fine location permissions not granted");
+            return false;
+        }
+
+        return true;
     }
 }

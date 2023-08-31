@@ -32,8 +32,8 @@ import pt.ulisboa.tecnico.withoutnet.models.Update;
 
 public class Frontend {
     //private String serverURL = "http://10.0.2.2:8080/";     // change accordingly
-    //private String serverURL = "http://192.168.1.102:8081/";
-    private String serverURL = "http://sigma01.ist.utl.pt:50012/";
+    private String serverURL = "http://192.168.1.102:8081/";
+    //private String serverURL = "http://sigma01.ist.utl.pt:50012/";
     //private String serverURL = "http://10.5.192.102:8081/";
 
     private String token;

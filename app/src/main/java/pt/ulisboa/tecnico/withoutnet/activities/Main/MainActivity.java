@@ -1,14 +1,19 @@
 package pt.ulisboa.tecnico.withoutnet.activities.Main;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.work.WorkManager;
 import androidx.work.WorkRequest;
 
+import android.Manifest;
 import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.Settings;
@@ -19,6 +24,9 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import java.util.ArrayList;
 
 import pt.ulisboa.tecnico.withoutnet.GlobalClass;
 import pt.ulisboa.tecnico.withoutnet.activities.Debug.CachedUpdatesActivity;
@@ -27,11 +35,13 @@ import pt.ulisboa.tecnico.withoutnet.R;
 import pt.ulisboa.tecnico.withoutnet.databinding.ActivityMainBinding;
 import pt.ulisboa.tecnico.withoutnet.models.Node;
 import pt.ulisboa.tecnico.withoutnet.models.Update;
+import pt.ulisboa.tecnico.withoutnet.services.ble.BleService;
 import pt.ulisboa.tecnico.withoutnet.services.ble.ReceiveAndPropagateUpdatesService;
 import pt.ulisboa.tecnico.withoutnet.services.ble.TestService;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
+    private static final int REQUEST_BLUETOOTH_PERMISSIONS = 1;
 
     private GlobalClass globalClass;
 
@@ -103,30 +113,71 @@ public class MainActivity extends AppCompatActivity {
             TextView pressButtonTextView = (TextView) findViewById(R.id.press_button_text_view);
 
             if(isParticipating) {
-                isParticipating = false;
-                //button.setText(R.string.start_participating);
-                imageButton.setForeground(getDrawable(R.drawable.ic_wn_switch_off));
-                participationStatusTextView.setText(R.string.not_participating);
-                pressButtonTextView.setText(R.string.press_to_start_participating);
-
-                if(isServiceRunning(ReceiveAndPropagateUpdatesService.class)) {
-                    Intent intent = new Intent(this, ReceiveAndPropagateUpdatesService.class);
-                    stopService(intent);
-                }
+                stopParticipating();
             } else {
-                isParticipating = true;
-                //button.setText(R.string.stop_participating);
-                imageButton.setForeground(getDrawable(R.drawable.ic_wn_switch_on));
-                participationStatusTextView.setText(R.string.participating);
-                pressButtonTextView.setText(R.string.press_to_stop_participating);
-
-                if(!isServiceRunning(ReceiveAndPropagateUpdatesService.class)) {
-                    Intent intent = new Intent(this, ReceiveAndPropagateUpdatesService.class);
-                    startService(intent);
-                }
+                startParticipating();
             }
 
         });
+    }
+
+    private void startParticipating() {
+        ImageButton imageButton = (ImageButton) findViewById(R.id.start_stop_participating_button);
+        TextView participationStatusTextView = (TextView) findViewById(R.id.participation_status_text_view);
+        TextView pressButtonTextView = (TextView) findViewById(R.id.press_button_text_view);
+
+        ArrayList<String> permissionsList = new ArrayList<>();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+                && ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "Bluetooth connect permission not granted. Asking for permission.");
+            permissionsList.add(Manifest.permission.BLUETOOTH_CONNECT);
+            return;
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+                && ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED){
+            Log.d(TAG, "Bluetooth scan permission not granted. Asking for permission.");
+            permissionsList.add(Manifest.permission.BLUETOOTH_SCAN);
+
+        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S
+                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "Fine location permissions not granted. Asking user for permission.");
+            permissionsList.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+
+        if(!permissionsList.isEmpty()) {
+            String[] permissionsArray = new String[permissionsList.size()];
+            permissionsList.toArray(permissionsArray);
+            ActivityCompat.requestPermissions(MainActivity.this, permissionsArray, REQUEST_BLUETOOTH_PERMISSIONS);
+            return;
+        }
+
+        isParticipating = true;
+        //button.setText(R.string.stop_participating);
+        imageButton.setForeground(getDrawable(R.drawable.ic_wn_switch_on));
+        participationStatusTextView.setText(R.string.participating);
+        pressButtonTextView.setText(R.string.press_to_stop_participating);
+
+        if(!isServiceRunning(ReceiveAndPropagateUpdatesService.class)) {
+            Intent intent = new Intent(this, ReceiveAndPropagateUpdatesService.class);
+            startService(intent);
+        }
+    }
+
+    private void stopParticipating() {
+        ImageButton imageButton = (ImageButton) findViewById(R.id.start_stop_participating_button);
+        TextView participationStatusTextView = (TextView) findViewById(R.id.participation_status_text_view);
+        TextView pressButtonTextView = (TextView) findViewById(R.id.press_button_text_view);
+
+        isParticipating = false;
+        //button.setText(R.string.start_participating);
+        imageButton.setForeground(getDrawable(R.drawable.ic_wn_switch_off));
+        participationStatusTextView.setText(R.string.not_participating);
+        pressButtonTextView.setText(R.string.press_to_start_participating);
+
+        if (isServiceRunning(ReceiveAndPropagateUpdatesService.class)) {
+            Intent intent = new Intent(this, ReceiveAndPropagateUpdatesService.class);
+            stopService(intent);
+        }
     }
 
     @Override
@@ -178,6 +229,23 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             default:
                 return false;
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        switch (requestCode) {
+            case REQUEST_BLUETOOTH_PERMISSIONS:
+                for(int grantResult : grantResults) {
+                    if(grantResult == PackageManager.PERMISSION_DENIED) {
+                        Toast.makeText(this, "WithoutNet participation cannot be enabled due to insufficient permissions", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                }
+                startParticipating();
+                break;
         }
     }
 

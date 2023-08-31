@@ -43,22 +43,9 @@ public class BleScanner {
     }
 
     // TODO: Is scan required to be synchronized?
+    @SuppressLint("MissingPermission")
     public synchronized void scan() {
-        if (Build.VERSION.SDK_INT >= 31
-                && ActivityCompat.checkSelfPermission(this.context, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-
-        if(ActivityCompat.checkSelfPermission(this.context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Move these permission checks to the activity where the scan is carried out
-            //ActivityCompat.requestPermissions(activity, new String[]{ Manifest.permission.ACCESS_FINE_LOCATION }, REQUEST_ACCESS_FINE_LOCATION);
+        if(!checkBLPermissions()) {
             return;
         }
 
@@ -99,6 +86,11 @@ public class BleScanner {
     @SuppressLint("MissingPermission")
     public void stopScanning() {
         Log.d(TAG, "Bluetooth scan stopping (manually)...\n");
+
+        if(!checkBLPermissions()) {
+            return;
+        }
+
         bluetoothLeScanner.stopScan(this.scanCallback);
         scanning = false;
 
@@ -116,7 +108,26 @@ public class BleScanner {
     @SuppressLint("MissingPermission")
     public void stopScanningDefinitely() {
         Log.d(TAG, "Bluetooth scan stopping (manually)...\n");
+
+        if(!checkBLPermissions()) {
+            return;
+        }
+
         bluetoothLeScanner.stopScan(this.scanCallback);
         scanning = false;
+    }
+
+    private boolean checkBLPermissions() {
+        if (Build.VERSION.SDK_INT >= 31
+                && ActivityCompat.checkSelfPermission(this.context, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+            Log.e(TAG, "Bluetooth scan permissions not granted");
+            return false;
+        } else if (Build.VERSION.SDK_INT < 31
+                && ActivityCompat.checkSelfPermission(this.context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Log.e(TAG, "Fine location permissions not granted");
+            return false;
+        }
+
+        return true;
     }
 }
