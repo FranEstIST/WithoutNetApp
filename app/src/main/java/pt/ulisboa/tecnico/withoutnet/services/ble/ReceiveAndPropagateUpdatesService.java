@@ -228,7 +228,8 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
                     //Log.d(TAG, "Message: " + messageString);
 
-                    if(messageByteArray.length == 1 || messageByteArray.equals(Responses.EMPTY_BYTE_ARRAY)) {
+                    //if(messageByteArray.length == 1 || messageByteArray.equals(Responses.EMPTY_BYTE_ARRAY)) {
+                    if(messageByteArray.length == 0 || messageByteArray[0] == 0) {
                         Log.d(TAG, "No more messages to be read from node");
 
                         // All pending messages have been read
