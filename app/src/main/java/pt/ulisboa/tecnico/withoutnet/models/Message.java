@@ -103,6 +103,52 @@ public class Message {
         this.inServer = false;
     }
 
+    public Message(ArrayList<byte[]> chunks) {
+        this.length = 0;
+
+        for(int i = 0; i < chunks.size(); i++) {
+            byte[] chunk = chunks.get(i);
+
+            byte[] lengthByteArray = Arrays.copyOfRange(chunk, 0, 2);
+
+            short chunkLength = (short) byteArrayToIntRev(lengthByteArray);
+            this.length += chunkLength;
+
+            int payloadChunkStart;
+
+            if(i == 0) {
+                byte[] timestampByteArray = Arrays.copyOfRange(chunk, 2, 6);
+                byte[] messageTypeByteArray = Arrays.copyOfRange(chunk, 6, 7);
+                byte[] senderByteArray = Arrays.copyOfRange(chunk, 7, 11);
+                byte[] receiverByteArray = Arrays.copyOfRange(chunk, 11, 15);
+
+                this.timestamp = byteArrayToIntRev(timestampByteArray);
+
+                try {
+                    this.messageType = MessageType.values()[Integer.valueOf(byteArrayToIntRev(messageTypeByteArray))];
+                } catch (ArrayIndexOutOfBoundsException e1) {
+                    //TODO: Throw an exception here
+                    e1.printStackTrace();
+                }
+
+                this.sender = byteArrayToIntRev(senderByteArray);
+                this.receiver = byteArrayToIntRev(receiverByteArray);
+
+                payloadChunkStart = 15;
+            } else {
+                payloadChunkStart = 2;
+            }
+
+            byte[] payloadChunkByteArray = Arrays.copyOfRange(chunk, payloadChunkStart, chunkLength + 2);
+
+            if(i == 0) {
+                this.payload = payloadChunkByteArray;
+            } else {
+                this.payload = concatByteArrays(this.payload, payloadChunkByteArray);
+            }
+        }
+    }
+
     /*public Message(String messageString) {
         String messageStringComponents[] = messageString.split("#");
 
@@ -270,6 +316,41 @@ public class Message {
                 receiverByteArray,
                 this.payload);
 
+    }
+
+    public ArrayList<byte[]> toChunks() {
+        //int numChunks = (this.length - (2 + 4 + 1 + 4 + 4))/20 +
+        //int numChunks = this.length/20 + (this.length%20 == 0 ? 0 : 1);
+        int numChunks = this.length/18 + (this.length%18 == 0 ? 0 : 1);
+        // short totalLength = (short) (this.length + 2*numChunks);
+        byte[] messageByteArray = this.toByteArray();
+        ArrayList<byte[]> chunks = new ArrayList<>();
+
+        for(int currentChunk = 1; currentChunk <= numChunks; currentChunk++) {
+            short messageOffset = (short) (2 + 18 * (currentChunk - 1));
+
+            /*short remainingChunksLength = (short) (totalLength - 20 * (currentChunk - 1));
+            short chunkLength = 20 > remainingChunksLength ? remainingChunksLength : 20;*/
+
+            short remainingMessageLength = (short) (this.length - 18 * (currentChunk - 1));
+            short chunkLength = 18 > remainingMessageLength ? remainingMessageLength : 18;
+
+            byte[] chunkLengthByteArray = shortToByteArrayRev(chunkLength);
+
+            byte[] chunkPayloadByteArray = Arrays.copyOfRange(messageByteArray,
+                    messageOffset,
+                    messageOffset + chunkLength);
+
+            /*byte[] chunkPayloadByteArray = Arrays.copyOfRange(messageByteArray,
+                    20 * (currentChunk - 1),
+                    20 * currentChunk);*/
+
+            byte[] chunkByteArray = concatByteArrays(chunkLengthByteArray, chunkPayloadByteArray);
+
+            chunks.add(chunkByteArray);
+        }
+
+        return chunks;
     }
 
     private byte[] concatByteArrays(byte[]... byteArrays) {

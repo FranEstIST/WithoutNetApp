@@ -72,6 +72,12 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
     private boolean allIncomingMessagesWritten = false;
 
+    private ArrayList<byte[]> currentOutgoingMessageChunks = new ArrayList<>();
+
+    private ArrayList<byte[]> currentIncomingMessageChunks = new ArrayList<>();
+
+    private int currentIncomingMessageChunkIndex = 0;
+
     private ScanCallback scanCallback  = new ScanCallback() {
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
@@ -224,40 +230,42 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                 } else if(characteristicId.equals(BleGattIDs.OUTGOING_MESSAGE_CHARACTERISTIC_ID)) {
                     Log.d(TAG, "Message read");
 
-                    byte[] messageByteArray = intent.getByteArrayExtra("byte-array-value");
+                    byte[] chunkByteArray = intent.getByteArrayExtra("byte-array-value");
 
-                    //Log.d(TAG, "Message: " + messageString);
+                    if(chunkByteArray.length >= 4 && chunkByteArray[0] == 0 && chunkByteArray[1] == 0) {
+                        // The chunk's length is 0, which means all of the current message's chunks have been received
 
-                    //if(messageByteArray.length == 1 || messageByteArray.equals(Responses.EMPTY_BYTE_ARRAY)) {
-                    if(messageByteArray.length == 0 || messageByteArray[0] == 0) {
-                        Log.d(TAG, "No more messages to be read from node");
+                        Log.d(TAG, "All message chunks have been read");
 
-                        // All pending messages have been read
-                        // If all messages meant for the node have been written, then
-                        // disconnect from the node
-                        //allOutgoingMessagesRead = true;
+                        // Add the current message to the cache
+                        Message message = new Message(ReceiveAndPropagateUpdatesService.this.currentOutgoingMessageChunks);
+                        globalClass.addMessage(message);
 
-                        //if(allIncomingMessagesWritten) {
+                        Log.d(TAG, "Message added to message list: " + message);
+                        Log.d(TAG, "Message byte array: " + message.byteArrayToString());
+
+                        // Reset the current incoming message chunk list, in order to collect
+                        // the next message's chunks
+                        ReceiveAndPropagateUpdatesService.this.currentOutgoingMessageChunks.clear();
+
+                        if(!(chunkByteArray[2] == 0 && chunkByteArray[3] == 0)) {
+                            // The "isLastMessage" flag on this end chunk has been set to true, meaning
+                            // there are no more messages to be read from the node
+
+                            Log.d(TAG, "No more messages to be read from node");
                             Log.d(TAG, "Session with node complete. Disconnecting...");
 
                             final boolean result = bleService.disconnect();
                             Log.d(TAG, "Disconnect request result = " + result);
 
-                            //allIncomingMessagesWritten = false;
-                            //allOutgoingMessagesRead = false;
-                        //}
-
-                        return;
+                            return;
+                        }
+                    } else {
+                        // Append the new chunk to the other chunks
+                        ReceiveAndPropagateUpdatesService.this.currentOutgoingMessageChunks.add(chunkByteArray);
                     }
 
-                    // Add the current message to the cache
-                    Message message = new Message(messageByteArray);
-                    globalClass.addMessage(message);
-
-                    Log.d(TAG, "Message added to message list: " + message);
-                    Log.d(TAG, "Message byte array: " + message.byteArrayToString());
-
-                    // Read the next message
+                    // Read the next chunk
                     BluetoothGattCharacteristic outgoingMessageCharacteristic = bleService.getOutgoingMessageCharacteristic();
                     bleService.readCharacteristic(outgoingMessageCharacteristic);
                 } else {
@@ -266,7 +274,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                 }
             } else if (BleService.ACTION_CHARACTERISTIC_WRITTEN.equals(action)) {
                 // TODO: Write debug message to log
-                writeNextMessage();
+                writeNextChunk();
             } else {
                 Log.d(TAG, "Unknown action received by broadcast receiver");
             }
@@ -287,6 +295,52 @@ public class ReceiveAndPropagateUpdatesService extends Service {
             }
         }
     });
+
+    private void writeNextChunk() {
+        int receiverUuid = bleService.getCurrentNodeUuid();
+
+        if(currentIncomingMessageChunks.isEmpty()) {
+            // The previous incoming message's chunks have all been sent,
+            // so now the next messages chunks must be sent
+
+            // Get every message intended for this node not yet sent
+            TreeSet<Message> messagesToBeWritten = globalClass.getAllMessagesForReceiver(receiverUuid);
+
+            if (messagesToBeWritten != null && messagesToBeWritten.size() > 0) {
+                BluetoothGattCharacteristic incomingMessageCharacteristic = bleService.getIncomingMessageCharacteristic();
+
+                // TODO: It should be checked if incomingMessageCharacteristic != null
+
+                // "Pop" a message from this set
+                Message message = messagesToBeWritten.first();
+                messagesToBeWritten.remove(message);
+
+                Log.d(TAG, "Next message to be written to node: " + message.toString());
+
+                currentIncomingMessageChunks = message.toChunks();
+            } else {
+                Log.d(TAG, "No more messages to be written to node");
+
+                // All messages meant for the node have been written
+                // Time to read the node's pending messages
+                BluetoothGattCharacteristic outgoingMessageCharacteristic = bleService.getOutgoingMessageCharacteristic();
+                bleService.readCharacteristic(outgoingMessageCharacteristic);
+
+                return;
+            }
+        }
+
+        BluetoothGattCharacteristic incomingMessageCharacteristic = bleService.getIncomingMessageCharacteristic();
+
+        byte[] chunk = currentIncomingMessageChunks.get(0);
+        currentIncomingMessageChunks.remove(chunk);
+
+        incomingMessageCharacteristic.setValue(chunk);
+
+        Log.d(TAG, "Next chunk to be written to node: " + chunk);
+
+        bleService.writeCharacteristic(incomingMessageCharacteristic);
+    }
 
     private void writeNextMessage() {
         int receiverUuid = bleService.getCurrentNodeUuid();
