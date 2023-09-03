@@ -319,6 +319,9 @@ public class Message {
     }
 
     public ArrayList<byte[]> toChunks() {
+        // TODO: Add final chunk, whose length should be 0,
+        // to tell the receiving node that the message is complete
+
         //int numChunks = (this.length - (2 + 4 + 1 + 4 + 4))/20 +
         //int numChunks = this.length/20 + (this.length%20 == 0 ? 0 : 1);
         int numChunks = this.length/18 + (this.length%18 == 0 ? 0 : 1);
@@ -326,26 +329,38 @@ public class Message {
         byte[] messageByteArray = this.toByteArray();
         ArrayList<byte[]> chunks = new ArrayList<>();
 
-        for(int currentChunk = 1; currentChunk <= numChunks; currentChunk++) {
-            short messageOffset = (short) (2 + 18 * (currentChunk - 1));
+        for(int currentChunk = 1; currentChunk <= numChunks + 1; currentChunk++) {
+            byte[] chunkByteArray;
+
+            if(currentChunk <= numChunks) {
+                short messageOffset = (short) (2 + 18 * (currentChunk - 1));
 
             /*short remainingChunksLength = (short) (totalLength - 20 * (currentChunk - 1));
             short chunkLength = 20 > remainingChunksLength ? remainingChunksLength : 20;*/
 
-            short remainingMessageLength = (short) (this.length - 18 * (currentChunk - 1));
-            short chunkLength = 18 > remainingMessageLength ? remainingMessageLength : 18;
+                short remainingMessageLength = (short) (this.length - 18 * (currentChunk - 1));
+                short chunkLength = 18 > remainingMessageLength ? remainingMessageLength : 18;
 
-            byte[] chunkLengthByteArray = shortToByteArrayRev(chunkLength);
+                byte[] chunkLengthByteArray = shortToByteArrayRev(chunkLength);
 
-            byte[] chunkPayloadByteArray = Arrays.copyOfRange(messageByteArray,
-                    messageOffset,
-                    messageOffset + chunkLength);
+                byte[] chunkPayloadByteArray = Arrays.copyOfRange(messageByteArray,
+                        messageOffset,
+                        messageOffset + chunkLength);
 
-            /*byte[] chunkPayloadByteArray = Arrays.copyOfRange(messageByteArray,
+                /*byte[] chunkPayloadByteArray = Arrays.copyOfRange(messageByteArray,
                     20 * (currentChunk - 1),
                     20 * currentChunk);*/
 
-            byte[] chunkByteArray = concatByteArrays(chunkLengthByteArray, chunkPayloadByteArray);
+                chunkByteArray = concatByteArrays(chunkLengthByteArray, chunkPayloadByteArray);
+            } else {
+                chunkByteArray = shortToByteArrayRev((short) 0);
+            }
+
+            if(chunkByteArray.length < 20) {
+                byte[] paddingByteArray = new byte[20 - chunkByteArray.length];
+                Arrays.fill(paddingByteArray, (byte) 0x0);
+                chunkByteArray = concatByteArrays(chunkByteArray, paddingByteArray);
+            }
 
             chunks.add(chunkByteArray);
         }

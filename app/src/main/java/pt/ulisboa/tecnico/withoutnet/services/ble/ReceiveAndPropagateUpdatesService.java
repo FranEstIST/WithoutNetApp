@@ -231,7 +231,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
                     bleService.setCurrentNodeUuid(nodeUuid);
 
-                    writeNextMessage();
+                    writeNextChunk();
                 } else if(characteristicId.equals(BleGattIDs.OUTGOING_MESSAGE_CHARACTERISTIC_ID)) {
                     Log.d(TAG, "Message read");
 
@@ -294,6 +294,17 @@ public class ReceiveAndPropagateUpdatesService extends Service {
         }
     };
 
+    public String byteArrayToString(byte[] byteArray) {
+        byte[] messageByteArray = byteArray;
+        String messageByteArrayString = "";
+
+        for(byte messageByte : messageByteArray) {
+            messageByteArrayString += messageByte + " # ";
+        }
+
+        return messageByteArrayString;
+    }
+
     private Thread exchangeMessagesWithServerThread = new Thread(new Runnable() {
         @Override
         public void run() {
@@ -350,7 +361,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
         incomingMessageCharacteristic.setValue(chunk);
 
-        Log.d(TAG, "Next chunk to be written to node: " + chunk);
+        Log.d(TAG, "Next chunk to be written to node: " + byteArrayToString(chunk));
 
         bleService.writeCharacteristic(incomingMessageCharacteristic);
     }
@@ -538,12 +549,14 @@ public class ReceiveAndPropagateUpdatesService extends Service {
     }
 
     private boolean enoughTimeHasPassedSinceLastConnection(String address) {
-        Long lastConnectionTime = this.lastConnectionTimesByAddress.get(address);
+        /*Long lastConnectionTime = this.lastConnectionTimesByAddress.get(address);
 
         if(lastConnectionTime == null) {
             return true;
         }
 
-        return (System.currentTimeMillis() - lastConnectionTime) >= CONNECTION_INTERVAL;
+        return (System.currentTimeMillis() - lastConnectionTime) >= CONNECTION_INTERVAL;*/
+
+        return true;
     }
 }
