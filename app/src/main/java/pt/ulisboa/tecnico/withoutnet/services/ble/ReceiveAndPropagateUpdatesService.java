@@ -76,8 +76,6 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
     private ArrayList<byte[]> currentIncomingMessageChunks = new ArrayList<>();
 
-    private int currentIncomingMessageChunkIndex = 0;
-
     private ScanCallback scanCallback  = new ScanCallback() {
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
@@ -157,6 +155,13 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                 // Stop scanning while a connection is ongoing
                 // ReceiveAndPropagateUpdatesService.this.scanner.stopScanning();
 
+                // These lists, which allow for the collection of message chunks, must
+                // be cleared upon a new connection, in case a previous connection
+                // was interrupted while a message was being sent/received
+
+                currentIncomingMessageChunks.clear();
+                currentOutgoingMessageChunks.clear();
+
                 connected = true;
                 Log.d(TAG, "Connected to node");
 
@@ -233,20 +238,26 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                     byte[] chunkByteArray = intent.getByteArrayExtra("byte-array-value");
 
                     if(chunkByteArray.length >= 4 && chunkByteArray[0] == 0 && chunkByteArray[1] == 0) {
-                        // The chunk's length is 0, which means all of the current message's chunks have been received
+                        if(!ReceiveAndPropagateUpdatesService.this.currentOutgoingMessageChunks.isEmpty()) {
+                            // The message chunks' list is not empty and the current chunk's length is 0,
+                            // which means all of the current message's chunks have been received
 
-                        Log.d(TAG, "All message chunks have been read");
+                            Log.d(TAG, "All message chunks have been read");
 
-                        // Add the current message to the cache
-                        Message message = new Message(ReceiveAndPropagateUpdatesService.this.currentOutgoingMessageChunks);
-                        globalClass.addMessage(message);
+                            // Add the current message to the cache
+                            Message message = new Message(ReceiveAndPropagateUpdatesService.this.currentOutgoingMessageChunks);
+                            globalClass.addMessage(message);
 
-                        Log.d(TAG, "Message added to message list: " + message);
-                        Log.d(TAG, "Message byte array: " + message.byteArrayToString());
+                            Log.d(TAG, "Message added to message list: " + message);
+                            Log.d(TAG, "Message byte array: " + message.byteArrayToString());
 
-                        // Reset the current incoming message chunk list, in order to collect
-                        // the next message's chunks
-                        ReceiveAndPropagateUpdatesService.this.currentOutgoingMessageChunks.clear();
+                            // Reset the current incoming message chunk list, in order to collect
+                            // the next message's chunks
+                            ReceiveAndPropagateUpdatesService.this.currentOutgoingMessageChunks.clear();
+                        }
+
+                        // If the message chunk's list is empty, then the node must not have any messages
+                        // to send, meaning the code in the if clause below should be executed
 
                         if(!(chunkByteArray[2] == 0 && chunkByteArray[3] == 0)) {
                             // The "isLastMessage" flag on this end chunk has been set to true, meaning
@@ -263,6 +274,8 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                     } else {
                         // Append the new chunk to the other chunks
                         ReceiveAndPropagateUpdatesService.this.currentOutgoingMessageChunks.add(chunkByteArray);
+
+                        Log.d(TAG, "Read chunk " + ReceiveAndPropagateUpdatesService.this.currentOutgoingMessageChunks.size());
                     }
 
                     // Read the next chunk
