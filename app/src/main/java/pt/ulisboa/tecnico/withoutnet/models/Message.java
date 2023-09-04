@@ -173,6 +173,10 @@ public class Message {
         this.content = messageStringComponents[5];
     }*/
 
+    public Message getAckMessage() {
+        return new Message(this.timestamp, MessageType.ACK, this.receiver, this.sender, new byte[] {});
+    }
+
     short byteArrayToShort(byte[] byteArray) {
         short shortValue = 0;
         for (byte b : byteArray) {
@@ -465,9 +469,4 @@ public class Message {
                 + "#" + this.receiver
                 + "#" + byteArrayToIntRev(this.payload);
     }
-}
-
-enum MessageType {
-    DATA,
-    ACK
 }

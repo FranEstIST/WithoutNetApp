@@ -44,6 +44,7 @@ import pt.ulisboa.tecnico.withoutnet.constants.BleGattIDs;
 import pt.ulisboa.tecnico.withoutnet.constants.Responses;
 import pt.ulisboa.tecnico.withoutnet.constants.StatusCodes;
 import pt.ulisboa.tecnico.withoutnet.models.Message;
+import pt.ulisboa.tecnico.withoutnet.models.MessageType;
 import pt.ulisboa.tecnico.withoutnet.utils.ble.BleScanner;
 import pt.ulisboa.tecnico.withoutnet.GlobalClass;
 import pt.ulisboa.tecnico.withoutnet.models.Node;
@@ -335,9 +336,17 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
                 // TODO: It should be checked if incomingMessageCharacteristic != null
 
+                // TODO: Shouldn't a message only be removed from the cache and ACKed after it has been sent?
+
                 // "Pop" a message from this set
                 Message message = messagesToBeWritten.first();
                 messagesToBeWritten.remove(message);
+
+                if(message.getMessageType().equals(MessageType.DATA)) {
+                    // Add the corresponding ACK message to the sender's queue
+                    // of pending messages to be written
+                    globalClass.addMessage(message.getAckMessage());
+                }
 
                 Log.d(TAG, "Next message to be written to node: " + message.toString());
 
