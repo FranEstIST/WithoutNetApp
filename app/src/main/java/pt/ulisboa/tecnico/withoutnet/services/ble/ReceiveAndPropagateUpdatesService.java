@@ -77,6 +77,8 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
     private ArrayList<byte[]> currentIncomingMessageChunks = new ArrayList<>();
 
+    private Message messageToBeWritten = null;
+
     private ScanCallback scanCallback  = new ScanCallback() {
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
@@ -331,26 +333,28 @@ public class ReceiveAndPropagateUpdatesService extends Service {
             // Get every message intended for this node not yet sent
             TreeSet<Message> messagesToBeWritten = globalClass.getAllMessagesForReceiver(receiverUuid);
 
+            if(messageToBeWritten != null && messagesToBeWritten.contains(messageToBeWritten)) {
+                // The previous message to be written to the node has been written, so now
+                // it should be removed from the cache and ACKed by the receiver
+                messagesToBeWritten.remove(messageToBeWritten);
+
+                if(messageToBeWritten.getMessageType().equals(MessageType.DATA)) {
+                    // Add the corresponding ACK message to the sender's queue
+                    // of pending messages to be written
+                    globalClass.addMessage(messageToBeWritten.getAckMessage());
+                }
+            }
+
             if (messagesToBeWritten != null && messagesToBeWritten.size() > 0) {
                 BluetoothGattCharacteristic incomingMessageCharacteristic = bleService.getIncomingMessageCharacteristic();
 
                 // TODO: It should be checked if incomingMessageCharacteristic != null
 
-                // TODO: Shouldn't a message only be removed from the cache and ACKed after it has been sent?
+                messageToBeWritten = messagesToBeWritten.first();
 
-                // "Pop" a message from this set
-                Message message = messagesToBeWritten.first();
-                messagesToBeWritten.remove(message);
+                Log.d(TAG, "Next message to be written to node: " + messageToBeWritten.toString());
 
-                if(message.getMessageType().equals(MessageType.DATA)) {
-                    // Add the corresponding ACK message to the sender's queue
-                    // of pending messages to be written
-                    globalClass.addMessage(message.getAckMessage());
-                }
-
-                Log.d(TAG, "Next message to be written to node: " + message.toString());
-
-                currentIncomingMessageChunks = message.toChunks();
+                currentIncomingMessageChunks = messageToBeWritten.toChunks();
             } else {
                 Log.d(TAG, "No more messages to be written to node");
 
