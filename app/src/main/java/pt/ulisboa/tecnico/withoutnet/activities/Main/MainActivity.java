@@ -1,5 +1,9 @@
 package pt.ulisboa.tecnico.withoutnet.activities.Main;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -7,7 +11,9 @@ import androidx.work.WorkManager;
 import androidx.work.WorkRequest;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.ActivityManager;
+import android.bluetooth.BluetoothAdapter;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -90,6 +96,8 @@ public class MainActivity extends AppCompatActivity {
 
     private WorkRequest receiveAndPropagateUpdatesWorkReq;
 
+    private ActivityResultLauncher<Intent> bluetoothAdapterActivityResultLauncher;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -114,6 +122,19 @@ public class MainActivity extends AppCompatActivity {
                 startParticipating();
             }
         });
+
+        bluetoothAdapterActivityResultLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                new ActivityResultCallback<ActivityResult>() {
+                    @Override
+                    public void onActivityResult(ActivityResult result) {
+                        if (result.getResultCode() == Activity.RESULT_OK) {
+                            MainActivity.this.startParticipating();
+                        } else {
+                            Toast.makeText(MainActivity.this, "WithoutNet participation cannot be enabled due to Bluetooth not being enabled", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
     }
 
     private void startParticipating() {
@@ -145,6 +166,22 @@ public class MainActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(MainActivity.this, permissionsArray, REQUEST_BLUETOOTH_PERMISSIONS);
             return;
         }
+
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if(bluetoothAdapter == null) {
+            // This device does not support Bluetooth
+            Log.d(TAG, "Bluetooth is unavailable");
+            Toast.makeText(this, "WithoutNet participation cannot be enabled due to Bluetooth being unavailable on this device", Toast.LENGTH_SHORT).show();
+            return;
+        } else if (!bluetoothAdapter.isEnabled()) {
+            // Bluetooth is not enabled
+            // Ask user to enable Bluetooth
+            Log.d(TAG, "Bluetooth is not enabled. Asking user to enable Bluetooth.");
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            bluetoothAdapterActivityResultLauncher.launch(enableBtIntent);
+            return;
+        }
+
 
         isParticipating = true;
 
