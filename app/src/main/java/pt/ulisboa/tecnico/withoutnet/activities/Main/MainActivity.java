@@ -185,7 +185,7 @@ public class MainActivity extends AppCompatActivity {
 
         isParticipating = true;
 
-        imageButton.setForeground(getDrawable(R.drawable.ic_wn_switch_on));
+        imageButton.setForeground(getDrawable(R.drawable.wn_button_on));
         participationStatusTextView.setText(R.string.participating);
         pressButtonTextView.setText(R.string.press_to_stop_participating);
 
@@ -202,7 +202,7 @@ public class MainActivity extends AppCompatActivity {
 
         isParticipating = false;
 
-        imageButton.setForeground(getDrawable(R.drawable.ic_wn_switch_off));
+        imageButton.setForeground(getDrawable(R.drawable.wn_button_off));
         participationStatusTextView.setText(R.string.not_participating);
         pressButtonTextView.setText(R.string.press_to_start_participating);
 
