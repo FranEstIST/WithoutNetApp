@@ -45,7 +45,8 @@
             android:exported="false" />
         <activity
             android:name=".activities.Main.MainActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/Theme.WithoutNet.NoActionBar" />
         <activity
             android:name=".activities.Login.LoginActivity"
             android:exported="true"

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/HomeFragment">
+
+    <fragment
+        android:id="@+id/HomeFragment"
+        android:name="pt.ulisboa.tecnico.withoutnet.fragments.HomeFragment"
+        android:label="@string/home_fragment_label"
+        tools:layout="@layout/fragment_home">
+    </fragment>
+
+    <fragment
+        android:id="@+id/NodesFragment"
+        android:name="pt.ulisboa.tecnico.withoutnet.fragments.NodesFragment"
+        android:label="@string/nodes_fragment_label"
+        tools:layout="@layout/fragment_nodes">
+    </fragment>
+
+    <fragment
+        android:id="@+id/NetworksFragment"
+        android:name="pt.ulisboa.tecnico.withoutnet.fragments.NetworksFragment"
+        android:label="@string/networks_fragment_label"
+        tools:layout="@layout/fragment_networks">
+    </fragment>
+
+    <fragment
+        android:id="@+id/SettingsFragment"
+        android:name="pt.ulisboa.tecnico.withoutnet.fragments.SettingsFragment"
+        android:label="@string/settings_fragment_label"
+        tools:layout="@layout/fragment_settings">
+    </fragment>
+
+    <fragment
+        android:id="@+id/DebugFragment"
+        android:name="pt.ulisboa.tecnico.withoutnet.fragments.DebugFragment"
+        android:label="@string/debug_fragment_label"
+        tools:layout="@layout/fragment_debug">
+    </fragment>
+
+</navigation>

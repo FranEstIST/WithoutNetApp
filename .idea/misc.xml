@@ -14,13 +14,17 @@
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/activity_login.xml" value="0.11302083333333333" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/activity_main.xml" value="0.264" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/activity_main2.xml" value="0.22780797101449277" />
+        <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/app_bar_main.xml" value="0.24895833333333334" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/content_main.xml" value="0.22780797101449277" />
+        <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/fragment_debug.xml" value="0.25" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/fragment_first.xml" value="0.22780797101449277" />
+        <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/fragment_home.xml" value="0.25" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/fragment_second.xml" value="0.17753623188405798" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/item_cached_update.xml" value="0.536" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/item_node.xml" value="0.536" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/item_update_field.xml" value="0.17753623188405798" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/menu/menu_main.xml" value="0.25416666666666665" />
+        <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/menu/nav_menu.xml" value="0.1" />
       </map>
     </option>
   </component>
