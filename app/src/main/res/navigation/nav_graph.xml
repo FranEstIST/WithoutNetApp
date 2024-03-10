@@ -10,6 +10,18 @@
         android:name="pt.ulisboa.tecnico.withoutnet.fragments.HomeFragment"
         android:label="@string/home_fragment_label"
         tools:layout="@layout/fragment_home">
+        <action
+            android:id="@+id/action_HomeFragment_to_NetworksFragment"
+            app:destination="@id/NetworksFragment" />
+        <action
+            android:id="@+id/action_HomeFragment_to_SettingsFragment"
+            app:destination="@id/SettingsFragment" />
+        <action
+            android:id="@+id/action_HomeFragment_to_NodesFragment"
+            app:destination="@id/NodesFragment" />
+        <action
+            android:id="@+id/action_HomeFragment_to_DebugFragment"
+            app:destination="@id/DebugFragment" />
     </fragment>
 
     <fragment
@@ -17,6 +29,21 @@
         android:name="pt.ulisboa.tecnico.withoutnet.fragments.NodesFragment"
         android:label="@string/nodes_fragment_label"
         tools:layout="@layout/fragment_nodes">
+        <action
+            android:id="@+id/action_NodesFragment_to_HomeFragment"
+            app:destination="@id/HomeFragment" />
+        <action
+            android:id="@+id/action_NodesFragment_to_NetworksFragment"
+            app:destination="@id/NetworksFragment" />
+        <action
+            android:id="@+id/action_NodesFragment_to_DebugFragment"
+            app:destination="@id/DebugFragment" />
+        <action
+            android:id="@+id/action_NodesFragment_to_HomeFragment2"
+            app:destination="@id/HomeFragment" />
+        <action
+            android:id="@+id/action_NodesFragment_to_SettingsFragment"
+            app:destination="@id/SettingsFragment" />
     </fragment>
 
     <fragment
@@ -24,6 +51,18 @@
         android:name="pt.ulisboa.tecnico.withoutnet.fragments.NetworksFragment"
         android:label="@string/networks_fragment_label"
         tools:layout="@layout/fragment_networks">
+        <action
+            android:id="@+id/action_NetworksFragment_to_HomeFragment"
+            app:destination="@id/HomeFragment" />
+        <action
+            android:id="@+id/action_NetworksFragment_to_SettingsFragment"
+            app:destination="@id/SettingsFragment" />
+        <action
+            android:id="@+id/action_NetworksFragment_to_NodesFragment"
+            app:destination="@id/NodesFragment" />
+        <action
+            android:id="@+id/action_NetworksFragment_to_DebugFragment"
+            app:destination="@id/DebugFragment" />
     </fragment>
 
     <fragment
@@ -31,6 +70,18 @@
         android:name="pt.ulisboa.tecnico.withoutnet.fragments.SettingsFragment"
         android:label="@string/settings_fragment_label"
         tools:layout="@layout/fragment_settings">
+        <action
+            android:id="@+id/action_SettingsFragment_to_NetworksFragment"
+            app:destination="@id/NetworksFragment" />
+        <action
+            android:id="@+id/action_SettingsFragment_to_DebugFragment"
+            app:destination="@id/DebugFragment" />
+        <action
+            android:id="@+id/action_SettingsFragment_to_HomeFragment"
+            app:destination="@id/HomeFragment" />
+        <action
+            android:id="@+id/action_SettingsFragment_to_NodesFragment"
+            app:destination="@id/NodesFragment" />
     </fragment>
 
     <fragment
@@ -38,6 +89,18 @@
         android:name="pt.ulisboa.tecnico.withoutnet.fragments.DebugFragment"
         android:label="@string/debug_fragment_label"
         tools:layout="@layout/fragment_debug">
+        <action
+            android:id="@+id/action_DebugFragment_to_HomeFragment"
+            app:destination="@id/HomeFragment" />
+        <action
+            android:id="@+id/action_DebugFragment_to_NodesFragment"
+            app:destination="@id/NodesFragment" />
+        <action
+            android:id="@+id/action_DebugFragment_to_SettingsFragment"
+            app:destination="@id/SettingsFragment" />
+        <action
+            android:id="@+id/action_DebugFragment_to_NetworksFragment"
+            app:destination="@id/NetworksFragment" />
     </fragment>
 
 </navigation>
