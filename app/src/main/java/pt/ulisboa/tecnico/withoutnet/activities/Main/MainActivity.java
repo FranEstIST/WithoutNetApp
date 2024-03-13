@@ -80,7 +80,11 @@ public class MainActivity extends AppCompatActivity {
 
         navController = Navigation.findNavController(this, R.id.navHostFragmentContainerView);
         appBarConfiguration = new AppBarConfiguration
-                .Builder(navController.getGraph())
+                .Builder(R.id.HomeFragment
+                    , R.id.NodesFragment
+                    , R.id.NetworksFragment
+                    , R.id.SettingsFragment
+                    , R.id.DebugFragment)
                 .setOpenableLayout(drawerLayout)
                 .build();
 
