@@ -57,10 +57,12 @@ public class MainActivity extends AppCompatActivity {
 
     private GlobalClass globalClass;
 
-    private ActivityMainBinding binding;
+    public ActivityMainBinding binding;
 
     private NavController navController;
     private AppBarConfiguration appBarConfiguration;
+
+    private Menu menu;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,6 +98,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        this.menu = menu;
+
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
@@ -149,5 +153,9 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.navHostFragmentContainerView);
         return NavigationUI.navigateUp(navController, appBarConfiguration)
                 || super.onSupportNavigateUp();
+    }
+
+    public Menu getMenu() {
+        return menu;
     }
 }

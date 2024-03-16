@@ -1,14 +1,23 @@
 package pt.ulisboa.tecnico.withoutnet.fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import pt.ulisboa.tecnico.withoutnet.R;
+import pt.ulisboa.tecnico.withoutnet.activities.CreateNewNetworkPopUpActivity;
+import pt.ulisboa.tecnico.withoutnet.activities.Main.MainActivity;
+import pt.ulisboa.tecnico.withoutnet.databinding.FragmentNetworksBinding;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -25,6 +34,8 @@ public class NetworksFragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
+
+    private FragmentNetworksBinding binding;
 
     public NetworksFragment() {
         // Required empty public constructor
@@ -60,7 +71,36 @@ public class NetworksFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_networks, container, false);
+        binding = FragmentNetworksBinding.inflate(inflater, container, false);
+        return binding.getRoot();
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        MainActivity  mainActivity = (MainActivity) getActivity();
+
+        if(mainActivity != null && mainActivity.binding != null) {
+            TextView appBarTitleTextView = mainActivity.binding.appBarTitle;
+            appBarTitleTextView.setText(R.string.networks);
+        }
+
+        setHasOptionsMenu(true);
+
+        binding.createNetworkButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(NetworksFragment.this.getActivity(), CreateNewNetworkPopUpActivity.class);
+                startActivity(intent);
+            }
+        });
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        menu.clear();
+        inflater.inflate(R.menu.menu_search, menu);
+        super.onCreateOptionsMenu(menu, inflater);
     }
 }

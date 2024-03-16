@@ -17,6 +17,7 @@ import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.work.WorkManager;
@@ -174,6 +175,30 @@ public class HomeFragment extends Fragment {
                 });
 
         return binding.getRoot();
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        MainActivity  mainActivity = (MainActivity) getActivity();
+
+        if(mainActivity != null && mainActivity.binding != null) {
+            TextView appBarTitleTextView = mainActivity.binding.appBarTitle;
+            appBarTitleTextView.setText("");
+        }
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        MainActivity  mainActivity = (MainActivity) getActivity();
+
+        if(mainActivity != null && mainActivity.binding != null) {
+            TextView appBarTitleTextView = mainActivity.binding.appBarTitle;
+            appBarTitleTextView.setText(R.string.home);
+        }
     }
 
     private void startParticipating() {

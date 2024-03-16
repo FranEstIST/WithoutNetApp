@@ -45,6 +45,12 @@
     <string name="press_to_start_participating">Press the button to start participating</string>
     <string name="press_to_stop_participating">Press the button to stop participating</string>
 
+    <string name="search">Search</string>
+    <string name="search_for_a_network_to_view_it">Search for a network to view it</string>
+    <string name="create_new_network">Create a new network</string>
+    <string name="network_name">Network name</string>
+    <string name="create_network">Create network</string>
+
     <string name="upload_updates">Upload updates</string>
     <string name="download_updates">Download updates</string>
 
@@ -73,5 +79,7 @@
     <string name="debug">Debug</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_activity_change_node">ChangeNodeActivity</string>
+    <string name="title_activity_create_new_network_pop_up">CreateNewNetworkPopUpActivity</string>
 
 </resources>
