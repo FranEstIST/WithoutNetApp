@@ -51,6 +51,11 @@
     <string name="network_name">Network name</string>
     <string name="create_network">Create network</string>
 
+    <string name="search_for_a_node_to_view_it">Search for a node to view it</string>
+    <string name="create_new_node">Create new node</string>
+    <string name="node_name">Node name</string>
+    <string name="create_node">Create node</string>
+
     <string name="upload_updates">Upload updates</string>
     <string name="download_updates">Download updates</string>
 
