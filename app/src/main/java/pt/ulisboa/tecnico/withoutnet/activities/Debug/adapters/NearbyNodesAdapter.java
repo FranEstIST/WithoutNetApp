@@ -75,8 +75,6 @@ public class NearbyNodesAdapter extends RecyclerView.Adapter<NearbyNodesAdapter.
         // Get the data model based on position
         Node node = new ArrayList<>(nodesByName.values()).get(position);
 
-        //Log.d("CA", "Chatroom is available: " + chatroom.isAvailable());
-
         // Set item views based on your views and data model
         TextView nameTextView = holder.nameTextView;
 

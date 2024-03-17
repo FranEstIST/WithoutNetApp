@@ -5,6 +5,9 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -12,11 +15,16 @@ import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import java.util.ArrayList;
 
 import pt.ulisboa.tecnico.withoutnet.R;
 import pt.ulisboa.tecnico.withoutnet.activities.Main.MainActivity;
+import pt.ulisboa.tecnico.withoutnet.adapters.NodesListAdapter;
 import pt.ulisboa.tecnico.withoutnet.databinding.FragmentNetworksBinding;
 import pt.ulisboa.tecnico.withoutnet.databinding.FragmentNodesBinding;
+import pt.ulisboa.tecnico.withoutnet.models.Node;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -86,6 +94,33 @@ public class NodesFragment extends Fragment {
         }
 
         setHasOptionsMenu(true);
+
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this.getContext());
+        binding.nodesListRecyclerView.setLayoutManager(layoutManager);
+
+        Node nodeOne = new Node("1", "nodeOne", "TEMP");
+        Node nodeTwo = new Node("2", "nodeTwo", "TEMP");
+        Node nodeThree = new Node("3", "nodeThree", "TEMP");
+
+        ArrayList<Node> nodes = new ArrayList<>();
+
+        nodes.add(nodeOne);
+        nodes.add(nodeTwo);
+        nodes.add(nodeThree);
+
+        NodesListAdapter nodesListAdapter = new NodesListAdapter(nodes, new NodesListAdapter.OnNodeClickListener() {
+            @Override
+            public void onNodeClick(int position) {
+                Toast.makeText(NodesFragment.this.getContext(), "Clicked on node " + position, Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        binding.nodesListRecyclerView.setAdapter(nodesListAdapter);
+        binding.nodesListRecyclerView.addItemDecoration(new DividerItemDecoration(this.getContext(),
+                DividerItemDecoration.VERTICAL));
+
+        binding.nodesSearchTextView.setVisibility(View.GONE);
+        binding.nodesListRecyclerView.setVisibility(View.VISIBLE);
     }
 
     @Override
