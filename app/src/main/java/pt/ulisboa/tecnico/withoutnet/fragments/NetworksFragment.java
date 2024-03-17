@@ -6,6 +6,8 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -14,10 +16,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+
 import pt.ulisboa.tecnico.withoutnet.R;
 import pt.ulisboa.tecnico.withoutnet.activities.CreateNewNetworkPopUpActivity;
 import pt.ulisboa.tecnico.withoutnet.activities.Main.MainActivity;
+import pt.ulisboa.tecnico.withoutnet.adapters.NetworksListAdapter;
 import pt.ulisboa.tecnico.withoutnet.databinding.FragmentNetworksBinding;
+import pt.ulisboa.tecnico.withoutnet.models.Network;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -95,6 +101,28 @@ public class NetworksFragment extends Fragment {
                 startActivity(intent);
             }
         });
+
+        Network networkOne = new Network(1, "NetworkOne", new ArrayList<>());
+        Network networkTwo = new Network(2, "NetworkTwo", new ArrayList<>());
+        Network networkThree = new Network(3, "NetworkThree", new ArrayList<>());
+
+        ArrayList<Network> networks = new ArrayList<>();
+
+        networks.add(networkOne);
+        networks.add(networkTwo);
+        networks.add(networkThree);
+
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this.getContext());
+        binding.networksListRecyclerView.setLayoutManager(linearLayoutManager);
+
+        NetworksListAdapter  networksListAdapter = new NetworksListAdapter(networks);
+        binding.networksListRecyclerView.setAdapter(networksListAdapter);
+
+        binding.networksListRecyclerView.addItemDecoration(new DividerItemDecoration(this.getContext(),
+                DividerItemDecoration.VERTICAL));
+
+        binding.networksListRecyclerView.setVisibility(View.VISIBLE);
+        binding.networkSearchTextView.setVisibility(View.GONE);
     }
 
     @Override
