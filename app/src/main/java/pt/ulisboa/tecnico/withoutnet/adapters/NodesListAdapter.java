@@ -44,6 +44,15 @@ public class NodesListAdapter extends RecyclerView.Adapter<NodesListAdapter.View
 
         TextView UUIDTextView = holder.UUIDTextView;
         UUIDTextView.setText(String.valueOf(node.getId()));
+
+        TextView networkNameTextView = holder.networkNameTextView;
+
+        // TODO: Replace "In" by a string in the string resource file
+        if(node.getNetwork() != null) {
+            networkNameTextView.setText("In " + node.getNetwork().getName());
+        } else {
+            networkNameTextView.setVisibility(View.GONE);
+        }
         //UUIDTextView.setText(String.valueOf(node.getServiceUUID()));
     }
 
@@ -55,6 +64,7 @@ public class NodesListAdapter extends RecyclerView.Adapter<NodesListAdapter.View
     class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         public TextView nameTextView;
         public TextView UUIDTextView;
+        public TextView networkNameTextView;
 
         private OnNodeClickListener onNodeClickListener;
 
@@ -63,6 +73,7 @@ public class NodesListAdapter extends RecyclerView.Adapter<NodesListAdapter.View
 
             this.nameTextView = (TextView) itemView.findViewById(R.id.node_cn);
             this.UUIDTextView = (TextView) itemView.findViewById(R.id.node_uuid);
+            this.networkNameTextView = (TextView) itemView.findViewById(R.id.network_name_text_view);
 
             this.onNodeClickListener = onNodeClickListener;
 

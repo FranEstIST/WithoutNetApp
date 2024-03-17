@@ -1,5 +1,6 @@
 package pt.ulisboa.tecnico.withoutnet.models;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Network {
@@ -11,6 +12,12 @@ public class Network {
         this.id = id;
         this.name = name;
         this.nodes = nodes;
+    }
+
+    public Network(int id, String name) {
+        this.id = id;
+        this.name = name;
+        this.nodes = new ArrayList<>();
     }
 
     public int getId() {

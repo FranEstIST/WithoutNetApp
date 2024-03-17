@@ -24,6 +24,7 @@ import pt.ulisboa.tecnico.withoutnet.activities.Main.MainActivity;
 import pt.ulisboa.tecnico.withoutnet.adapters.NodesListAdapter;
 import pt.ulisboa.tecnico.withoutnet.databinding.FragmentNetworksBinding;
 import pt.ulisboa.tecnico.withoutnet.databinding.FragmentNodesBinding;
+import pt.ulisboa.tecnico.withoutnet.models.Network;
 import pt.ulisboa.tecnico.withoutnet.models.Node;
 
 /**
@@ -98,9 +99,11 @@ public class NodesFragment extends Fragment {
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this.getContext());
         binding.nodesListRecyclerView.setLayoutManager(layoutManager);
 
-        Node nodeOne = new Node("1", "nodeOne", "TEMP");
-        Node nodeTwo = new Node("2", "nodeTwo", "TEMP");
-        Node nodeThree = new Node("3", "nodeThree", "TEMP");
+        Network network = new Network(1, "Alameda Garden 1");
+
+        Node nodeOne = new Node("1", "nodeOne", "TEMP", network);
+        Node nodeTwo = new Node("2", "nodeTwo", "TEMP", network);
+        Node nodeThree = new Node("3", "nodeThree", "TEMP", network);
 
         ArrayList<Node> nodes = new ArrayList<>();
 

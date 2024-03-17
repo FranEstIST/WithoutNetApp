@@ -16,6 +16,7 @@ public class Node {
     private String id;
     private String commonName;
     private String readingType;
+    private Network network;
 
     /**
      * Returns a Node object, as long as the necessary permissions for accessing BL devices
@@ -36,6 +37,13 @@ public class Node {
         this.setId(id);
         this.setCommonName(commonName);
         this.readingType = readingType;
+    }
+
+    public Node(String id, String commonName, String readingType, Network network) {
+        this.setId(id);
+        this.setCommonName(commonName);
+        this.readingType = readingType;
+        this.network = network;
     }
 
     public Node(String relevantNodeValue) {
@@ -81,6 +89,14 @@ public class Node {
 
     public void setReadingType(String readingType) {
         this.readingType = readingType;
+    }
+
+    public Network getNetwork() {
+        return network;
+    }
+
+    public void setNetwork(Network network) {
+        this.network = network;
     }
 
     @NonNull
