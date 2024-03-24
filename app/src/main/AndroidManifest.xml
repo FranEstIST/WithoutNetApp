@@ -30,6 +30,12 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
+            android:name=".activities.NodeDetailsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activities.NodesListActivity"
+            android:exported="false" />
+        <activity
             android:name=".activities.CreateNewNetworkPopUpActivity"
             android:exported="false"
             android:label="@string/title_activity_create_new_network_pop_up"
