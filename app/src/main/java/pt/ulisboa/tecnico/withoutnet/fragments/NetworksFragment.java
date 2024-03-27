@@ -15,12 +15,15 @@ import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 
 import pt.ulisboa.tecnico.withoutnet.R;
 import pt.ulisboa.tecnico.withoutnet.activities.CreateNewNetworkPopUpActivity;
 import pt.ulisboa.tecnico.withoutnet.activities.Main.MainActivity;
+import pt.ulisboa.tecnico.withoutnet.activities.NodeDetailsActivity;
+import pt.ulisboa.tecnico.withoutnet.activities.NodesListActivity;
 import pt.ulisboa.tecnico.withoutnet.adapters.NetworksListAdapter;
 import pt.ulisboa.tecnico.withoutnet.databinding.FragmentNetworksBinding;
 import pt.ulisboa.tecnico.withoutnet.models.Network;
@@ -115,7 +118,18 @@ public class NetworksFragment extends Fragment {
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this.getContext());
         binding.networksListRecyclerView.setLayoutManager(linearLayoutManager);
 
-        NetworksListAdapter  networksListAdapter = new NetworksListAdapter(networks);
+        NetworksListAdapter.OnNetworkClickListener onNetworkClickListener = new NetworksListAdapter.OnNetworkClickListener() {
+            @Override
+            public void onNetworkClick(Network network) {
+                Toast.makeText(NetworksFragment.this.getActivity(), "Clicked on network " + network.getName(), Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(NetworksFragment.this.getActivity(), NodesListActivity.class);
+                intent.putExtra("network-id", network.getId());
+                intent.putExtra("network-name", network.getName());
+                startActivity(intent);
+            }
+        };
+
+        NetworksListAdapter  networksListAdapter = new NetworksListAdapter(networks, onNetworkClickListener);
         binding.networksListRecyclerView.setAdapter(networksListAdapter);
 
         binding.networksListRecyclerView.addItemDecoration(new DividerItemDecoration(this.getContext(),

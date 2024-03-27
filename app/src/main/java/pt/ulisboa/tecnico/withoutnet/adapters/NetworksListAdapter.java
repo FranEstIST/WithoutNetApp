@@ -1,9 +1,11 @@
 package pt.ulisboa.tecnico.withoutnet.adapters;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -14,10 +16,14 @@ import pt.ulisboa.tecnico.withoutnet.R;
 import pt.ulisboa.tecnico.withoutnet.models.Network;
 
 public class NetworksListAdapter extends RecyclerView.Adapter<NetworksListAdapter.NetworksListItemViewHolder> {
-    private ArrayList<Network> networks;
+    public static final String TAG = "NetworksListAdapter";
 
-    public NetworksListAdapter(ArrayList<Network> networks) {
+    private ArrayList<Network> networks;
+    private OnNetworkClickListener onNetworkClickListener;
+
+    public NetworksListAdapter(ArrayList<Network> networks, OnNetworkClickListener onNetworkClickListener) {
         this.networks = networks;
+        this.onNetworkClickListener = onNetworkClickListener;
     }
 
     @NonNull
@@ -60,11 +66,22 @@ public class NetworksListAdapter extends RecyclerView.Adapter<NetworksListAdapte
             super(itemView);
             networkNameTextView = itemView.findViewById(R.id.networkNameTextView);
             nodeQuantityTextView = itemView.findViewById(R.id.nodeQuantityTextView);
+
+            itemView.setOnClickListener(this);
         }
 
         @Override
         public void onClick(View v) {
+            int clickedPosition = getAdapterPosition();
+            Network clickedNetwork = networks.get(clickedPosition);
 
+            Log.d(TAG, "Clicked on network: " + clickedPosition);
+
+            onNetworkClickListener.onNetworkClick(clickedNetwork);
         }
+    }
+
+    public interface OnNetworkClickListener {
+        void onNetworkClick(Network network);
     }
 }

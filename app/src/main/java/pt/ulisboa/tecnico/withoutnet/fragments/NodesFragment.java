@@ -115,6 +115,7 @@ public class NodesFragment extends Fragment {
             @Override
             public void onNodeClick(int position) {
                 Toast.makeText(NodesFragment.this.getContext(), "Clicked on node " + position, Toast.LENGTH_SHORT).show();
+
             }
         });
 

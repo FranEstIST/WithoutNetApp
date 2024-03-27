@@ -31,10 +31,12 @@
         tools:targetApi="31">
         <activity
             android:name=".activities.NodeDetailsActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/Theme.WithoutNet.NoActionBar" />
         <activity
             android:name=".activities.NodesListActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/Theme.WithoutNet.NoActionBar" />
         <activity
             android:name=".activities.CreateNewNetworkPopUpActivity"
             android:exported="false"
