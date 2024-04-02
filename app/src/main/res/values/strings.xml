@@ -58,6 +58,11 @@
     <string name="node_name">Node name</string>
     <string name="create_node">Create node</string>
 
+    <string name="id">ID</string>
+    <string name="name">Name</string>
+    <string name="network">Network</string>
+    <string name="no_network">No network</string>
+
     <string name="upload_updates">Upload updates</string>
     <string name="download_updates">Download updates</string>
 

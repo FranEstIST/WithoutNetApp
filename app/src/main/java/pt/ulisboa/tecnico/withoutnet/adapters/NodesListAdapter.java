@@ -82,11 +82,12 @@ public class NodesListAdapter extends RecyclerView.Adapter<NodesListAdapter.View
 
         @Override
         public void onClick(View v) {
-            this.onNodeClickListener.onNodeClick(getAdapterPosition());
+            int clickedPosition = getAdapterPosition();
+            this.onNodeClickListener.onNodeClick(nodes.get(clickedPosition));
         }
     }
 
     public interface OnNodeClickListener {
-        void onNodeClick(int position);
+        void onNodeClick(Node clickedNode);
     }
 }

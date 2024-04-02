@@ -1,9 +1,10 @@
 package pt.ulisboa.tecnico.withoutnet.models;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Network {
+public class Network implements Serializable {
     private int id;
     private String name;
     private List<Node> nodes;

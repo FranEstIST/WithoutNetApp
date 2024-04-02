@@ -9,10 +9,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.UUID;
 
-public class Node {
+public class Node implements Serializable {
     private String id;
     private String commonName;
     private String readingType;

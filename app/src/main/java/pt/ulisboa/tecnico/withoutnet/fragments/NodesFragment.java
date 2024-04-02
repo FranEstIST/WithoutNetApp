@@ -1,5 +1,6 @@
 package pt.ulisboa.tecnico.withoutnet.fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -21,6 +22,8 @@ import java.util.ArrayList;
 
 import pt.ulisboa.tecnico.withoutnet.R;
 import pt.ulisboa.tecnico.withoutnet.activities.Main.MainActivity;
+import pt.ulisboa.tecnico.withoutnet.activities.NodeDetailsActivity;
+import pt.ulisboa.tecnico.withoutnet.activities.NodesListActivity;
 import pt.ulisboa.tecnico.withoutnet.adapters.NodesListAdapter;
 import pt.ulisboa.tecnico.withoutnet.databinding.FragmentNetworksBinding;
 import pt.ulisboa.tecnico.withoutnet.databinding.FragmentNodesBinding;
@@ -113,9 +116,11 @@ public class NodesFragment extends Fragment {
 
         NodesListAdapter nodesListAdapter = new NodesListAdapter(nodes, new NodesListAdapter.OnNodeClickListener() {
             @Override
-            public void onNodeClick(int position) {
-                Toast.makeText(NodesFragment.this.getContext(), "Clicked on node " + position, Toast.LENGTH_SHORT).show();
-
+            public void onNodeClick(Node clickedNode) {
+                Toast.makeText(NodesFragment.this.getContext(), "Clicked on node " + clickedNode.getCommonName(), Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(NodesFragment.this.getActivity(), NodeDetailsActivity.class);
+                intent.putExtra("node", clickedNode);
+                startActivity(intent);
             }
         });
 

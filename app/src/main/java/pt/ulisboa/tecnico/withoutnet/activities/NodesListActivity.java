@@ -26,7 +26,6 @@ public class NodesListActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_nodes_list);
 
         binding = ActivityNodesListBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -53,8 +52,10 @@ public class NodesListActivity extends AppCompatActivity {
 
         NodesListAdapter.OnNodeClickListener onNodeClickListener = new NodesListAdapter.OnNodeClickListener() {
             @Override
-            public void onNodeClick(int position) {
-
+            public void onNodeClick(Node clickedNode) {
+                Intent intent = new Intent(NodesListActivity.this, NodeDetailsActivity.class);
+                intent.putExtra("node", clickedNode);
+                startActivity(intent);
             }
         };
 

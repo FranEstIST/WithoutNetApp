@@ -1,6 +1,8 @@
 package pt.ulisboa.tecnico.withoutnet.models;
 
-public enum MessageType {
+import java.io.Serializable;
+
+public enum MessageType implements Serializable {
     DATA,
     ACK
 }

@@ -2,7 +2,9 @@ package pt.ulisboa.tecnico.withoutnet.models;
 
 import androidx.annotation.NonNull;
 
-public class Update {
+import java.io.Serializable;
+
+public class Update implements Serializable {
     private long timestamp;
 
     private Node sender;
