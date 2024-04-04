@@ -45,7 +45,7 @@ public class NodeDetailsActivity extends AppCompatActivity {
         binding.nodeFieldsListRecyclerView.addItemDecoration(new DividerItemDecoration(this,
                 DividerItemDecoration.VERTICAL));
 
-        NodeFieldsListAdapter nodeFieldsListAdapter = new NodeFieldsListAdapter(node);
+        NodeFieldsListAdapter nodeFieldsListAdapter = new NodeFieldsListAdapter(node, this);
         binding.nodeFieldsListRecyclerView.setAdapter(nodeFieldsListAdapter);
     }
 

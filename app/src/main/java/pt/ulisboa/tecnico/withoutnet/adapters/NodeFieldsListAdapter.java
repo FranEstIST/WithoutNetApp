@@ -1,5 +1,7 @@
 package pt.ulisboa.tecnico.withoutnet.adapters;
 
+import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 
 import pt.ulisboa.tecnico.withoutnet.R;
+import pt.ulisboa.tecnico.withoutnet.activities.ChangeNodeFieldValuePopUpActivity;
 import pt.ulisboa.tecnico.withoutnet.models.Node;
 
 public class NodeFieldsListAdapter extends RecyclerView.Adapter<NodeFieldsListAdapter.NodeFieldViewHolder> {
@@ -20,9 +23,12 @@ public class NodeFieldsListAdapter extends RecyclerView.Adapter<NodeFieldsListAd
 
     private Node node;
 
-    public NodeFieldsListAdapter(Node node) {
+    private Context context;
+
+    public NodeFieldsListAdapter(Node node, Context context) {
         super();
         this.node = node;
+        this.context = context;
     }
 
     @NonNull
@@ -41,6 +47,15 @@ public class NodeFieldsListAdapter extends RecyclerView.Adapter<NodeFieldsListAd
         } else if(position == 1) {
             holder.fieldNameTextView.setText(R.string.name);
             holder.fieldValueTextView.setText(node.getCommonName());
+
+            holder.editFieldValueButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(NodeFieldsListAdapter.this.context, ChangeNodeFieldValuePopUpActivity.class);
+                    intent.putExtra("node-field-type", ChangeNodeFieldValuePopUpActivity.NodeFieldType.NAME);
+                    context.startActivity(intent);
+                }
+            });
         } else {
             holder.fieldNameTextView.setText(R.string.network);
 
@@ -50,6 +65,14 @@ public class NodeFieldsListAdapter extends RecyclerView.Adapter<NodeFieldsListAd
                 holder.fieldValueTextView.setText(R.string.no_network);
             }
 
+            holder.editFieldValueButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(NodeFieldsListAdapter.this.context, ChangeNodeFieldValuePopUpActivity.class);
+                    intent.putExtra("node-field-type", ChangeNodeFieldValuePopUpActivity.NodeFieldType.NETWORK);
+                    context.startActivity(intent);
+                }
+            });
         }
     }
 
