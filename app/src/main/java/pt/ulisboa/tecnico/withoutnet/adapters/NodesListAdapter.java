@@ -4,24 +4,40 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import pt.ulisboa.tecnico.withoutnet.R;
 import pt.ulisboa.tecnico.withoutnet.models.Node;
 
-public class NodesListAdapter extends RecyclerView.Adapter<NodesListAdapter.ViewHolder> {
+public class NodesListAdapter extends RecyclerView.Adapter<NodesListAdapter.ViewHolder> implements Filterable {
     private ArrayList<Node> nodes;
+    private ArrayList<Node> filteredNodes;
+
+    private boolean shouldOnlyDiplayFilteredNodes;
 
     private OnNodeClickListener onNodeClickListener;
 
+    public NodesListAdapter(ArrayList<Node> nodes, OnNodeClickListener onNodeClickListener, boolean shouldOnlyDiplayFilteredNodes) {
+        this.nodes = nodes;
+        this.filteredNodes = new ArrayList<>();
+        this.onNodeClickListener = onNodeClickListener;
+        this.shouldOnlyDiplayFilteredNodes = shouldOnlyDiplayFilteredNodes;
+    }
+
     public NodesListAdapter(ArrayList<Node> nodes, OnNodeClickListener onNodeClickListener) {
         this.nodes = nodes;
+        this.filteredNodes = new ArrayList<>();
         this.onNodeClickListener = onNodeClickListener;
+        this.shouldOnlyDiplayFilteredNodes = false;
     }
 
     @Override
@@ -37,7 +53,13 @@ public class NodesListAdapter extends RecyclerView.Adapter<NodesListAdapter.View
 
     @Override
     public void onBindViewHolder(NodesListAdapter.ViewHolder holder, int position) {
-        Node node = nodes.get(position);
+        Node node;
+
+        if(shouldOnlyDiplayFilteredNodes) {
+            node = filteredNodes.get(position);
+        } else {
+            node = nodes.get(position);
+        }
 
         TextView nameTextView = holder.nameTextView;
         nameTextView.setText(node.getCommonName());
@@ -58,7 +80,37 @@ public class NodesListAdapter extends RecyclerView.Adapter<NodesListAdapter.View
 
     @Override
     public int getItemCount() {
-        return nodes.size();
+        return shouldOnlyDiplayFilteredNodes ? filteredNodes.size() : nodes.size();
+    }
+
+    @Override
+    public Filter getFilter() {
+        return new Filter() {
+            @Override
+            protected FilterResults performFiltering(CharSequence constraint) {
+                FilterResults results = new FilterResults();
+                ArrayList resultingList;
+
+                if(constraint == null || constraint.equals("")) {
+                    resultingList = new ArrayList();
+                } else {
+                    resultingList = new ArrayList(nodes.stream().filter(node -> {
+                        return node.getCommonName().toLowerCase().contains(constraint.toString().toLowerCase());
+                    }).collect(Collectors.toList()));
+                }
+
+                results.values = resultingList;
+                results.count = resultingList.size();
+
+                return results;
+            }
+
+            @Override
+            protected void publishResults(CharSequence constraint, FilterResults results) {
+                filteredNodes = (ArrayList<Node>)results.values;
+                notifyDataSetChanged();
+            }
+        };
     }
 
     class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {

@@ -53,6 +53,9 @@
     <string name="no_nodes_in_network">No nodes in network</string>
     <string name="add_a_node">Add a node</string>
 
+    <string name="search_for_a_node_to_add_it">Search for a node to add it</string>
+    <string name="no_nodes_found">No nodes found</string>
+
     <string name="search_for_a_node_to_view_it">Search for a node to view it</string>
     <string name="create_a_new_node">Create a new node</string>
     <string name="node_name">Node name</string>

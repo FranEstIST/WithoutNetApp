@@ -3,15 +3,20 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/drawable-anydpi/add_or_create_node_button_bg_light.xml" value="0.191" />
+        <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/drawable-anydpi/ic_baseline_arrow_forward_24.xml" value="0.191" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/drawable-anydpi/ic_stat_name.xml" value="0.1895" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/drawable/ic_baseline_circle_24.xml" value="0.1895" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/drawable/ic_baseline_circle_24_grey.xml" value="0.1895" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/drawable/ic_launcher_background.xml" value="0.206" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/drawable/ic_wn_switch_off.xml" value="0.1895" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/drawable/pop_up_bg_light.xml" value="0.1685" />
+        <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/activity_add_node_to_network.xml" value="0.21739130434782608" />
+        <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/activity_add_or_create_new_node_pop_up.xml" value="0.21739130434782608" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/activity_cached_updates.xml" value="0.12552083333333333" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/activity_change_node_field_value_pop_up.xml" value="0.21739130434782608" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/activity_create_new_network_pop_up.xml" value="0.176" />
+        <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/activity_create_new_node_pop_up.xml" value="0.21739130434782608" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/activity_debug.xml" value="0.264" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/activity_debug_node.xml" value="0.25416666666666665" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/activity_login.xml" value="0.11302083333333333" />
@@ -19,9 +24,12 @@
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/activity_main2.xml" value="0.22780797101449277" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/activity_node_details.xml" value="0.2359375" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/activity_nodes_list.xml" value="0.25" />
+        <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/add_or_create_node_button.xml" value="0.21739130434782608" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/app_bar_main.xml" value="0.24895833333333334" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/content_create_new_network_pop_up.xml" value="0.19791666666666666" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/content_main.xml" value="0.22780797101449277" />
+        <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/fragment_add_or_create_new_node.xml" value="0.21739130434782608" />
+        <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/fragment_create_new_node.xml" value="0.21739130434782608" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/fragment_debug.xml" value="0.25" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/fragment_first.xml" value="0.22780797101449277" />
         <entry key="..\:/Users/Francisco/Documents/Universidade/Mestrado/Ano_2/Semestre_2/DMEIC/Code/app/app/src/main/res/layout/fragment_first2.xml" value="0.11041666666666666" />

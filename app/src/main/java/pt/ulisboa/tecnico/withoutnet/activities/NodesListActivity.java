@@ -79,6 +79,14 @@ public class NodesListActivity extends AppCompatActivity {
 
         binding.nodesInNetworkSearchTextView.setVisibility(View.GONE);
         binding.networkNodesListRecyclerView.setVisibility(View.VISIBLE);
+
+        binding.addNodeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(NodesListActivity.this, AddNodeToNetworkActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 
     @Override
