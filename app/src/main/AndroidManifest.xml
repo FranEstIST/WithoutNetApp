@@ -30,17 +30,21 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
+            android:name=".activities.ChangeNodeNetworkActivity"
+            android:exported="false"
+            android:theme="@style/Theme.WithoutNet.NoActionBar" />
+        <activity
             android:name=".activities.AddNodeToNetworkActivity"
             android:exported="false"
             android:theme="@style/Theme.WithoutNet.NoActionBar" />
         <activity
             android:name=".activities.AddOrCreateNewNodePopUpActivity"
             android:exported="false"
-            android:theme="@style/Theme.WithoutNet.PopUp"/>
+            android:theme="@style/Theme.WithoutNet.PopUp" />
         <activity
             android:name=".activities.CreateNewNodePopUpActivity"
             android:exported="false"
-            android:theme="@style/Theme.WithoutNet.PopUp"/>
+            android:theme="@style/Theme.WithoutNet.PopUp" />
         <activity
             android:name=".activities.ChangeNodeFieldValuePopUpActivity"
             android:exported="false"

@@ -69,6 +69,8 @@
     <string name="change_nodes">Change Node\'s</string>
     <string name="enter_new">Enter new</string>
     <string name="submit">Submit</string>
+    <string name="no_network_found">No network found</string>
+    <string name="search_for_a_network_to_add_it">Search for a network to add it</string>
 
     <string name="upload_updates">Upload updates</string>
     <string name="download_updates">Download updates</string>

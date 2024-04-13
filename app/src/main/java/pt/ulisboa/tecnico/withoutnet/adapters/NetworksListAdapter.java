@@ -4,6 +4,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -11,19 +13,32 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 import pt.ulisboa.tecnico.withoutnet.R;
 import pt.ulisboa.tecnico.withoutnet.models.Network;
 
-public class NetworksListAdapter extends RecyclerView.Adapter<NetworksListAdapter.NetworksListItemViewHolder> {
+public class NetworksListAdapter extends RecyclerView.Adapter<NetworksListAdapter.NetworksListItemViewHolder> implements Filterable {
     public static final String TAG = "NetworksListAdapter";
 
     private ArrayList<Network> networks;
+    private ArrayList<Network> filteredNetworks;
     private OnNetworkClickListener onNetworkClickListener;
+
+    private boolean shouldOnlyDisplayFilteredNetworks;
 
     public NetworksListAdapter(ArrayList<Network> networks, OnNetworkClickListener onNetworkClickListener) {
         this.networks = networks;
+        this.filteredNetworks = new ArrayList<>();
         this.onNetworkClickListener = onNetworkClickListener;
+        this.shouldOnlyDisplayFilteredNetworks = false;
+    }
+
+    public NetworksListAdapter(ArrayList<Network> networks, OnNetworkClickListener onNetworkClickListener, boolean shouldOnlyDisplayFilteredNetworks) {
+        this.networks = networks;
+        this.filteredNetworks = new ArrayList<>();
+        this.onNetworkClickListener = onNetworkClickListener;
+        this.shouldOnlyDisplayFilteredNetworks = shouldOnlyDisplayFilteredNetworks;
     }
 
     @NonNull
@@ -35,7 +50,13 @@ public class NetworksListAdapter extends RecyclerView.Adapter<NetworksListAdapte
 
     @Override
     public void onBindViewHolder(@NonNull NetworksListItemViewHolder holder, int position) {
-        Network network = networks.get(position);
+        Network network;
+
+        if(shouldOnlyDisplayFilteredNetworks) {
+            network = filteredNetworks.get(position);
+        } else {
+            network = networks.get(position);
+        }
 
         holder.networkNameTextView.setText(network.getName());
 
@@ -47,7 +68,37 @@ public class NetworksListAdapter extends RecyclerView.Adapter<NetworksListAdapte
 
     @Override
     public int getItemCount() {
-        return networks.size();
+        return shouldOnlyDisplayFilteredNetworks ? filteredNetworks.size() : networks.size();
+    }
+
+    @Override
+    public Filter getFilter() {
+        return new Filter() {
+            @Override
+            protected FilterResults performFiltering(CharSequence constraint) {
+                FilterResults filterResults = new FilterResults();
+                ArrayList<Network> resultingList;
+
+                if(constraint == null || constraint.equals("")) {
+                    resultingList = new ArrayList<>();
+                } else {
+                    resultingList = new ArrayList<>(networks.stream().filter(network -> {
+                        return network.getName().toLowerCase().contains(constraint.toString().toLowerCase());
+                    }).collect(Collectors.toList()));
+                }
+
+                filterResults.values = resultingList;
+                filterResults.count = resultingList.size();
+
+                return filterResults;
+            }
+
+            @Override
+            protected void publishResults(CharSequence constraint, FilterResults results) {
+                filteredNetworks = (ArrayList<Network>)results.values;
+                notifyDataSetChanged();
+            }
+        };
     }
 
     public ArrayList<Network> getNetworks() {

@@ -16,6 +16,7 @@ import java.util.ArrayList;
 
 import pt.ulisboa.tecnico.withoutnet.R;
 import pt.ulisboa.tecnico.withoutnet.activities.ChangeNodeFieldValuePopUpActivity;
+import pt.ulisboa.tecnico.withoutnet.activities.ChangeNodeNetworkActivity;
 import pt.ulisboa.tecnico.withoutnet.models.Node;
 
 public class NodeFieldsListAdapter extends RecyclerView.Adapter<NodeFieldsListAdapter.NodeFieldViewHolder> {
@@ -68,8 +69,11 @@ public class NodeFieldsListAdapter extends RecyclerView.Adapter<NodeFieldsListAd
             holder.editFieldValueButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Intent intent = new Intent(NodeFieldsListAdapter.this.context, ChangeNodeFieldValuePopUpActivity.class);
+                    /*Intent intent = new Intent(NodeFieldsListAdapter.this.context, ChangeNodeFieldValuePopUpActivity.class);
                     intent.putExtra("node-field-type", ChangeNodeFieldValuePopUpActivity.NodeFieldType.NETWORK);
+                    context.startActivity(intent);*/
+
+                    Intent intent = new Intent(NodeFieldsListAdapter.this.context, ChangeNodeNetworkActivity.class);
                     context.startActivity(intent);
                 }
             });
