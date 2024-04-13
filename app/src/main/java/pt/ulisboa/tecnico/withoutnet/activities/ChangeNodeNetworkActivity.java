@@ -6,6 +6,7 @@ import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -64,6 +65,14 @@ public class ChangeNodeNetworkActivity extends AppCompatActivity {
 
         binding.networksListRecyclerView.addItemDecoration(new DividerItemDecoration(this,
                 DividerItemDecoration.VERTICAL));
+
+        binding.createNewNetworkButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(ChangeNodeNetworkActivity.this, CreateNewNetworkPopUpActivity.class);
+                startActivity(intent);
+            }
+        });
 
     }
 
