@@ -1,4 +1,4 @@
-package pt.ulisboa.tecnico.withoutnet.activities;
+package pt.ulisboa.tecnico.withoutnet.activities.Nodes;
 
 import androidx.appcompat.app.AppCompatActivity;
 

@@ -20,10 +20,9 @@ import android.widget.Toast;
 import java.util.ArrayList;
 
 import pt.ulisboa.tecnico.withoutnet.R;
-import pt.ulisboa.tecnico.withoutnet.activities.CreateNewNetworkPopUpActivity;
+import pt.ulisboa.tecnico.withoutnet.activities.Networks.CreateNewNetworkPopUpActivity;
 import pt.ulisboa.tecnico.withoutnet.activities.Main.MainActivity;
-import pt.ulisboa.tecnico.withoutnet.activities.NodeDetailsActivity;
-import pt.ulisboa.tecnico.withoutnet.activities.NodesListActivity;
+import pt.ulisboa.tecnico.withoutnet.activities.Nodes.NodesListActivity;
 import pt.ulisboa.tecnico.withoutnet.adapters.NetworksListAdapter;
 import pt.ulisboa.tecnico.withoutnet.databinding.FragmentNetworksBinding;
 import pt.ulisboa.tecnico.withoutnet.models.Network;

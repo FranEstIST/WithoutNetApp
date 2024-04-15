@@ -5,4 +5,5 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="add_or_create_node_button_width">120dp</dimen>
     <dimen name="add_or_create_node_button_height">120dp</dimen>
+    <dimen name="edit_field_input_width">160dp</dimen>
 </resources>

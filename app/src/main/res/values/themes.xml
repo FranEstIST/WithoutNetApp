@@ -14,9 +14,17 @@
         <!-- Customize your theme here. -->
     </style>
 
-    <style name="Theme.WithoutNet.NoActionBar">
+    <style name="Theme.WithoutNet.NoActionBar" parent="Theme.WithoutNet">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="android:textColorSecondary">@color/white</item>
+    </style>
+
+    <style name="Theme.WithoutNet.NavigationDrawer" parent="Theme.WithoutNet">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="colorOnPrimary">@color/white</item>
     </style>
 
     <style name="Theme.WithoutNet.PopUp">
@@ -26,6 +34,15 @@
         <item name="android:windowBackground">@drawable/pop_up_bg_light</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="Theme.WithoutNet.Splash" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <!--<item name="android:background">@color/white</item>-->
+        <item name="android:windowBackground">@drawable/splash_background</item>
+        <item name="colorPrimary">@color/white</item>
+        <item name="colorPrimaryDark">@color/black</item>
+        <item name="colorAccent">@color/white</item>
+        <item name="android:statusBarColor">@color/white</item>
     </style>
 
     <style name="Theme.WithoutNet.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />

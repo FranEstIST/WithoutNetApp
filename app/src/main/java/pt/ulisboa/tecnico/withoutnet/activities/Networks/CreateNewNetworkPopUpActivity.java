@@ -1,4 +1,4 @@
-package pt.ulisboa.tecnico.withoutnet.activities;
+package pt.ulisboa.tecnico.withoutnet.activities.Networks;
 
 import android.os.Bundle;
 

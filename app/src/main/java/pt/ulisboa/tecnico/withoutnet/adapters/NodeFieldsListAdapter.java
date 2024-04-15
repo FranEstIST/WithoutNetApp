@@ -5,18 +5,15 @@ import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.util.ArrayList;
-
 import pt.ulisboa.tecnico.withoutnet.R;
-import pt.ulisboa.tecnico.withoutnet.activities.ChangeNodeFieldValuePopUpActivity;
-import pt.ulisboa.tecnico.withoutnet.activities.ChangeNodeNetworkActivity;
+import pt.ulisboa.tecnico.withoutnet.activities.Nodes.ChangeNodeFieldValuePopUpActivity;
+import pt.ulisboa.tecnico.withoutnet.activities.Networks.ChangeNodeNetworkActivity;
 import pt.ulisboa.tecnico.withoutnet.models.Node;
 
 public class NodeFieldsListAdapter extends RecyclerView.Adapter<NodeFieldsListAdapter.NodeFieldViewHolder> {

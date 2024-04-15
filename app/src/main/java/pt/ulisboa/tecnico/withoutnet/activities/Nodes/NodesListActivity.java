@@ -1,4 +1,4 @@
-package pt.ulisboa.tecnico.withoutnet.activities;
+package pt.ulisboa.tecnico.withoutnet.activities.Nodes;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -13,7 +13,6 @@ import android.view.View;
 
 import java.util.ArrayList;
 
-import pt.ulisboa.tecnico.withoutnet.R;
 import pt.ulisboa.tecnico.withoutnet.adapters.NodesListAdapter;
 import pt.ulisboa.tecnico.withoutnet.databinding.ActivityNodesListBinding;
 import pt.ulisboa.tecnico.withoutnet.models.Network;
@@ -45,7 +44,7 @@ public class NodesListActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayShowHomeEnabled(true);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
-        binding.appBarTitle.setText(networkName +"'s Nodes");
+        binding.appBarTitle.setText(networkName +"'s nodes");
 
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
         binding.networkNodesListRecyclerView.setLayoutManager(layoutManager);

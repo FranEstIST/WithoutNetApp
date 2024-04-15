@@ -54,7 +54,7 @@
                     android:layout_gravity="center"
                     android:fontFamily="sans-serif-medium"
                     android:text="@string/not_available"
-                    android:textColor="@color/black"
+                    android:textColor="@color/white"
                     android:textSize="20sp" />
 
             </androidx.appcompat.widget.Toolbar>
@@ -73,6 +73,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:menu="@menu/nav_menu" />
+        app:menu="@menu/nav_menu"
+        android:theme="@style/Theme.WithoutNet.NavigationDrawer" />
 
 </androidx.drawerlayout.widget.DrawerLayout>

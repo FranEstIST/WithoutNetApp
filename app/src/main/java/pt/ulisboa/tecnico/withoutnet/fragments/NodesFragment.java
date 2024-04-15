@@ -22,10 +22,9 @@ import java.util.ArrayList;
 
 import pt.ulisboa.tecnico.withoutnet.R;
 import pt.ulisboa.tecnico.withoutnet.activities.Main.MainActivity;
-import pt.ulisboa.tecnico.withoutnet.activities.NodeDetailsActivity;
-import pt.ulisboa.tecnico.withoutnet.activities.NodesListActivity;
+import pt.ulisboa.tecnico.withoutnet.activities.Nodes.CreateNewNodePopUpActivity;
+import pt.ulisboa.tecnico.withoutnet.activities.Nodes.NodeDetailsActivity;
 import pt.ulisboa.tecnico.withoutnet.adapters.NodesListAdapter;
-import pt.ulisboa.tecnico.withoutnet.databinding.FragmentNetworksBinding;
 import pt.ulisboa.tecnico.withoutnet.databinding.FragmentNodesBinding;
 import pt.ulisboa.tecnico.withoutnet.models.Network;
 import pt.ulisboa.tecnico.withoutnet.models.Node;
@@ -94,7 +93,7 @@ public class NodesFragment extends Fragment {
 
         if(mainActivity != null && mainActivity.binding != null) {
             TextView appBarTitleTextView = mainActivity.binding.appBarTitle;
-            appBarTitleTextView.setText(R.string.networks);
+            appBarTitleTextView.setText(R.string.nodes);
         }
 
         setHasOptionsMenu(true);
@@ -130,6 +129,14 @@ public class NodesFragment extends Fragment {
 
         binding.nodesSearchTextView.setVisibility(View.GONE);
         binding.nodesListRecyclerView.setVisibility(View.VISIBLE);
+
+        binding.createNodeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(NodesFragment.this.getActivity(), CreateNewNodePopUpActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 
     @Override

@@ -30,43 +30,43 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
-            android:name=".activities.ChangeNodeNetworkActivity"
+            android:name=".activities.StartUp.SplashScreenActivity"
+            android:exported="true"
+            android:theme="@style/Theme.WithoutNet.Splash">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".activities.Networks.ChangeNodeNetworkActivity"
             android:exported="false"
             android:theme="@style/Theme.WithoutNet.NoActionBar" />
         <activity
-            android:name=".activities.AddNodeToNetworkActivity"
+            android:name=".activities.Nodes.AddNodeToNetworkActivity"
             android:exported="false"
             android:theme="@style/Theme.WithoutNet.NoActionBar" />
         <activity
-            android:name=".activities.AddOrCreateNewNodePopUpActivity"
+            android:name=".activities.Nodes.CreateNewNodePopUpActivity"
             android:exported="false"
             android:theme="@style/Theme.WithoutNet.PopUp" />
         <activity
-            android:name=".activities.CreateNewNodePopUpActivity"
+            android:name=".activities.Nodes.ChangeNodeFieldValuePopUpActivity"
             android:exported="false"
             android:theme="@style/Theme.WithoutNet.PopUp" />
         <activity
-            android:name=".activities.ChangeNodeFieldValuePopUpActivity"
-            android:exported="false"
-            android:theme="@style/Theme.WithoutNet.PopUp" />
-        <activity
-            android:name=".activities.NodeDetailsActivity"
+            android:name=".activities.Nodes.NodeDetailsActivity"
             android:exported="false"
             android:theme="@style/Theme.WithoutNet.NoActionBar" />
         <activity
-            android:name=".activities.NodesListActivity"
+            android:name=".activities.Nodes.NodesListActivity"
             android:exported="false"
             android:theme="@style/Theme.WithoutNet.NoActionBar" />
         <activity
-            android:name=".activities.CreateNewNetworkPopUpActivity"
+            android:name=".activities.Networks.CreateNewNetworkPopUpActivity"
             android:exported="false"
             android:label="@string/title_activity_create_new_network_pop_up"
             android:theme="@style/Theme.WithoutNet.PopUp" />
-        <activity
-            android:name=".activities.ChangeNodeActivity"
-            android:exported="false"
-            android:label="@string/title_activity_change_node"
-            android:theme="@style/Theme.WithoutNet.NoActionBar" />
         <activity
             android:name=".activities.Debug.CachedUpdatesActivity"
             android:exported="false" />
@@ -82,14 +82,9 @@
             android:theme="@style/Theme.WithoutNet.NoActionBar" />
         <activity
             android:name=".activities.Login.LoginActivity"
-            android:exported="true"
+            android:exported="false"
             android:label="@string/app_name"
             android:theme="@style/Theme.WithoutNet.NoActionBar">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
 
         <service android:name=".services.ble.BleService" />

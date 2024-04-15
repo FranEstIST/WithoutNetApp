@@ -1,4 +1,4 @@
-package pt.ulisboa.tecnico.withoutnet.activities;
+package pt.ulisboa.tecnico.withoutnet.activities.Nodes;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -31,12 +31,8 @@ public class ChangeNodeFieldValuePopUpActivity extends AppCompatActivity {
 
         switch (nodeFieldType) {
             case NAME:
-                binding.changeNodeFieldTextView.setText(getResources().getText(R.string.change_nodes)
-                        + " "
-                        + getResources().getText(R.string.name));
-                binding.newNodeFieldValueInputText.setHint(getResources().getText(R.string.enter_new)
-                        + " "
-                        + getResources().getText(R.string.name));
+                binding.changeNodeFieldTextView.setText(R.string.change_nodes_name);
+                binding.newNodeFieldValueInputText.setHint(R.string.enter_new_name);
                 break;
             case NETWORK:
                 binding.changeNodeFieldTextView.setText(getResources().getText(R.string.change_nodes)

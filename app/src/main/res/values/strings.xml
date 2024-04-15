@@ -67,6 +67,9 @@
     <string name="no_network">No network</string>
 
     <string name="change_nodes">Change Node\'s</string>
+    <string name="change_nodes_name">Change node\'s name</string>
+    <string name="change_nodes_network">Change node\'s network</string>
+    <string name="enter_new_name">Enter new name</string>
     <string name="enter_new">Enter new</string>
     <string name="submit">Submit</string>
     <string name="no_network_found">No network found</string>
@@ -96,6 +99,7 @@
     <string name="home">Home</string>
     <string name="networks">Networks</string>
     <string name="nodes">Nodes</string>
+    <string name="nodes_lc">nodes</string>
     <string name="settings">Settings</string>
     <string name="debug">Debug</string>
     <!-- TODO: Remove or change this placeholder text -->

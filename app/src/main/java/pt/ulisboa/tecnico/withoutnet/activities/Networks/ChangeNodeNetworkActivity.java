@@ -1,4 +1,4 @@
-package pt.ulisboa.tecnico.withoutnet.activities;
+package pt.ulisboa.tecnico.withoutnet.activities.Networks;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -39,6 +39,8 @@ public class ChangeNodeNetworkActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
+
+        binding.appBarTitle.setText(R.string.change_nodes_network);
 
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         binding.networksListRecyclerView.setLayoutManager(linearLayoutManager);

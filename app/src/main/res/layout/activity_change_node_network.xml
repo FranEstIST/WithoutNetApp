@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".activities.ChangeNodeNetworkActivity">
+    tools:context=".activities.Networks.ChangeNodeNetworkActivity">
 
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBarLayout"
@@ -30,7 +30,7 @@
                 android:layout_gravity="center"
                 android:fontFamily="sans-serif-medium"
                 android:text="@string/not_available"
-                android:textColor="@color/black"
+                android:textColor="@color/white"
                 android:textSize="20sp" />
 
         </androidx.appcompat.widget.Toolbar>

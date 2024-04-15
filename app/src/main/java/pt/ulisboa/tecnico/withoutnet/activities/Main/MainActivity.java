@@ -24,6 +24,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.graphics.ColorFilter;
+import android.graphics.ColorMatrixColorFilter;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -76,6 +81,11 @@ public class MainActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         setSupportActionBar(binding.toolbar);
+
+        /*Drawable drawable = binding.toolbar.getNavigationIcon();
+        if(drawable != null) {
+            drawable.setColorFilter(new PorterDuffColorFilter(getResources().getColor(R.color.wn_blue_3), PorterDuff.Mode.SRC_ATOP));
+        }*/
 
         DrawerLayout drawerLayout = binding.activityMainDrawerLayout;
         NavigationView navView = binding.navView;
