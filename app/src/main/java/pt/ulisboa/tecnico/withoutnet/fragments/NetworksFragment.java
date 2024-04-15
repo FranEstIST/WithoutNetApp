@@ -5,15 +5,19 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Filter;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,6 +37,7 @@ import pt.ulisboa.tecnico.withoutnet.models.Network;
  * create an instance of this fragment.
  */
 public class NetworksFragment extends Fragment {
+    private static final String TAG = "NetworksFragment";
 
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -44,6 +49,8 @@ public class NetworksFragment extends Fragment {
     private String mParam2;
 
     private FragmentNetworksBinding binding;
+
+    private NetworksListAdapter networksListAdapter;
 
     public NetworksFragment() {
         // Required empty public constructor
@@ -128,20 +135,67 @@ public class NetworksFragment extends Fragment {
             }
         };
 
-        NetworksListAdapter  networksListAdapter = new NetworksListAdapter(networks, onNetworkClickListener);
+        networksListAdapter = new NetworksListAdapter(networks, onNetworkClickListener, true);
         binding.networksListRecyclerView.setAdapter(networksListAdapter);
 
         binding.networksListRecyclerView.addItemDecoration(new DividerItemDecoration(this.getContext(),
                 DividerItemDecoration.VERTICAL));
 
         binding.networksListRecyclerView.setVisibility(View.VISIBLE);
-        binding.networkSearchTextView.setVisibility(View.GONE);
+        /*binding.networkSearchTextView.setVisibility(View.GONE);*/
+    }
+
+    private void filterNetworks(String query) {
+        Filter.FilterListener filterListener = new Filter.FilterListener() {
+            @Override
+            public void onFilterComplete(int count) {
+                if(count == 0) {
+                    if(query.equals("")) {
+                        binding.networkSearchTextView.setText(R.string.search_for_a_network_to_view_it);
+                    } else {
+                        binding.networkSearchTextView.setText(R.string.no_network_found);
+                    }
+                    binding.networkSearchTextView.setVisibility(View.VISIBLE);
+                } else {
+                    binding.networkSearchTextView.setVisibility(View.GONE);
+                }
+            }
+        };
+
+        networksListAdapter.getFilter().filter(query, filterListener);
     }
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         menu.clear();
         inflater.inflate(R.menu.menu_search, menu);
+
+        MenuItem menuSearchItem = menu.findItem(R.id.action_search);
+        SearchView searchView = (SearchView) menuSearchItem.getActionView();
+
+        //searchView.setQueryHint("...");
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                Log.d(TAG, "Entered: " + query);
+
+                filterNetworks(query);
+
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                //Toast.makeText(SearchActivity.this.getBaseContext(), "Entered: " + newText, Toast.LENGTH_SHORT).show();
+                Log.d(TAG, "Entered: " + newText);
+
+                filterNetworks(newText);
+
+                return true;
+            }
+        });
+
         super.onCreateOptionsMenu(menu, inflater);
     }
 }

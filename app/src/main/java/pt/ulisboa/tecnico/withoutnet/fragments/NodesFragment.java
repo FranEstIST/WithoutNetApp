@@ -5,16 +5,20 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Filter;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,6 +39,7 @@ import pt.ulisboa.tecnico.withoutnet.models.Node;
  * create an instance of this fragment.
  */
 public class NodesFragment extends Fragment {
+    private static final String TAG = "NodesFragment";
 
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -46,6 +51,8 @@ public class NodesFragment extends Fragment {
     private String mParam2;
 
     private FragmentNodesBinding binding;
+
+    private NodesListAdapter nodesListAdapter;
 
     public NodesFragment() {
         // Required empty public constructor
@@ -113,7 +120,7 @@ public class NodesFragment extends Fragment {
         nodes.add(nodeTwo);
         nodes.add(nodeThree);
 
-        NodesListAdapter nodesListAdapter = new NodesListAdapter(nodes, new NodesListAdapter.OnNodeClickListener() {
+        nodesListAdapter = new NodesListAdapter(nodes, new NodesListAdapter.OnNodeClickListener() {
             @Override
             public void onNodeClick(Node clickedNode) {
                 Toast.makeText(NodesFragment.this.getContext(), "Clicked on node " + clickedNode.getCommonName(), Toast.LENGTH_SHORT).show();
@@ -121,13 +128,13 @@ public class NodesFragment extends Fragment {
                 intent.putExtra("node", clickedNode);
                 startActivity(intent);
             }
-        });
+        }, true);
 
         binding.nodesListRecyclerView.setAdapter(nodesListAdapter);
         binding.nodesListRecyclerView.addItemDecoration(new DividerItemDecoration(this.getContext(),
                 DividerItemDecoration.VERTICAL));
 
-        binding.nodesSearchTextView.setVisibility(View.GONE);
+        //binding.nodesSearchTextView.setVisibility(View.GONE);
         binding.nodesListRecyclerView.setVisibility(View.VISIBLE);
 
         binding.createNodeButton.setOnClickListener(new View.OnClickListener() {
@@ -139,10 +146,58 @@ public class NodesFragment extends Fragment {
         });
     }
 
+    private void filterNodes(String query) {
+        Filter.FilterListener filterListener = new Filter.FilterListener() {
+            @Override
+            public void onFilterComplete(int count) {
+                if(query.equals("")) {
+                    binding.nodesSearchTextView.setText(R.string.search_for_a_node_to_view_it);
+                    binding.nodesSearchTextView.setVisibility(View.VISIBLE);
+                } else if(nodesListAdapter.getItemCount() == 0) {
+                    binding.nodesSearchTextView.setText(R.string.no_nodes_found);
+                    binding.nodesSearchTextView.setVisibility(View.VISIBLE);
+                } else {
+                    binding.nodesSearchTextView.setVisibility(View.INVISIBLE);
+                }
+
+                Log.d(TAG, "Finished filtering");
+            }
+        };
+
+        nodesListAdapter.getFilter().filter(query, filterListener);
+    }
+
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         menu.clear();
         inflater.inflate(R.menu.menu_search, menu);
+
+        MenuItem menuSearchItem = menu.findItem(R.id.action_search);
+        SearchView searchView = (SearchView) menuSearchItem.getActionView();
+
+        //searchView.setQueryHint("...");
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                Log.d(TAG, "Entered: " + query);
+
+                filterNodes(query);
+
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                //Toast.makeText(SearchActivity.this.getBaseContext(), "Entered: " + newText, Toast.LENGTH_SHORT).show();
+                Log.d(TAG, "Entered: " + newText);
+
+                filterNodes(newText);
+
+                return true;
+            }
+        });
+
         super.onCreateOptionsMenu(menu, inflater);
     }
 }
