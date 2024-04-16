@@ -113,6 +113,11 @@ public class NodesListAdapter extends RecyclerView.Adapter<NodesListAdapter.View
         };
     }
 
+    public void setNodes(ArrayList<Node> nodes) {
+        this.nodes = nodes;
+        notifyDataSetChanged();
+    }
+
     class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         public TextView nameTextView;
         public TextView UUIDTextView;

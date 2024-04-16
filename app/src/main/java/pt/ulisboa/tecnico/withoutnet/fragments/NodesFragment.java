@@ -23,7 +23,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.List;
 
+import pt.ulisboa.tecnico.withoutnet.Frontend;
+import pt.ulisboa.tecnico.withoutnet.GlobalClass;
 import pt.ulisboa.tecnico.withoutnet.R;
 import pt.ulisboa.tecnico.withoutnet.activities.Main.MainActivity;
 import pt.ulisboa.tecnico.withoutnet.activities.Nodes.CreateNewNodePopUpActivity;
@@ -49,6 +52,8 @@ public class NodesFragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
+
+    private GlobalClass globalClass;
 
     private FragmentNodesBinding binding;
 
@@ -101,6 +106,7 @@ public class NodesFragment extends Fragment {
         if(mainActivity != null && mainActivity.binding != null) {
             TextView appBarTitleTextView = mainActivity.binding.appBarTitle;
             appBarTitleTextView.setText(R.string.nodes);
+            globalClass = (GlobalClass) getActivity().getApplicationContext();
         }
 
         setHasOptionsMenu(true);
@@ -130,6 +136,8 @@ public class NodesFragment extends Fragment {
             }
         }, true);
 
+        getNodesFromServer();
+
         binding.nodesListRecyclerView.setAdapter(nodesListAdapter);
         binding.nodesListRecyclerView.addItemDecoration(new DividerItemDecoration(this.getContext(),
                 DividerItemDecoration.VERTICAL));
@@ -144,6 +152,25 @@ public class NodesFragment extends Fragment {
                 startActivity(intent);
             }
         });
+    }
+
+    private void getNodesFromServer() {
+        Frontend.FrontendResponseListener responseListener = new Frontend.FrontendResponseListener() {
+            @Override
+            public void onResponse(Object response) {
+                ArrayList<Node> receivedNodes = (ArrayList<Node>) response;
+                nodesListAdapter.setNodes(receivedNodes);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                Log.e(TAG, errorMessage);
+            }
+        };
+
+        if(globalClass != null) {
+            globalClass.getFrontend().getAllNodesInServer(responseListener);
+        }
     }
 
     private void filterNodes(String query) {

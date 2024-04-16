@@ -127,16 +127,16 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
                 return true;
             case R.id.action_upload_updates:
-                new Thread(() -> {
+                /*new Thread(() -> {
                     GlobalClass globalClass = MainActivity.this.globalClass;
                     for (Node node : globalClass.getAllUpdates().keySet()) {
                         int status = globalClass.getFrontend().sendUpdateToServer(globalClass.getMostRecentUpdate(node));
                         Log.d(TAG, "Upload updates status: " + status);
                     }
-                }).start();
+                }).start();*/
                 return true;
             case R.id.action_download_updates:
-                new Thread(() -> {
+                /*new Thread(() -> {
                     GlobalClass globalClass = MainActivity.this.globalClass;
                     for (Node node : globalClass.getAllUpdates().keySet()) {
                         Update update = globalClass.getFrontend().getMostRecentUpdateByNodeFromServer(node);
@@ -147,7 +147,7 @@ public class MainActivity extends AppCompatActivity {
                             Log.d(TAG, "No update was found on the server for node: " + node);
                         }
                     }
-                }).start();
+                }).start();*/
                 return true;
             case R.id.action_view_cached_updates:
                 intent = new Intent(getApplicationContext(), CachedUpdatesActivity.class);

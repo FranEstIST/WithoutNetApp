@@ -38,6 +38,7 @@ import java.util.List;
 
 import pt.ulisboa.tecnico.withoutnet.constants.StatusCodes;
 import pt.ulisboa.tecnico.withoutnet.models.Message;
+import pt.ulisboa.tecnico.withoutnet.models.Network;
 import pt.ulisboa.tecnico.withoutnet.models.Node;
 import pt.ulisboa.tecnico.withoutnet.models.Update;
 import pt.ulisboa.tecnico.withoutnet.network.FrontendErrorMessages;
@@ -225,6 +226,50 @@ public class Frontend {
         return receivedUpdate;
     }*/
 
+    public void getAllNodesInServer(FrontendResponseListener responseListener) {
+        if(getConnectionType() == -1) {
+            responseListener.onError(null);
+            return;
+        }
+
+        String url = BASE_URL + "get-all-nodes";
+
+        JsonObjectRequest request = new JsonObjectRequest(url, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    int status = response.getInt("status");
+
+                    if(status == StatusCodes.OK) {
+                        JSONArray nodesJsonArray = response.getJSONArray("nodes");
+                        ArrayList<Node> nodes = new ArrayList<>();
+
+                        for(int i = 0; i < nodesJsonArray.length(); i++) {
+                            Node node = buildNodeFromJson(nodesJsonArray.getJSONObject(i));
+                            nodes.add(node);
+                        }
+
+                        responseListener.onResponse(nodes);
+                    } else {
+                        responseListener.onError(FrontendErrorMessages.fromStatusCode(status));
+                    }
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    responseListener.onError(JSON_ERROR);
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+                responseListener.onResponse(FrontendErrorMessages.VOLLEY_ERROR);
+            }
+        });
+
+        this.requestQueue.add(request);
+    }
+
     private int getConnectionType() {
         int result = -1;
 
@@ -267,11 +312,15 @@ public class Frontend {
         return messageJson;
     }
 
-    private Node buildNodefromJson(JsonObject nodeJson) {
-        String uuid = nodeJson.get("uuid").getAsString();
-        String commonName = nodeJson.get("commonName").getAsString();
-        String readingType = nodeJson.get("readingType").getAsString();
-        return new Node(uuid, commonName, readingType);
+    private Node buildNodeFromJson(JSONObject nodeJson) throws JSONException {
+        String uuid = nodeJson.getString("id");
+        String commonName = nodeJson.getString("common-name");
+        int networkId = nodeJson.getInt("network-id");
+        String networkName = nodeJson.getString("network-name");;
+
+        Network network = new Network(networkId, networkName);
+
+        return new Node(uuid, commonName, network);
     }
 
     public interface FrontendResponseListener {
