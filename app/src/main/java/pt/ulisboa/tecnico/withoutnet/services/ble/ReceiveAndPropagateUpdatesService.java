@@ -431,14 +431,28 @@ public class ReceiveAndPropagateUpdatesService extends Service {
         Frontend frontend = globalClass.getFrontend();
 
         // Read the messages in the server
-        List<Message> messagesInServer = frontend.getAllMessagesInServer();
+        Frontend.FrontendResponseListener responseListener = new Frontend.FrontendResponseListener() {
+            @Override
+            public void onResponse(Object response) {
+                Log.d(TAG, "Received messages from server");
 
-        if(messagesInServer != null) {
-            for(Message message : messagesInServer) {
-                message.setInServer(true);
-                globalClass.addMessage(message);
+                List<Message> messagesInServer = (List<Message>) response;
+
+                if(messagesInServer != null) {
+                    for(Message message : messagesInServer) {
+                        message.setInServer(true);
+                        globalClass.addMessage(message);
+                    }
+                }
             }
-        }
+
+            @Override
+            public void onError(String errorMessage) {
+                Log.e(TAG, errorMessage);
+            }
+        };
+
+        frontend.getAllMessagesInServerViaVolley(responseListener);
 
         // Write the messages in cache to the server
         // TODO: Messages should be sent to the server in bulk
@@ -451,11 +465,33 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
             for(Message message : messages) {
                 if(!message.isInServer()) {
-                    int status = frontend.sendMessageToServer(message);
+
+                    responseListener = new Frontend.FrontendResponseListener() {
+                        @Override
+                        public void onResponse(Object response) {
+                            Log.d(TAG, "Received a response to add message request");
+
+                            int status = (int) response;
+
+                            if(status == StatusCodes.OK) {
+                                message.setInServer(true);
+                                Log.d(TAG, "Added message to server");
+                            }
+                        }
+
+                        @Override
+                        public void onError(String errorMessage) {
+                            Log.e(TAG, errorMessage);
+                        }
+                    };
+
+                    frontend.sendMessageToServerViaVolley(message, responseListener);
+
+                    /*int status = frontend.sendMessageToServer(message);
 
                     if(status == StatusCodes.OK) {
                         message.setInServer(true);
-                    }
+                    }*/
                 }
             }
         }

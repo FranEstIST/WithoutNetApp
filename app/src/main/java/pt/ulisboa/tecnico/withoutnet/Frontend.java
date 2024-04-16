@@ -1,5 +1,7 @@
 package pt.ulisboa.tecnico.withoutnet;
 
+import static pt.ulisboa.tecnico.withoutnet.network.FrontendErrorMessages.JSON_ERROR;
+
 import android.content.Context;
 import android.location.Location;
 import android.net.ConnectivityManager;
@@ -7,10 +9,19 @@ import android.net.NetworkCapabilities;
 import android.os.StrictMode;
 import android.util.Log;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -29,120 +40,163 @@ import pt.ulisboa.tecnico.withoutnet.constants.StatusCodes;
 import pt.ulisboa.tecnico.withoutnet.models.Message;
 import pt.ulisboa.tecnico.withoutnet.models.Node;
 import pt.ulisboa.tecnico.withoutnet.models.Update;
+import pt.ulisboa.tecnico.withoutnet.network.FrontendErrorMessages;
 
 public class Frontend {
+    private final String TAG = "Frontend";
+
     //private String serverURL = "http://10.0.2.2:8080/";     // change accordingly
     private String serverURL = "http://192.168.1.102:8081/";
     //private String serverURL = "http://sigma01.ist.utl.pt:50012/";
     //private String serverURL = "http://10.5.192.102:8081/";
 
+    private RequestQueue requestQueue;
+    private static final String BASE_URL = "https://192.168.1.102:8081/";
+
     private String token;
     private GlobalClass globalClass;
 
-    private final String TAG = "FRONTEND";
-
     public Frontend(GlobalClass globalClass) {
         this.globalClass = globalClass;
+        this.requestQueue = globalClass.getRequestQueue();
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
     }
 
-    public int sendMessageToServer(Message message) {
+    public void sendMessageToServerViaVolley(Message message, FrontendResponseListener responseListener) {
         // This should check whether or not the smartphone is connected to the internet
-        if (getConnectionType() == -1) return -1;
+        if (getConnectionType() == -1) return;
 
-        // Create the update's json object
-        JsonObject sendMessageJson = JsonParser.parseString("{}").getAsJsonObject();
-        // TODO: Fix this
-        sendMessageJson.addProperty("length", message.getLength());
-        sendMessageJson.addProperty("timestamp", message.getTimestamp());
-        sendMessageJson.addProperty("messageType", message.getMessageTypeAsInt());
-        sendMessageJson.addProperty("sender", message.getSender());
-        sendMessageJson.addProperty("receiver", message.getReceiver());
-        sendMessageJson.addProperty("payload", message.getPayloadAsByteString());
+        String url = BASE_URL + "add-message";
 
-        // Send request and extract status code
-        JsonObject response = postRequest("add-message", sendMessageJson.toString());
+        JSONObject jsonRequest = new JSONObject();
 
-        return response.get("status").getAsInt();
-    }
-
-    public int sendMessageBatchToServer(List<Message> messageBatch) {
-        // This should check whether or not the smartphone is connected to the internet
-        if (getConnectionType() == -1) return -1;
-
-        // Create the send message batch request's json object
-        JsonObject sendMessageBatchRequestJson = JsonParser.parseString("{}").getAsJsonObject();
-
-        JsonArray messageBatchJson = new JsonArray();
-
-        for(Message message : messageBatch) {
-            messageBatchJson.add(getMessageJson(message));
+        try {
+            jsonRequest.put("length", message.getLength());
+            jsonRequest.put("timestamp", message.getTimestamp());
+            jsonRequest.put("messageType", message.getMessageTypeAsInt());
+            jsonRequest.put("sender", message.getSender());
+            jsonRequest.put("receiver", message.getReceiver());
+            jsonRequest.put("payload", message.getPayloadAsByteString());
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return;
         }
 
-        sendMessageBatchRequestJson.add("messageBatch", messageBatchJson);
-
-        // Send request and extract status code
-        JsonObject response = postRequest("add-message-batch", sendMessageBatchRequestJson.toString());
-
-        return response.get("status").getAsInt();
-    }
-
-    public List<Message> getAllMessagesInServer() {
-        //if (getConnectionType() == -1) return -1;
-
-        // Send request and extract status code
-        JsonObject response = postRequest("get-all-messages", "");
-
-        int statusCode = response.get("status").getAsInt();
-
-        List<Message> receivedMessages = null;
-
-        // if status is OK, create an ArrayList with all the acl users
-        if (statusCode == StatusCodes.OK) {
-            JsonArray messagesJsonArray = response.get("messages").getAsJsonArray();
-
-            if (messagesJsonArray == null) return receivedMessages;  // avoids empty jsons
-
-            receivedMessages = new ArrayList<>();
-
-            for(int i = 0; i < messagesJsonArray.size(); i++) {
-                // TODO: Fix this
-
-                JsonObject messageJson = messagesJsonArray.get(i).getAsJsonObject();
-                short length = messageJson.get("length").getAsShort();
-                long timestamp = messageJson.get("timestamp").getAsLong();
-                int messageType = messageJson.get("messageType").getAsInt();
-                int sender = messageJson.get("sender").getAsInt();
-                int receiver = messageJson.get("receiver").getAsInt();
-                String payload = messageJson.get("payload").getAsString();
-
-                Message receivedMessage = new Message(length, timestamp, messageType, sender, receiver, payload);
-
-                receivedMessages.add(receivedMessage);
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, jsonRequest, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                Log.d(TAG, "Received response (sendMessageToServerViaVolley)");
+                responseListener.onResponse(response);
             }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e(TAG, "Received error");
+                responseListener.onError("Error");
+            }
+        });
+
+        this.requestQueue.add(request);
+    }
+
+    public void getAllMessagesInServerViaVolley(FrontendResponseListener responseListener) {
+        if (getConnectionType() == -1) return;
+
+        String url = BASE_URL + "get-all-messages";
+
+        JsonObjectRequest request = new JsonObjectRequest(url, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                Log.d(TAG, "Received response (getAllMessagesInServerViaVolley)");
+
+                try {
+                    int statusCode = response.getInt("status");
+
+                    List<Message> receivedMessages = null;
+
+                    // if status is OK, create an ArrayList with all the messages
+                    if (statusCode == StatusCodes.OK) {
+                        JSONArray messagesJsonArray = response.getJSONArray("messages");
+
+                        if (messagesJsonArray == null)
+                            responseListener.onResponse(receivedMessages);
+
+                        receivedMessages = new ArrayList<>();
+
+                        for (int i = 0; i < messagesJsonArray.length(); i++) {
+                            // TODO: Fix this
+
+                            JSONObject messageJson = messagesJsonArray.getJSONObject(i);
+                            short length = (short) messageJson.getInt("length");
+                            long timestamp = messageJson.getLong("timestamp");
+                            int messageType = messageJson.getInt("messageType");
+                            int sender = messageJson.getInt("sender");
+                            int receiver = messageJson.getInt("receiver");
+                            String payload = messageJson.getString("payload");
+
+                            Message receivedMessage = new Message(length, timestamp, messageType, sender, receiver, payload);
+
+                            receivedMessages.add(receivedMessage);
+                        }
+
+                        responseListener.onResponse(receivedMessages);
+                    }
+                    responseListener.onError("Error");
+                } catch (JSONException e) {
+                    Log.e(TAG, "Received error");
+                    e.printStackTrace();
+                    responseListener.onError("Error");
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                responseListener.onError("Error");
+            }
+        });
+
+        this.requestQueue.add(request);
+    }
+
+    public void sendMessageBatchToServer(List<Message> messageBatch, FrontendResponseListener responseListener) {
+        if (getConnectionType() == -1) return;
+
+        String url = BASE_URL + "add-message-batch";
+
+        JSONObject jsonRequest = new JSONObject();
+
+        JSONArray messageBatchJsonArray = new JSONArray();
+        try {
+            for (Message message : messageBatch) {
+                messageBatchJsonArray.put(getMessageJson(message));
+            }
+
+            jsonRequest.put("messageBatch", messageBatchJsonArray);
+        } catch (JSONException e) {
+            e.printStackTrace();
+            responseListener.onError(FrontendErrorMessages.JSON_ERROR);
+            return;
         }
 
-        return receivedMessages;
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, jsonRequest, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                Log.d(TAG, "Received response (sendMessageToServerViaVolley)");
+                responseListener.onResponse(response);
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e(TAG, "Received error");
+                responseListener.onError("Error");
+            }
+        });
+
+        this.requestQueue.add(request);
     }
 
-    public int sendUpdateToServer(Update update) {
-        // This should check whether or not the smartphone is connected to the internet
-        if (getConnectionType() == -1) return -1;
-
-        // Create the update's json object
-        JsonObject sendUpdateJson = JsonParser.parseString("{}").getAsJsonObject();
-        sendUpdateJson.addProperty("timestamp", update.getTimestamp());
-        sendUpdateJson.add("sender", getNodeJson(update.getSender()));
-        sendUpdateJson.addProperty("reading", update.getReading());
-
-        // Send request and extract status code
-        JsonObject response = postRequest("add-update", sendUpdateJson.toString());
-
-        return response.get("status").getAsInt();
-    }
-
-    public Update getMostRecentUpdateByNodeFromServer(Node node) {
+    /*public Update getMostRecentUpdateByNodeFromServer(Node node) {
         //if (getConnectionType() == -1) return -1;
 
         // Create the node's json object
@@ -169,7 +223,7 @@ public class Frontend {
         }
 
         return receivedUpdate;
-    }
+    }*/
 
     private int getConnectionType() {
         int result = -1;
@@ -200,14 +254,16 @@ public class Frontend {
         return nodeJson;
     }
 
-    private JsonObject getMessageJson(Message message) {
-        JsonObject messageJson = JsonParser.parseString("{}").getAsJsonObject();
-        messageJson.addProperty("length", message.getLength());
-        messageJson.addProperty("timestamp", message.getTimestamp());
-        messageJson.addProperty("messageType", message.getMessageTypeAsInt());
-        messageJson.addProperty("sender", message.getSender());
-        messageJson.addProperty("receiver", message.getReceiver());
-        messageJson.addProperty("payload", message.getPayloadAsByteString());
+    private JSONObject getMessageJson(Message message) throws JSONException {
+        JSONObject messageJson = new JSONObject();
+
+        messageJson.put("length", message.getLength());
+        messageJson.put("timestamp", message.getTimestamp());
+        messageJson.put("messageType", message.getMessageTypeAsInt());
+        messageJson.put("sender", message.getSender());
+        messageJson.put("receiver", message.getReceiver());
+        messageJson.put("payload", message.getPayloadAsByteString());
+
         return messageJson;
     }
 
@@ -218,118 +274,9 @@ public class Frontend {
         return new Node(uuid, commonName, readingType);
     }
 
-    private JsonObject getRequest(String endpoint, String data) {
-        JsonObject responseJson = JsonParser.parseString("{}").getAsJsonObject();
-        responseJson.addProperty("status", -1);
+    public interface FrontendResponseListener {
+        public void onResponse(Object response);
 
-        String endpointURL = this.serverURL + endpoint;
-
-        responseJson.addProperty("status", -1);
-
-        int responseCode;
-        String responseString;
-
-        HttpURLConnection connection;
-
-        try {
-            connection = (HttpURLConnection) new URL(endpointURL).openConnection();
-        } catch (IOException e) {
-            System.out.println(String.format("Failed to open a connection with URL '%s'", endpointURL));
-            return responseJson;
-        }
-
-        try {
-            connection.setRequestMethod("GET");
-        } catch (ProtocolException e) {
-            System.out.println(String.format("Failed to set post method"));
-        }
-
-        connection.setDoOutput(true);
-        connection.setRequestProperty("Content-Type", "application/json");
-
-        try {
-            writeStream(connection.getOutputStream(), data);
-
-            InputStream in = new BufferedInputStream(connection.getInputStream());
-
-            if (connection.getResponseCode() != -1) {
-                responseString = readStream(in);
-            } else {
-                return JsonParser.parseString("{status:-1}").getAsJsonObject();
-            }
-
-            System.out.println("RESPONSE: " + responseString);
-            return JsonParser.parseString(responseString).getAsJsonObject();
-        } catch (IOException e) {
-            Log.d(TAG, "Error: Failed to write to the connection\nServer URL: " + serverURL);
-        }
-
-        return JsonParser.parseString("{status:-1}").getAsJsonObject();
-    }
-
-    private JsonObject postRequest(String endpoint, String data) {
-        JsonObject responseJson = JsonParser.parseString("{}").getAsJsonObject();
-        responseJson.addProperty("status", -1);
-
-        String endpointURL = this.serverURL + endpoint;
-
-        responseJson.addProperty("status", -1);
-
-        int responseCode;
-        String responseString;
-
-        HttpURLConnection connection;
-
-        try {
-            connection = (HttpURLConnection) new URL(endpointURL).openConnection();
-        } catch (IOException e) {
-            System.out.println(String.format("Failed to open a connection with URL '%s'", endpointURL));
-            return responseJson;
-        }
-
-        try {
-            connection.setRequestMethod("POST");
-        } catch (ProtocolException e) {
-            System.out.println(String.format("Failed to set post method"));
-        }
-
-        connection.setDoOutput(true);
-        connection.setRequestProperty("Content-Type", "application/json");
-
-        try {
-            writeStream(connection.getOutputStream(), data);
-
-            InputStream in = new BufferedInputStream(connection.getInputStream());
-
-            if (connection.getResponseCode() != -1) {
-                responseString = readStream(in);
-            } else {
-                return JsonParser.parseString("{status:-1}").getAsJsonObject();
-            }
-
-            System.out.println("RESPONSE: " + responseString);
-            return JsonParser.parseString(responseString).getAsJsonObject();
-        } catch (IOException e) {
-            Log.d(TAG, "Error: Failed to write to the connection\nServer URL: " + serverURL);
-        }
-
-        return JsonParser.parseString("{status:-1}").getAsJsonObject();
-    }
-
-    private void writeStream(OutputStream os, String data) throws IOException {
-        OutputStreamWriter oSW = new OutputStreamWriter(os);
-        oSW.write(data);
-        oSW.flush();
-        oSW.close();
-    }
-
-    private String readStream(InputStream is) throws IOException {
-        StringBuilder sb = new StringBuilder();
-        BufferedReader r = new BufferedReader(new InputStreamReader(is), 1000);
-        for (String line = r.readLine(); line != null; line = r.readLine()) {
-            sb.append(line);
-        }
-        is.close();
-        return sb.toString();
+        public void onError(String errorMessage);
     }
 }

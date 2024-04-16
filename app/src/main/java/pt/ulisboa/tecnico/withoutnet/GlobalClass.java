@@ -2,6 +2,9 @@ package pt.ulisboa.tecnico.withoutnet;
 
 import android.app.Application;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.Volley;
+
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -19,6 +22,8 @@ public class GlobalClass extends Application {
     private HashMap<Integer, TreeSet<Message>> messagesByReceiver;
 
     private Frontend frontend;
+
+    private RequestQueue requestQueue;
 
     @Override
     public void onCreate() {
@@ -116,6 +121,14 @@ public class GlobalClass extends Application {
 
     public Frontend getFrontend() {
         return this.frontend;
+    }
+
+    public RequestQueue getRequestQueue() {
+        if(this.requestQueue == null) {
+            this.requestQueue = Volley.newRequestQueue(this.getApplicationContext());
+        }
+
+        return this.requestQueue;
     }
 
     @Override
