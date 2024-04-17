@@ -226,6 +226,95 @@ public class Frontend {
         return receivedUpdate;
     }*/
 
+    public void addNode(Node node, FrontendResponseListener responseListener) {
+        if(getConnectionType() == -1) {
+            responseListener.onError(null);
+            return;
+        }
+
+        String url = BASE_URL + "add-node";
+
+        JSONObject jsonRequest = new JSONObject();
+
+        try {
+            jsonRequest.put("commonName", node.getCommonName());
+            jsonRequest.put("networkId", node.getNetwork().getId());
+        } catch (JSONException e) {
+            e.printStackTrace();
+            responseListener.onError(JSON_ERROR);
+        }
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, jsonRequest, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    int status = response.getInt("status");
+                    if(status == StatusCodes.OK) {
+                        Node addedNode = buildNodeFromJson(response.getJSONObject("node"));
+                        responseListener.onResponse(addedNode);
+                    } else {
+                        responseListener.onError(FrontendErrorMessages.fromStatusCode(status));
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+                responseListener.onError(FrontendErrorMessages.VOLLEY_ERROR);
+            }
+        });
+
+        this.requestQueue.add(request);
+    }
+
+    public void updateNode(Node node, FrontendResponseListener responseListener) {
+        if(getConnectionType() == -1) {
+            responseListener.onError(null);
+            return;
+        }
+
+        String url = BASE_URL + "update-node";
+
+        JSONObject jsonRequest = new JSONObject();
+
+        try {
+            jsonRequest.put("id", node.getId());
+            jsonRequest.put("commonName", node.getCommonName());
+            jsonRequest.put("networkId", node.getNetwork().getId());
+        } catch (JSONException e) {
+            e.printStackTrace();
+            responseListener.onError(JSON_ERROR);
+        }
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, jsonRequest, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    int status = response.getInt("status");
+                    if(status == StatusCodes.OK) {
+                        Node updatedNode = buildNodeFromJson(response.getJSONObject("node"));
+                        responseListener.onResponse(updatedNode);
+                    } else {
+                        responseListener.onError(FrontendErrorMessages.fromStatusCode(status));
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+                responseListener.onError(FrontendErrorMessages.VOLLEY_ERROR);
+            }
+        });
+
+        this.requestQueue.add(request);
+    }
+
     public void getAllNodesInServer(FrontendResponseListener responseListener) {
         if(getConnectionType() == -1) {
             responseListener.onError(null);
@@ -263,7 +352,50 @@ public class Frontend {
             @Override
             public void onErrorResponse(VolleyError error) {
                 error.printStackTrace();
-                responseListener.onResponse(FrontendErrorMessages.VOLLEY_ERROR);
+                responseListener.onError(FrontendErrorMessages.VOLLEY_ERROR);
+            }
+        });
+
+        this.requestQueue.add(request);
+    }
+
+    public void addNetwork(String networkName, FrontendResponseListener responseListener) {
+        if(getConnectionType() == -1) {
+            responseListener.onError(null);
+            return;
+        }
+
+        String url = BASE_URL + "add-network";
+
+        JSONObject jsonRequest = new JSONObject();
+
+        try {
+            jsonRequest.put("name", networkName);
+        } catch (JSONException e) {
+            e.printStackTrace();
+            responseListener.onError(JSON_ERROR);
+        }
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, jsonRequest, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    int status = response.getInt("status");
+                    if(status == StatusCodes.OK) {
+                        Network addedNetwork = buildNetworkFromJson(response.getJSONObject("network"));
+                        responseListener.onResponse(addedNetwork);
+                    } else {
+                        responseListener.onError(FrontendErrorMessages.fromStatusCode(status));
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+                responseListener.onError(FrontendErrorMessages.VOLLEY_ERROR);
             }
         });
 
@@ -291,11 +423,22 @@ public class Frontend {
         return result;
     }
 
-    private JsonObject getNodeJson(Node node) {
-        JsonObject nodeJson = JsonParser.parseString("{}").getAsJsonObject();
-        nodeJson.addProperty("uuid", node.getId());
-        nodeJson.addProperty("common-name", node.getCommonName());
-        nodeJson.addProperty("reading-type", node.getReadingType());
+    private JSONObject getNetworkJson(Network network) throws JSONException {
+        JSONObject networkJson = new JSONObject();
+
+        networkJson.put("id", network.getId());
+        networkJson.put("name", network.getName());
+
+        return networkJson;
+    }
+
+    private JSONObject getNodeJson(Node node) throws JSONException {
+        JSONObject nodeJson = new JSONObject();
+
+        nodeJson.put("id", node.getId());
+        nodeJson.put("common-name", node.getCommonName());
+        nodeJson.put("network-id", node.getNetwork().getId());
+
         return nodeJson;
     }
 
@@ -321,6 +464,13 @@ public class Frontend {
         Network network = new Network(networkId, networkName);
 
         return new Node(uuid, commonName, network);
+    }
+
+    private Network buildNetworkFromJson(JSONObject networkJson) throws JSONException {
+        int id = networkJson.getInt("id");
+        String name = networkJson.getString("name");
+
+        return new Network(id, name);
     }
 
     public interface FrontendResponseListener {

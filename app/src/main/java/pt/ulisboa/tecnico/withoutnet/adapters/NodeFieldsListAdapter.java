@@ -51,6 +51,7 @@ public class NodeFieldsListAdapter extends RecyclerView.Adapter<NodeFieldsListAd
                 public void onClick(View v) {
                     Intent intent = new Intent(NodeFieldsListAdapter.this.context, ChangeNodeFieldValuePopUpActivity.class);
                     intent.putExtra("node-field-type", ChangeNodeFieldValuePopUpActivity.NodeFieldType.NAME);
+                    intent.putExtra("node", node);
                     context.startActivity(intent);
                 }
             });

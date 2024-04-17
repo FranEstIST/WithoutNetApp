@@ -124,7 +124,7 @@ public class NetworksListAdapter extends RecyclerView.Adapter<NetworksListAdapte
         @Override
         public void onClick(View v) {
             int clickedPosition = getAdapterPosition();
-            Network clickedNetwork = networks.get(clickedPosition);
+            Network clickedNetwork = shouldOnlyDisplayFilteredNetworks ? filteredNetworks.get(clickedPosition) : networks.get(clickedPosition);
 
             Log.d(TAG, "Clicked on network: " + clickedPosition);
 

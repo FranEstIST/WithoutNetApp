@@ -77,6 +77,7 @@ public class AddNodeToNetworkActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(AddNodeToNetworkActivity.this, CreateNewNodePopUpActivity.class);
+                intent.putExtra("network", network);
                 startActivity(intent);
             }
         });

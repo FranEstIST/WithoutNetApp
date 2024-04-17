@@ -67,6 +67,13 @@ public class Node implements Serializable {
         this.setReadingType(relevantNodeValueComponents[2]);
     }
 
+    public Node(int id, String commonName, Network network) {
+        this.setId(id + "");
+        this.setCommonName(commonName);
+        this.readingType = "";
+        this.network = network;
+    }
+
     public String getCommonName() {
         return this.commonName;
     }
