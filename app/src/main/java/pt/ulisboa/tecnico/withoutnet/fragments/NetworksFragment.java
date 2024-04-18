@@ -23,6 +23,8 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 
+import pt.ulisboa.tecnico.withoutnet.Frontend;
+import pt.ulisboa.tecnico.withoutnet.GlobalClass;
 import pt.ulisboa.tecnico.withoutnet.R;
 import pt.ulisboa.tecnico.withoutnet.activities.Networks.CreateNewNetworkPopUpActivity;
 import pt.ulisboa.tecnico.withoutnet.activities.Main.MainActivity;
@@ -30,6 +32,7 @@ import pt.ulisboa.tecnico.withoutnet.activities.Nodes.NodesListActivity;
 import pt.ulisboa.tecnico.withoutnet.adapters.NetworksListAdapter;
 import pt.ulisboa.tecnico.withoutnet.databinding.FragmentNetworksBinding;
 import pt.ulisboa.tecnico.withoutnet.models.Network;
+import pt.ulisboa.tecnico.withoutnet.models.Node;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -47,6 +50,8 @@ public class NetworksFragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
+
+    private GlobalClass globalClass;
 
     private FragmentNetworksBinding binding;
 
@@ -103,6 +108,8 @@ public class NetworksFragment extends Fragment {
 
         setHasOptionsMenu(true);
 
+        globalClass = (GlobalClass) getActivity().getApplicationContext();
+
         binding.createNetworkButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -145,7 +152,7 @@ public class NetworksFragment extends Fragment {
         /*binding.networkSearchTextView.setVisibility(View.GONE);*/
     }
 
-    private void filterNetworks(String query) {
+    /*private void filterNetworks(String query) {
         Filter.FilterListener filterListener = new Filter.FilterListener() {
             @Override
             public void onFilterComplete(int count) {
@@ -163,6 +170,44 @@ public class NetworksFragment extends Fragment {
         };
 
         networksListAdapter.getFilter().filter(query, filterListener);
+    }*/
+
+    private void filterNetworks(String query) {
+        if(query.equals("")) {
+            binding.networkSearchTextView.setText(R.string.search_for_a_node_to_view_it);
+            binding.networkSearchTextView.setVisibility(View.VISIBLE);
+            binding.networksListRecyclerView.setVisibility(View.GONE);
+            return;
+        }
+
+        Frontend.FrontendResponseListener responseListener = new Frontend.FrontendResponseListener() {
+            @Override
+            public void onResponse(Object response) {
+                if(response == null) {
+                    Toast.makeText(NetworksFragment.this.getContext(), "No internet connection", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                ArrayList<Network> filteredNetworks = (ArrayList<Network>) response;
+                networksListAdapter.setFilteredNetworks(filteredNetworks);
+
+                if(networksListAdapter.getItemCount() == 0) {
+                    binding.networkSearchTextView.setText(R.string.no_nodes_found);
+                    binding.networkSearchTextView.setVisibility(View.VISIBLE);
+                    binding.networksListRecyclerView.setVisibility(View.GONE);
+                } else {
+                    binding.networkSearchTextView.setVisibility(View.GONE);
+                    binding.networksListRecyclerView.setVisibility(View.VISIBLE);
+                }
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                Log.e(TAG, errorMessage);
+            }
+        };
+
+        globalClass.getFrontend().getNetworksInServerContainingSubstring(query, responseListener);
     }
 
     @Override

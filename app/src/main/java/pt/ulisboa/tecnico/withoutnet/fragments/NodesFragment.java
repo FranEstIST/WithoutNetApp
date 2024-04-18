@@ -136,7 +136,7 @@ public class NodesFragment extends Fragment {
             }
         }, true);
 
-        getNodesFromServer();
+        //getNodesFromServer();
 
         binding.nodesListRecyclerView.setAdapter(nodesListAdapter);
         binding.nodesListRecyclerView.addItemDecoration(new DividerItemDecoration(this.getContext(),
@@ -173,7 +173,7 @@ public class NodesFragment extends Fragment {
         }
     }
 
-    private void filterNodes(String query) {
+    /*private void filterNodes(String query) {
         Filter.FilterListener filterListener = new Filter.FilterListener() {
             @Override
             public void onFilterComplete(int count) {
@@ -192,6 +192,44 @@ public class NodesFragment extends Fragment {
         };
 
         nodesListAdapter.getFilter().filter(query, filterListener);
+    }*/
+
+    private void filterNodes(String query) {
+        if(query.equals("")) {
+            binding.nodesSearchTextView.setText(R.string.search_for_a_node_to_view_it);
+            binding.nodesSearchTextView.setVisibility(View.VISIBLE);
+            binding.nodesListRecyclerView.setVisibility(View.GONE);
+            return;
+        }
+
+        Frontend.FrontendResponseListener responseListener = new Frontend.FrontendResponseListener() {
+            @Override
+            public void onResponse(Object response) {
+                if(response == null) {
+                    Toast.makeText(NodesFragment.this.getContext(), "No internet connection", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                ArrayList<Node> filteredNodes = (ArrayList<Node>) response;
+                nodesListAdapter.setFilteredNodes(filteredNodes);
+
+                if(nodesListAdapter.getItemCount() == 0) {
+                    binding.nodesSearchTextView.setText(R.string.no_nodes_found);
+                    binding.nodesSearchTextView.setVisibility(View.VISIBLE);
+                    binding.nodesListRecyclerView.setVisibility(View.GONE);
+                } else {
+                    binding.nodesSearchTextView.setVisibility(View.GONE);
+                    binding.nodesListRecyclerView.setVisibility(View.VISIBLE);
+                }
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                Log.e(TAG, errorMessage);
+            }
+        };
+
+        globalClass.getFrontend().getNodesInServerContainingSubstring(query, responseListener);
     }
 
     @Override

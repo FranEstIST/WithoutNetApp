@@ -12,6 +12,7 @@ import android.util.Log;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
+import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.google.gson.JsonArray;
@@ -359,6 +360,55 @@ public class Frontend {
         this.requestQueue.add(request);
     }
 
+    public void getNodesInServerContainingSubstring(String substring, FrontendResponseListener responseListener) {
+        if(getConnectionType() == -1) {
+            responseListener.onError(null);
+            return;
+        }
+
+        String url = BASE_URL + "find-nodes-by-search-term" + "/" + substring;
+
+        JsonObjectRequest request = new JsonObjectRequest(url, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    int status = response.getInt("status");
+
+                    if(status == StatusCodes.OK) {
+                        JSONArray nodesJsonArray = response.getJSONArray("nodes");
+                        ArrayList<Node> nodes = new ArrayList<>();
+
+                        for(int i = 0; i < nodesJsonArray.length(); i++) {
+                            Node node = buildNodeFromJson(nodesJsonArray.getJSONObject(i));
+                            nodes.add(node);
+                        }
+
+                        responseListener.onResponse(nodes);
+                    } else {
+                        responseListener.onError(FrontendErrorMessages.fromStatusCode(status));
+                    }
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    responseListener.onError(JSON_ERROR);
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+
+                if(error.getCause() instanceof TimeoutError) {
+                    responseListener.onError(FrontendErrorMessages.TIMEOUT_ERROR);
+                } else {
+                    responseListener.onError(FrontendErrorMessages.VOLLEY_ERROR);
+                }
+            }
+        });
+
+        this.requestQueue.add(request);
+    }
+
     public void addNetwork(String networkName, FrontendResponseListener responseListener) {
         if(getConnectionType() == -1) {
             responseListener.onError(null);
@@ -396,6 +446,55 @@ public class Frontend {
             public void onErrorResponse(VolleyError error) {
                 error.printStackTrace();
                 responseListener.onError(FrontendErrorMessages.VOLLEY_ERROR);
+            }
+        });
+
+        this.requestQueue.add(request);
+    }
+
+    public void getNetworksInServerContainingSubstring(String substring, FrontendResponseListener responseListener) {
+        if(getConnectionType() == -1) {
+            responseListener.onError(null);
+            return;
+        }
+
+        String url = BASE_URL + "find-networks-by-search-term" + "/" + substring;
+
+        JsonObjectRequest request = new JsonObjectRequest(url, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    int status = response.getInt("status");
+
+                    if(status == StatusCodes.OK) {
+                        JSONArray networksJsonArray = response.getJSONArray("networks");
+                        ArrayList<Network> networks = new ArrayList<>();
+
+                        for(int i = 0; i < networksJsonArray.length(); i++) {
+                            Network network = buildNetworkFromJson(networksJsonArray.getJSONObject(i));
+                            networks.add(network);
+                        }
+
+                        responseListener.onResponse(networks);
+                    } else {
+                        responseListener.onError(FrontendErrorMessages.fromStatusCode(status));
+                    }
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    responseListener.onError(JSON_ERROR);
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+
+                if(error.getCause() instanceof TimeoutError) {
+                    responseListener.onError(FrontendErrorMessages.TIMEOUT_ERROR);
+                } else {
+                    responseListener.onError(FrontendErrorMessages.VOLLEY_ERROR);
+                }
             }
         });
 

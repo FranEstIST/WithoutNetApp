@@ -107,6 +107,16 @@ public class NetworksListAdapter extends RecyclerView.Adapter<NetworksListAdapte
 
     public void setNetworks(ArrayList<Network> networks) {
         this.networks = networks;
+        this.notifyDataSetChanged();
+    }
+
+    public void setFilteredNetworks(ArrayList<Network> filteredNetworks) {
+        this.filteredNetworks = filteredNetworks;
+        this.notifyDataSetChanged();
+    }
+
+    public void setShouldOnlyDisplayFilteredNetworks(boolean shouldOnlyDisplayFilteredNetworks) {
+        this.shouldOnlyDisplayFilteredNetworks = shouldOnlyDisplayFilteredNetworks;
     }
 
     class NetworksListItemViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
