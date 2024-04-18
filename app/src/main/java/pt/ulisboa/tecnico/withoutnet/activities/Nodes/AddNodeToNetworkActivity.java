@@ -14,20 +14,28 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Filter;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 
+import pt.ulisboa.tecnico.withoutnet.Frontend;
+import pt.ulisboa.tecnico.withoutnet.GlobalClass;
 import pt.ulisboa.tecnico.withoutnet.R;
 import pt.ulisboa.tecnico.withoutnet.adapters.NodesListAdapter;
 import pt.ulisboa.tecnico.withoutnet.databinding.ActivityAddNodeToNetworkBinding;
+import pt.ulisboa.tecnico.withoutnet.fragments.NodesFragment;
 import pt.ulisboa.tecnico.withoutnet.models.Network;
 import pt.ulisboa.tecnico.withoutnet.models.Node;
 
 public class AddNodeToNetworkActivity extends AppCompatActivity {
     private static final String TAG = "AddNodeToNetworkActivity";
 
+    private GlobalClass globalClass;
+
     private ActivityAddNodeToNetworkBinding binding;
     private NodesListAdapter nodesListAdapter;
+
+    private Network network;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,17 +55,17 @@ public class AddNodeToNetworkActivity extends AppCompatActivity {
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
         binding.nodesListRecyclerView.setLayoutManager(layoutManager);
 
-        Network network = new Network(1, "Alameda Garden 1");
+        //Network network = new Network(1, "Alameda Garden 1");
 
-        Node nodeOne = new Node("1", "nodeOne", "TEMP", network);
+        /*Node nodeOne = new Node("1", "nodeOne", "TEMP", network);
         Node nodeTwo = new Node("2", "nodeTwo", "TEMP", network);
-        Node nodeThree = new Node("3", "nodeThree", "TEMP", network);
+        Node nodeThree = new Node("3", "nodeThree", "TEMP", network);*/
 
         ArrayList<Node> nodes = new ArrayList<>();
 
-        nodes.add(nodeOne);
+        /*nodes.add(nodeOne);
         nodes.add(nodeTwo);
-        nodes.add(nodeThree);
+        nodes.add(nodeThree);*/
 
         NodesListAdapter.OnNodeClickListener onNodeClickListener = new NodesListAdapter.OnNodeClickListener() {
             @Override
@@ -81,27 +89,48 @@ public class AddNodeToNetworkActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+        network = (Network) getIntent().getSerializableExtra("network");
+
+        globalClass = (GlobalClass) getApplicationContext();
     }
 
     private void filterNodes(String query) {
-        Filter.FilterListener filterListener = new Filter.FilterListener() {
+        if(query.equals("")) {
+            binding.nodesSearchTextView.setText(R.string.search_for_a_node_to_view_it);
+            binding.nodesSearchTextView.setVisibility(View.VISIBLE);
+            binding.nodesListRecyclerView.setVisibility(View.GONE);
+            return;
+        }
+
+        Frontend.FrontendResponseListener responseListener = new Frontend.FrontendResponseListener() {
             @Override
-            public void onFilterComplete(int count) {
-                if(query.equals("")) {
-                    binding.nodesSearchTextView.setText(R.string.search_for_a_node_to_add_it);
-                    binding.nodesSearchTextView.setVisibility(View.VISIBLE);
-                } else if(nodesListAdapter.getItemCount() == 0) {
-                    binding.nodesSearchTextView.setText(R.string.no_nodes_found);
-                    binding.nodesSearchTextView.setVisibility(View.VISIBLE);
-                } else {
-                    binding.nodesSearchTextView.setVisibility(View.INVISIBLE);
+            public void onResponse(Object response) {
+                if(response == null) {
+                    Toast.makeText(AddNodeToNetworkActivity.this, "No internet connection", Toast.LENGTH_SHORT).show();
+                    return;
                 }
 
-                Log.d(TAG, "Finished filtering");
+                ArrayList<Node> filteredNodes = (ArrayList<Node>) response;
+                nodesListAdapter.setFilteredNodes(filteredNodes);
+
+                if(nodesListAdapter.getItemCount() == 0) {
+                    binding.nodesSearchTextView.setText(R.string.no_nodes_found);
+                    binding.nodesSearchTextView.setVisibility(View.VISIBLE);
+                    binding.nodesListRecyclerView.setVisibility(View.GONE);
+                } else {
+                    binding.nodesSearchTextView.setVisibility(View.GONE);
+                    binding.nodesListRecyclerView.setVisibility(View.VISIBLE);
+                }
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                Log.e(TAG, errorMessage);
             }
         };
 
-        nodesListAdapter.getFilter().filter(query, filterListener);
+        globalClass.getFrontend().getNodesInServerContainingSubstring(query, responseListener);
     }
 
     @Override

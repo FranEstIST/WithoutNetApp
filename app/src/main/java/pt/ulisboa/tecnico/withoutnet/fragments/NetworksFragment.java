@@ -174,7 +174,7 @@ public class NetworksFragment extends Fragment {
 
     private void filterNetworks(String query) {
         if(query.equals("")) {
-            binding.networkSearchTextView.setText(R.string.search_for_a_node_to_view_it);
+            binding.networkSearchTextView.setText(R.string.search_for_a_network_to_view_it);
             binding.networkSearchTextView.setVisibility(View.VISIBLE);
             binding.networksListRecyclerView.setVisibility(View.GONE);
             return;

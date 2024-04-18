@@ -501,6 +501,105 @@ public class Frontend {
         this.requestQueue.add(request);
     }
 
+    public void getNodesInServerContainingSubstringInNetwork(String substring, Network network, FrontendResponseListener responseListener) {
+        if(getConnectionType() == -1) {
+            responseListener.onError(null);
+            return;
+        }
+
+        String url = BASE_URL + "find-nodes-by-network-id-and-search-term" + "/" + network.getId() + "/" + substring;
+
+        JsonObjectRequest request = new JsonObjectRequest(url, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    int status = response.getInt("status");
+
+                    if(status == StatusCodes.OK) {
+                        JSONArray nodesJsonArray = response.getJSONArray("nodes");
+                        ArrayList<Node> nodes = new ArrayList<>();
+
+                        for(int i = 0; i < nodesJsonArray.length(); i++) {
+                            Node node = buildNodeFromJson(nodesJsonArray.getJSONObject(i));
+                            nodes.add(node);
+                        }
+
+                        responseListener.onResponse(nodes);
+                    } else {
+                        responseListener.onError(FrontendErrorMessages.fromStatusCode(status));
+                    }
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    responseListener.onError(JSON_ERROR);
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+
+                if(error.getCause() instanceof TimeoutError) {
+                    responseListener.onError(FrontendErrorMessages.TIMEOUT_ERROR);
+                } else {
+                    responseListener.onError(FrontendErrorMessages.VOLLEY_ERROR);
+                }
+            }
+        });
+
+        this.requestQueue.add(request);
+    }
+
+    public void getNodesInNetwork(Network network, FrontendResponseListener responseListener) {
+        if(getConnectionType() == -1) {
+            responseListener.onError(null);
+            return;
+        }
+
+        String url = BASE_URL + "get-network-by-id/" + network.getId();
+
+        JsonObjectRequest request = new JsonObjectRequest(url, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    int status = response.getInt("status");
+
+                    if(status == StatusCodes.OK) {
+                        JSONObject networkJson = response.getJSONObject("network");
+                        JSONArray nodesJsonArray = networkJson.getJSONArray("nodes");
+                        ArrayList<Node> nodes = new ArrayList<>();
+
+                        for(int i = 0; i < nodesJsonArray.length(); i++) {
+                            Node node = buildNodeFromJson(nodesJsonArray.getJSONObject(i));
+                            nodes.add(node);
+                        }
+
+                        responseListener.onResponse(nodes);
+                    } else {
+                        responseListener.onError(FrontendErrorMessages.fromStatusCode(status));
+                    }
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    responseListener.onError(JSON_ERROR);
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+
+                if(error.getCause() instanceof TimeoutError) {
+                    responseListener.onError(FrontendErrorMessages.TIMEOUT_ERROR);
+                } else {
+                    responseListener.onError(FrontendErrorMessages.VOLLEY_ERROR);
+                }
+            }
+        });
+
+        this.requestQueue.add(request);
+    }
+
     private int getConnectionType() {
         int result = -1;
 

@@ -15,7 +15,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import pt.ulisboa.tecnico.withoutnet.Frontend;
 import pt.ulisboa.tecnico.withoutnet.R;
+import pt.ulisboa.tecnico.withoutnet.models.Network;
 import pt.ulisboa.tecnico.withoutnet.models.Node;
 
 public class NodesListAdapter extends RecyclerView.Adapter<NodesListAdapter.ViewHolder> implements Filterable {
@@ -83,6 +85,27 @@ public class NodesListAdapter extends RecyclerView.Adapter<NodesListAdapter.View
         return shouldOnlyDiplayFilteredNodes ? filteredNodes.size() : nodes.size();
     }
 
+    /*public void filterNodesByQueryingServer(Frontend frontend, String query, Network network, OnServerQueryCompletedListener onServerQueryCompletedListener) {
+        Frontend.FrontendResponseListener responseListener = new Frontend.FrontendResponseListener() {
+            @Override
+            public void onResponse(Object response) {
+
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+
+            }
+        };
+
+        if(network == null) {
+            frontend.getNodesInServerContainingSubstring();
+        } else {
+            frontend.getNodesInServerContainingSubstringInNetwork(query, network, );
+        }
+
+    }*/
+
     @Override
     public Filter getFilter() {
         return new Filter() {
@@ -92,7 +115,7 @@ public class NodesListAdapter extends RecyclerView.Adapter<NodesListAdapter.View
                 ArrayList resultingList;
 
                 if(constraint == null || constraint.equals("")) {
-                    resultingList = new ArrayList();
+                    resultingList = nodes;
                 } else {
                     resultingList = new ArrayList(nodes.stream().filter(node -> {
                         return node.getCommonName().toLowerCase().contains(constraint.toString().toLowerCase());
@@ -120,6 +143,11 @@ public class NodesListAdapter extends RecyclerView.Adapter<NodesListAdapter.View
 
     public void setFilteredNodes(ArrayList<Node> filteredNodes) {
         this.filteredNodes = filteredNodes;
+        notifyDataSetChanged();
+    }
+
+    public void setShouldOnlyDiplayFilteredNodes(boolean shouldOnlyDiplayFilteredNodes) {
+        this.shouldOnlyDiplayFilteredNodes = shouldOnlyDiplayFilteredNodes;
         notifyDataSetChanged();
     }
 
@@ -152,5 +180,9 @@ public class NodesListAdapter extends RecyclerView.Adapter<NodesListAdapter.View
 
     public interface OnNodeClickListener {
         void onNodeClick(Node clickedNode);
+    }
+
+    public interface OnServerQueryCompletedListener {
+        void onServerQueryCompleted(int returnedNodes);
     }
 }

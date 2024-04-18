@@ -72,6 +72,7 @@ public class NodeFieldsListAdapter extends RecyclerView.Adapter<NodeFieldsListAd
                     context.startActivity(intent);*/
 
                     Intent intent = new Intent(NodeFieldsListAdapter.this.context, ChangeNodeNetworkActivity.class);
+                    intent.putExtra("node", node);
                     context.startActivity(intent);
                 }
             });

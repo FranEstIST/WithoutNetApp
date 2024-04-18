@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -13,6 +14,7 @@ import java.io.Serializable;
 import pt.ulisboa.tecnico.withoutnet.Frontend;
 import pt.ulisboa.tecnico.withoutnet.GlobalClass;
 import pt.ulisboa.tecnico.withoutnet.R;
+import pt.ulisboa.tecnico.withoutnet.activities.Networks.ChangeNodeNetworkActivity;
 import pt.ulisboa.tecnico.withoutnet.databinding.ActivityChangeNodeFieldValuePopUpBinding;
 import pt.ulisboa.tecnico.withoutnet.models.Node;
 
@@ -83,7 +85,8 @@ public class ChangeNodeFieldValuePopUpActivity extends AppCompatActivity {
 
                     @Override
                     public void onError(String errorMessage) {
-
+                        Toast.makeText(ChangeNodeFieldValuePopUpActivity.this, "An error occurred", Toast.LENGTH_SHORT).show();
+                        Log.e(TAG, errorMessage);
                     }
                 };
 
