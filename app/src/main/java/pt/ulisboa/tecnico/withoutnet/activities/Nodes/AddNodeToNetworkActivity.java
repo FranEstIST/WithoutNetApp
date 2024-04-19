@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import pt.ulisboa.tecnico.withoutnet.Frontend;
 import pt.ulisboa.tecnico.withoutnet.GlobalClass;
 import pt.ulisboa.tecnico.withoutnet.R;
+import pt.ulisboa.tecnico.withoutnet.activities.Networks.ChangeNodeNetworkActivity;
 import pt.ulisboa.tecnico.withoutnet.adapters.NodesListAdapter;
 import pt.ulisboa.tecnico.withoutnet.databinding.ActivityAddNodeToNetworkBinding;
 import pt.ulisboa.tecnico.withoutnet.fragments.NodesFragment;
@@ -70,7 +71,32 @@ public class AddNodeToNetworkActivity extends AppCompatActivity {
         NodesListAdapter.OnNodeClickListener onNodeClickListener = new NodesListAdapter.OnNodeClickListener() {
             @Override
             public void onNodeClick(Node clickedNode) {
-                // TODO
+                clickedNode.setNetwork(network);
+
+                Frontend.FrontendResponseListener responseListener = new Frontend.FrontendResponseListener() {
+                    @Override
+                    public void onResponse(Object response) {
+                        if(response != null) {
+                            Node addedNode = (Node) response;
+
+                            Intent returnIntent = new Intent();
+                            returnIntent.putExtra("added-node", addedNode);
+
+                            AddNodeToNetworkActivity.this.setResult(RESULT_OK, returnIntent);
+                            AddNodeToNetworkActivity.this.finish();
+                        } else {
+                            Toast.makeText(AddNodeToNetworkActivity.this, "No Internet connection", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onError(String errorMessage) {
+                        Toast.makeText(AddNodeToNetworkActivity.this, "An error occurred", Toast.LENGTH_SHORT).show();
+                        Log.e(TAG, errorMessage);
+                    }
+                };
+
+                globalClass.getFrontend().updateNode(clickedNode, responseListener);
             }
         };
 

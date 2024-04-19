@@ -1,8 +1,15 @@
 package pt.ulisboa.tecnico.withoutnet.activities.Nodes;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContract;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
+import androidx.core.app.ActivityOptionsCompat;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -34,7 +41,11 @@ public class NodesListActivity extends AppCompatActivity {
     private ActivityNodesListBinding binding;
     private NodesListAdapter nodesListAdapter;
 
+    private SearchView searchView;
+
     private Network network;
+
+    private ActivityResultLauncher<Intent> addNodeResultLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,11 +109,40 @@ public class NodesListActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(NodesListActivity.this, AddNodeToNetworkActivity.class);
                 intent.putExtra("network", network);
-                startActivity(intent);
+                //startActivity(intent);
+                addNodeResultLauncher.launch(intent);
             }
         });
 
         globalClass = (GlobalClass) getApplicationContext();
+
+        addNodeResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
+            @Override
+            public void onActivityResult(ActivityResult result) {
+                if(result.getResultCode() == RESULT_OK) {
+                    Intent data = result.getData();
+
+                    if(!data.hasExtra("added-node")) {
+                        Toast.makeText(NodesListActivity.this, "Error adding node", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    Node addedNode = (Node) data.getSerializableExtra("added-node");
+
+                    Toast.makeText(NodesListActivity.this, "Added " + addedNode.getCommonName() + " to " + network.getName(), Toast.LENGTH_SHORT).show();
+
+                    // Refresh the list of nodes in the network
+                    CharSequence currentQueryCharSeq = searchView.getQuery();
+
+                    if(currentQueryCharSeq != null) {
+                        getNodesFromServer();
+                        filterNodes(currentQueryCharSeq.toString());
+                    }
+                } else {
+                    Toast.makeText(NodesListActivity.this, "Error adding node", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
 
         getNodesFromServer();
     }
@@ -153,7 +193,7 @@ public class NodesListActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.menu_search, menu);
 
         MenuItem menuSearchItem = menu.findItem(R.id.action_search);
-        SearchView searchView = (SearchView) menuSearchItem.getActionView();
+        searchView = (SearchView) menuSearchItem.getActionView();
 
         //searchView.setQueryHint("...");
 
