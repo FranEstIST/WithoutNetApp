@@ -72,7 +72,7 @@ public class NodesListAdapter extends RecyclerView.Adapter<NodesListAdapter.View
         TextView networkNameTextView = holder.networkNameTextView;
 
         // TODO: Replace "In" by a string in the string resource file
-        if(node.getNetwork() != null) {
+        if(node.getNetwork() != null && !node.getNetwork().getName().equals("")) {
             networkNameTextView.setText("In " + node.getNetwork().getName());
         } else {
             networkNameTextView.setVisibility(View.GONE);

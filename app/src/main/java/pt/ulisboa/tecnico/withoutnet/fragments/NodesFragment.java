@@ -1,8 +1,14 @@
 package pt.ulisboa.tecnico.withoutnet.fragments;
 
+import static android.app.Activity.RESULT_OK;
+
 import android.content.Intent;
 import android.os.Bundle;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SearchView;
@@ -29,9 +35,11 @@ import pt.ulisboa.tecnico.withoutnet.Frontend;
 import pt.ulisboa.tecnico.withoutnet.GlobalClass;
 import pt.ulisboa.tecnico.withoutnet.R;
 import pt.ulisboa.tecnico.withoutnet.activities.Main.MainActivity;
+import pt.ulisboa.tecnico.withoutnet.activities.Nodes.AddNodeToNetworkActivity;
 import pt.ulisboa.tecnico.withoutnet.activities.Nodes.CreateNewNodePopUpActivity;
 import pt.ulisboa.tecnico.withoutnet.activities.Nodes.NodeDetailsActivity;
 import pt.ulisboa.tecnico.withoutnet.adapters.NodesListAdapter;
+import pt.ulisboa.tecnico.withoutnet.constants.ErrorMessages;
 import pt.ulisboa.tecnico.withoutnet.databinding.FragmentNodesBinding;
 import pt.ulisboa.tecnico.withoutnet.models.Network;
 import pt.ulisboa.tecnico.withoutnet.models.Node;
@@ -56,6 +64,8 @@ public class NodesFragment extends Fragment {
     private GlobalClass globalClass;
 
     private FragmentNodesBinding binding;
+
+    private SearchView searchView;
 
     private NodesListAdapter nodesListAdapter;
 
@@ -145,13 +155,58 @@ public class NodesFragment extends Fragment {
         //binding.nodesSearchTextView.setVisibility(View.GONE);
         binding.nodesListRecyclerView.setVisibility(View.VISIBLE);
 
+        ActivityResultLauncher<Intent> createNewNodeResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
+            @Override
+            public void onActivityResult(ActivityResult result) {
+                refreshNodesList();
+
+                if(result.getResultCode() == RESULT_OK) {
+                    Intent returnIntent = result.getData();
+
+                    if(!returnIntent.hasExtra("added-node")) {
+                        Toast.makeText(NodesFragment.this.getActivity()
+                                        , ErrorMessages.ERROR_CREATING_NODE
+                                        , Toast.LENGTH_SHORT)
+                                .show();
+                    }
+
+                } else {
+                    Toast.makeText(NodesFragment.this.getActivity()
+                                    , ErrorMessages.ERROR_CREATING_NODE
+                                    , Toast.LENGTH_SHORT)
+                            .show();
+                }
+            }
+        });
+
         binding.createNodeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(NodesFragment.this.getActivity(), CreateNewNodePopUpActivity.class);
-                startActivity(intent);
+                //startActivity(intent);
+                createNewNodeResultLauncher.launch(intent);
             }
         });
+    }
+
+    private void refreshNodesList() {
+        String query = "";
+
+        if(searchView != null) {
+            CharSequence currentQueryCharSeq = searchView.getQuery();
+
+            if (currentQueryCharSeq != null) {
+                query = currentQueryCharSeq.toString();
+            }
+        }
+
+        filterNodes(query);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        refreshNodesList();
     }
 
     private void getNodesFromServer() {
@@ -238,7 +293,7 @@ public class NodesFragment extends Fragment {
         inflater.inflate(R.menu.menu_search, menu);
 
         MenuItem menuSearchItem = menu.findItem(R.id.action_search);
-        SearchView searchView = (SearchView) menuSearchItem.getActionView();
+        searchView = (SearchView) menuSearchItem.getActionView();
 
         //searchView.setQueryHint("...");
 

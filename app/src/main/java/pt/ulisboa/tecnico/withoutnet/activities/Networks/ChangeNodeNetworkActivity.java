@@ -79,7 +79,12 @@ public class ChangeNodeNetworkActivity extends AppCompatActivity {
                     public void onResponse(Object response) {
                         if(response != null) {
                             Node updatedNode = (Node) response;
-                            Toast.makeText(ChangeNodeNetworkActivity.this, "Changed node's network to: " + updatedNode.getNetwork().getName(), Toast.LENGTH_SHORT).show();
+
+                            Intent resultIntent = new Intent();
+                            resultIntent.putExtra("new-node-network", updatedNode.getNetwork());
+
+                            setResult(RESULT_OK, resultIntent);
+                            finish();
                         } else {
                             Toast.makeText(ChangeNodeNetworkActivity.this, "No Internet connection", Toast.LENGTH_SHORT).show();
                         }

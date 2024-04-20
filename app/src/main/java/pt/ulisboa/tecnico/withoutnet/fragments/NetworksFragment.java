@@ -55,6 +55,8 @@ public class NetworksFragment extends Fragment {
 
     private FragmentNetworksBinding binding;
 
+    private SearchView searchView;
+
     private NetworksListAdapter networksListAdapter;
 
     public NetworksFragment() {
@@ -152,6 +154,24 @@ public class NetworksFragment extends Fragment {
         /*binding.networkSearchTextView.setVisibility(View.GONE);*/
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        // Refresh the list of nodes on display
+        String query = "";
+
+        if(searchView != null) {
+            CharSequence currentQueryCharSeq = searchView.getQuery();
+
+            if (currentQueryCharSeq != null) {
+                query = currentQueryCharSeq.toString();
+            }
+        }
+
+        filterNetworks(query);
+    }
+
     /*private void filterNetworks(String query) {
         Filter.FilterListener filterListener = new Filter.FilterListener() {
             @Override
@@ -216,7 +236,7 @@ public class NetworksFragment extends Fragment {
         inflater.inflate(R.menu.menu_search, menu);
 
         MenuItem menuSearchItem = menu.findItem(R.id.action_search);
-        SearchView searchView = (SearchView) menuSearchItem.getActionView();
+        searchView = (SearchView) menuSearchItem.getActionView();
 
         //searchView.setQueryHint("...");
 

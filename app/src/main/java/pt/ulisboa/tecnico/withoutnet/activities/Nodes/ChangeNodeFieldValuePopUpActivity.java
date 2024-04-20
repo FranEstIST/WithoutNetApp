@@ -77,7 +77,12 @@ public class ChangeNodeFieldValuePopUpActivity extends AppCompatActivity {
                     public void onResponse(Object response) {
                         if(response != null) {
                             Node updatedNode = (Node) response;
-                            Toast.makeText(ChangeNodeFieldValuePopUpActivity.this, "Changed node's name to: " + updatedNode.getCommonName(), Toast.LENGTH_SHORT).show();
+
+                            Intent resultIntent = new Intent();
+                            resultIntent.putExtra("new-node-name", updatedNode.getCommonName());
+
+                            setResult(RESULT_OK, resultIntent);
+                            finish();
                         } else {
                             Toast.makeText(ChangeNodeFieldValuePopUpActivity.this, "No Internet connection", Toast.LENGTH_SHORT).show();
                         }

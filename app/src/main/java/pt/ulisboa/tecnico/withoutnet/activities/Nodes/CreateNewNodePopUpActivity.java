@@ -74,7 +74,11 @@ public class CreateNewNodePopUpActivity extends AppCompatActivity {
 
                         Node addedNode = (Node) response;
 
-                        //TODO: return this node to the calling activity
+                        Intent returnIntent = new Intent();
+                        returnIntent.putExtra("added-node", addedNode);
+
+                        setResult(RESULT_OK, returnIntent);
+                        finish();
                     }
 
                     @Override

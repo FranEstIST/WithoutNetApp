@@ -1,5 +1,9 @@
 package pt.ulisboa.tecnico.withoutnet.activities.Nodes;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
@@ -23,6 +27,7 @@ import pt.ulisboa.tecnico.withoutnet.GlobalClass;
 import pt.ulisboa.tecnico.withoutnet.R;
 import pt.ulisboa.tecnico.withoutnet.activities.Networks.ChangeNodeNetworkActivity;
 import pt.ulisboa.tecnico.withoutnet.adapters.NodesListAdapter;
+import pt.ulisboa.tecnico.withoutnet.constants.ErrorMessages;
 import pt.ulisboa.tecnico.withoutnet.databinding.ActivityAddNodeToNetworkBinding;
 import pt.ulisboa.tecnico.withoutnet.fragments.NodesFragment;
 import pt.ulisboa.tecnico.withoutnet.models.Network;
@@ -85,13 +90,19 @@ public class AddNodeToNetworkActivity extends AppCompatActivity {
                             AddNodeToNetworkActivity.this.setResult(RESULT_OK, returnIntent);
                             AddNodeToNetworkActivity.this.finish();
                         } else {
-                            Toast.makeText(AddNodeToNetworkActivity.this, "No Internet connection", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(AddNodeToNetworkActivity.this
+                                    , ErrorMessages.NO_INTERNET_CONNECTION
+                                    , Toast.LENGTH_SHORT)
+                                    .show();
                         }
                     }
 
                     @Override
                     public void onError(String errorMessage) {
-                        Toast.makeText(AddNodeToNetworkActivity.this, "An error occurred", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(AddNodeToNetworkActivity.this
+                                , ErrorMessages.AN_ERROR_OCCURRED
+                                , Toast.LENGTH_SHORT)
+                                .show();
                         Log.e(TAG, errorMessage);
                     }
                 };
@@ -107,12 +118,29 @@ public class AddNodeToNetworkActivity extends AppCompatActivity {
         binding.nodesListRecyclerView.addItemDecoration(new DividerItemDecoration(this,
                 DividerItemDecoration.VERTICAL));
 
+        ActivityResultLauncher<Intent> createNewNodeResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
+            @Override
+            public void onActivityResult(ActivityResult result) {
+                if(result.getResultCode() == RESULT_OK) {
+                    Intent returnIntent = result.getData();
+
+                    AddNodeToNetworkActivity.this.setResult(RESULT_OK, returnIntent);
+                    AddNodeToNetworkActivity.this.finish();
+                } else {
+                    Toast.makeText(AddNodeToNetworkActivity.this
+                                    , ErrorMessages.ERROR_CREATING_NODE
+                                    , Toast.LENGTH_SHORT)
+                            .show();
+                }
+            }
+        });
+
         binding.createNewNodeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(AddNodeToNetworkActivity.this, CreateNewNodePopUpActivity.class);
                 intent.putExtra("network", network);
-                startActivity(intent);
+                createNewNodeResultLauncher.launch(intent);
             }
         });
 

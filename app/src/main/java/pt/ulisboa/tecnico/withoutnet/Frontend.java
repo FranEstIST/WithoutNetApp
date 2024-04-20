@@ -667,8 +667,15 @@ public class Frontend {
     private Network buildNetworkFromJson(JSONObject networkJson) throws JSONException {
         int id = networkJson.getInt("id");
         String name = networkJson.getString("name");
+        JSONArray nodesJsonArray = networkJson.getJSONArray("nodes");
 
-        return new Network(id, name);
+        ArrayList<Node> nodes = new ArrayList<>();
+
+        for(int i = 0; i < nodesJsonArray.length(); i++) {
+            nodes.add(buildNodeFromJson(nodesJsonArray.getJSONObject(i)));
+        }
+
+        return new Network(id, name, nodes);
     }
 
     public interface FrontendResponseListener {

@@ -132,19 +132,36 @@ public class NodesListActivity extends AppCompatActivity {
                     Toast.makeText(NodesListActivity.this, "Added " + addedNode.getCommonName() + " to " + network.getName(), Toast.LENGTH_SHORT).show();
 
                     // Refresh the list of nodes in the network
+                    /*getNodesFromServer();
+
                     CharSequence currentQueryCharSeq = searchView.getQuery();
 
                     if(currentQueryCharSeq != null) {
-                        getNodesFromServer();
                         filterNodes(currentQueryCharSeq.toString());
-                    }
+                    }*/
                 } else {
                     Toast.makeText(NodesListActivity.this, "Error adding node", Toast.LENGTH_SHORT).show();
                 }
             }
         });
 
+        //getNodesFromServer();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // Refresh the list of nodes in the network
         getNodesFromServer();
+
+        if(searchView != null) {
+            CharSequence currentQueryCharSeq = searchView.getQuery();
+
+            if (currentQueryCharSeq != null) {
+                filterNodes(currentQueryCharSeq.toString());
+            }
+        }
     }
 
     private void updateActivityView() {

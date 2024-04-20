@@ -1,19 +1,31 @@
 package pt.ulisboa.tecnico.withoutnet.adapters;
 
+import static android.app.Activity.RESULT_OK;
+
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.telephony.NetworkRegistrationInfo;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
 import pt.ulisboa.tecnico.withoutnet.R;
 import pt.ulisboa.tecnico.withoutnet.activities.Nodes.ChangeNodeFieldValuePopUpActivity;
 import pt.ulisboa.tecnico.withoutnet.activities.Networks.ChangeNodeNetworkActivity;
+import pt.ulisboa.tecnico.withoutnet.activities.Nodes.NodesListActivity;
+import pt.ulisboa.tecnico.withoutnet.models.Network;
 import pt.ulisboa.tecnico.withoutnet.models.Node;
 
 public class NodeFieldsListAdapter extends RecyclerView.Adapter<NodeFieldsListAdapter.NodeFieldViewHolder> {
@@ -21,12 +33,14 @@ public class NodeFieldsListAdapter extends RecyclerView.Adapter<NodeFieldsListAd
 
     private Node node;
 
-    private Context context;
+    private AppCompatActivity activity;
 
-    public NodeFieldsListAdapter(Node node, Context context) {
+    private OnChangeFieldButtonClick onChangeFieldButtonClick;
+
+    public NodeFieldsListAdapter(Node node, OnChangeFieldButtonClick onChangeFieldButtonClick) {
         super();
         this.node = node;
-        this.context = context;
+        this.onChangeFieldButtonClick = onChangeFieldButtonClick;
     }
 
     @NonNull
@@ -49,10 +63,7 @@ public class NodeFieldsListAdapter extends RecyclerView.Adapter<NodeFieldsListAd
             holder.editFieldValueButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Intent intent = new Intent(NodeFieldsListAdapter.this.context, ChangeNodeFieldValuePopUpActivity.class);
-                    intent.putExtra("node-field-type", ChangeNodeFieldValuePopUpActivity.NodeFieldType.NAME);
-                    intent.putExtra("node", node);
-                    context.startActivity(intent);
+                    onChangeFieldButtonClick.onChangeNameButtonClick();
                 }
             });
         } else {
@@ -67,13 +78,7 @@ public class NodeFieldsListAdapter extends RecyclerView.Adapter<NodeFieldsListAd
             holder.editFieldValueButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    /*Intent intent = new Intent(NodeFieldsListAdapter.this.context, ChangeNodeFieldValuePopUpActivity.class);
-                    intent.putExtra("node-field-type", ChangeNodeFieldValuePopUpActivity.NodeFieldType.NETWORK);
-                    context.startActivity(intent);*/
-
-                    Intent intent = new Intent(NodeFieldsListAdapter.this.context, ChangeNodeNetworkActivity.class);
-                    intent.putExtra("node", node);
-                    context.startActivity(intent);
+                    onChangeFieldButtonClick.onChangeNetworkButtonClick();
                 }
             });
         }
@@ -82,6 +87,11 @@ public class NodeFieldsListAdapter extends RecyclerView.Adapter<NodeFieldsListAd
     @Override
     public int getItemCount() {
         return NUM_OF_FIELDS;
+    }
+
+    public void setNode(Node node) {
+        this.node = node;
+        notifyDataSetChanged();
     }
 
     class NodeFieldViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
@@ -101,5 +111,10 @@ public class NodeFieldsListAdapter extends RecyclerView.Adapter<NodeFieldsListAd
         public void onClick(View v) {
             // TODO
         }
+    }
+
+    public interface OnChangeFieldButtonClick {
+        void onChangeNameButtonClick();
+        void onChangeNetworkButtonClick();
     }
 }
