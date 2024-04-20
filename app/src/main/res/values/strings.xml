@@ -96,6 +96,12 @@
     <string name="withoutnet_participation_enabled">WithoutNet participation enabled</string>
     <string name="withoutnet_is_scanning_for_and_connecting_to_nodes">WithoutNet is scanning for and connecting to nodes</string>
 
+
+    <string name="server_url">Server URL</string>
+    <string name="node_scanning_interval">Node Scanning Interval</string>
+    <string name="message_transmission_to_server_interval">Message Transmission to Server Interval</string>
+    <string name="maximum_number_of_messages_in_cache">Maximum Number of Messages in Cache</string>
+
     <string name="home">Home</string>
     <string name="networks">Networks</string>
     <string name="nodes">Nodes</string>

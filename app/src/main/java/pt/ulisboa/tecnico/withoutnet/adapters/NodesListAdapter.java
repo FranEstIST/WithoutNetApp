@@ -11,13 +11,9 @@ import android.widget.TextView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.stream.Collectors;
 
-import pt.ulisboa.tecnico.withoutnet.Frontend;
 import pt.ulisboa.tecnico.withoutnet.R;
-import pt.ulisboa.tecnico.withoutnet.models.Network;
 import pt.ulisboa.tecnico.withoutnet.models.Node;
 
 public class NodesListAdapter extends RecyclerView.Adapter<NodesListAdapter.ViewHolder> implements Filterable {
