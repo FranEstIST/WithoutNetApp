@@ -31,9 +31,16 @@ android {
 }
 
 dependencies {
+    def room_version = "2.4.0"
     def work_version = "2.5.0"
 
     implementation 'com.android.volley:volley:1.2.1'
+
+    implementation "androidx.room:room-runtime:$room_version"
+    annotationProcessor "androidx.room:room-compiler:$room_version"
+
+    // RxJava3 support for Room
+    implementation "androidx.room:room-rxjava3:$room_version"
 
     // (Java only)
     implementation "androidx.work:work-runtime:$work_version"

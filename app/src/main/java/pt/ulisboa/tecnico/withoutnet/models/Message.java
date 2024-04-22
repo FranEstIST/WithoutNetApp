@@ -3,6 +3,7 @@ package pt.ulisboa.tecnico.withoutnet.models;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.room.Entity;
 
 import java.io.Serializable;
 import java.lang.reflect.Array;
@@ -15,6 +16,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+@Entity(primaryKeys = {"timestamp", "messageType", "sender", "receiver"})
 public class Message implements Serializable {
     private short length;
 
