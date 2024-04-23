@@ -12,6 +12,7 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
+import androidx.room.Room;
 import androidx.work.WorkManager;
 import androidx.work.WorkRequest;
 
@@ -51,6 +52,7 @@ import pt.ulisboa.tecnico.withoutnet.activities.Debug.CachedUpdatesActivity;
 import pt.ulisboa.tecnico.withoutnet.activities.Debug.DebugActivity;
 import pt.ulisboa.tecnico.withoutnet.R;
 import pt.ulisboa.tecnico.withoutnet.databinding.ActivityMainBinding;
+import pt.ulisboa.tecnico.withoutnet.db.WithoutNetAppDatabase;
 import pt.ulisboa.tecnico.withoutnet.models.Node;
 import pt.ulisboa.tecnico.withoutnet.models.Update;
 import pt.ulisboa.tecnico.withoutnet.services.ble.BleService;
@@ -76,6 +78,13 @@ public class MainActivity extends AppCompatActivity {
         WorkManager.getInstance(getApplicationContext()).cancelAllWork();
 
         globalClass = (GlobalClass) getApplicationContext();
+
+        WithoutNetAppDatabase withoutNetAppDatabase = Room
+                .databaseBuilder(this.getApplicationContext(), WithoutNetAppDatabase.class, "wn_app_database.db")
+                .fallbackToDestructiveMigration()
+                .build();
+
+        globalClass.setWithoutNetAppDatabase(withoutNetAppDatabase);
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());

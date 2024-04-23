@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.TreeSet;
 
+import pt.ulisboa.tecnico.withoutnet.db.WithoutNetAppDatabase;
 import pt.ulisboa.tecnico.withoutnet.models.Message;
 import pt.ulisboa.tecnico.withoutnet.models.Node;
 import pt.ulisboa.tecnico.withoutnet.models.Update;
@@ -24,6 +25,8 @@ public class GlobalClass extends Application {
     private Frontend frontend;
 
     private RequestQueue requestQueue;
+
+    private WithoutNetAppDatabase withoutNetAppDatabase;
 
     @Override
     public void onCreate() {
@@ -80,6 +83,10 @@ public class GlobalClass extends Application {
         return this.updatesByNode;
     }
 
+    public WithoutNetAppDatabase getWithoutNetAppDatabase() {
+        return withoutNetAppDatabase;
+    }
+
     public void addUpdate(Update update) {
         Node sender = update.getSender();
 
@@ -105,6 +112,10 @@ public class GlobalClass extends Application {
         if(!containsMessage(messageTreeSet, message)) {
             messageTreeSet.add(message);
         }
+    }
+
+    public void setWithoutNetAppDatabase(WithoutNetAppDatabase withoutNetAppDatabase) {
+        this.withoutNetAppDatabase = withoutNetAppDatabase;
     }
 
     private boolean containsMessage(TreeSet<Message> messageTreeSet, Message message) {

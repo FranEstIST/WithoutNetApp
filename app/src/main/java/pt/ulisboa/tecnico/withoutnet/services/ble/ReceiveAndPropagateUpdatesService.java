@@ -38,11 +38,16 @@ import java.util.TimerTask;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import io.reactivex.rxjava3.core.Scheduler;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.functions.Action;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import pt.ulisboa.tecnico.withoutnet.Frontend;
 import pt.ulisboa.tecnico.withoutnet.R;
 import pt.ulisboa.tecnico.withoutnet.constants.BleGattIDs;
 import pt.ulisboa.tecnico.withoutnet.constants.Responses;
 import pt.ulisboa.tecnico.withoutnet.constants.StatusCodes;
+import pt.ulisboa.tecnico.withoutnet.db.WithoutNetAppDatabase;
 import pt.ulisboa.tecnico.withoutnet.models.Message;
 import pt.ulisboa.tecnico.withoutnet.models.MessageType;
 import pt.ulisboa.tecnico.withoutnet.utils.ble.BleScanner;
@@ -78,6 +83,8 @@ public class ReceiveAndPropagateUpdatesService extends Service {
     private ArrayList<byte[]> currentIncomingMessageChunks = new ArrayList<>();
 
     private Message messageToBeWritten = null;
+
+    private final CompositeDisposable disposable = new CompositeDisposable();
 
     private ScanCallback scanCallback  = new ScanCallback() {
         @Override
@@ -429,19 +436,41 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
     private void exchangeMessagesWithServer() {
         Frontend frontend = globalClass.getFrontend();
+        WithoutNetAppDatabase withoutNetAppDatabase = globalClass.getWithoutNetAppDatabase();
 
         // Read the messages in the server
-        Frontend.FrontendResponseListener responseListener = new Frontend.FrontendResponseListener() {
+
+        /*GardenDatabase gardenDatabase = GardenDatabase.getInstance(this.context);
+        GardenDashboardViewModel gardenDashboardViewModel = new ViewModelFactory(
+                gardenDatabase.gardenDao(),
+                gardenDatabase.deviceDao(),
+                gardenDatabase.readingDao()
+        ).create(GardenDashboardViewModel.class);
+
+        this.disposable.add(gardenDashboardViewModel.getAllDevicesWithReadings()
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.newThread())
+                .subscribe(devicesWithReadings -> {
+                    Log.d(TAG, devicesWithReadings + "");
+                    this.devicesWithReadings.addAll(devicesWithReadings);
+                }));*/
+
+        Frontend.FrontendResponseListener getAllMessagesInServerResponseListener = new Frontend.FrontendResponseListener() {
             @Override
             public void onResponse(Object response) {
                 Log.d(TAG, "Received messages from server");
 
                 List<Message> messagesInServer = (List<Message>) response;
 
-                if(messagesInServer != null) {
-                    for(Message message : messagesInServer) {
+                if (messagesInServer != null) {
+                    for (Message message : messagesInServer) {
                         message.setInServer(true);
                         globalClass.addMessage(message);
+
+                        disposable.add(withoutNetAppDatabase.messageDao().insertAll(message)
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(Schedulers.newThread())
+                                .subscribe(() -> Log.d(TAG, "Added message")));
                     }
                 }
             }
@@ -452,21 +481,57 @@ public class ReceiveAndPropagateUpdatesService extends Service {
             }
         };
 
-        frontend.getAllMessagesInServerViaVolley(responseListener);
+        frontend.getAllMessagesInServerViaVolley(getAllMessagesInServerResponseListener);
 
         // Write the messages in cache to the server
         // TODO: Messages should be sent to the server in bulk
         HashMap<Integer, TreeSet<Message>> messagesByReceiver = globalClass.getAllMessages();
 
-        List<Integer> receivers = new ArrayList<>(messagesByReceiver.keySet());
+        //List<Integer> receivers = new ArrayList<>(messagesByReceiver.keySet());
 
-        for(Integer receiver : receivers) {
+        disposable.add(withoutNetAppDatabase.messageDao().getAll()
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.newThread())
+                .subscribe(messages -> {
+                    for(Message message : messages) {
+                        if(!message.isInServer()) {
+                            Frontend.FrontendResponseListener sendMessageToServerResponseListener = new Frontend.FrontendResponseListener() {
+                                @Override
+                                public void onResponse(Object response) {
+                                    Log.d(TAG, "Received a response to add message request");
+
+                                    int status = (int) response;
+
+                                    if(status == StatusCodes.OK) {
+                                        message.setInServer(true);
+                                        Log.d(TAG, "Added message to server");
+                                    }
+                                }
+
+                                @Override
+                                public void onError(String errorMessage) {
+                                    Log.e(TAG, errorMessage);
+                                }
+                            };
+
+                            frontend.sendMessageToServerViaVolley(message, sendMessageToServerResponseListener);
+
+                            /*int status = frontend.sendMessageToServer(message);
+
+                            if(status == StatusCodes.OK) {
+                                message.setInServer(true);
+                            }*/
+                        }
+                    }
+                }));
+
+        /*for(Integer receiver : receivers) {
             TreeSet<Message> messages = messagesByReceiver.get(receiver);
 
             for(Message message : messages) {
                 if(!message.isInServer()) {
 
-                    responseListener = new Frontend.FrontendResponseListener() {
+                    responseListener[0] = new Frontend.FrontendResponseListener() {
                         @Override
                         public void onResponse(Object response) {
                             Log.d(TAG, "Received a response to add message request");
@@ -485,16 +550,9 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                         }
                     };
 
-                    frontend.sendMessageToServerViaVolley(message, responseListener);
-
-                    /*int status = frontend.sendMessageToServer(message);
-
-                    if(status == StatusCodes.OK) {
-                        message.setInServer(true);
-                    }*/
+                    frontend.sendMessageToServerViaVolley(message, responseListener[0]);
                 }
-            }
-        }
+            }*/
     }
 
     private static IntentFilter makeGattUpdateIntentFilter() {

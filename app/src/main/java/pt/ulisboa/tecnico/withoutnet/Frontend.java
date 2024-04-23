@@ -95,7 +95,7 @@ public class Frontend {
             @Override
             public void onErrorResponse(VolleyError error) {
                 Log.e(TAG, "Received error");
-                responseListener.onError("Error");
+                responseListener.onError("Error 1");
             }
         });
 
@@ -143,18 +143,19 @@ public class Frontend {
                         }
 
                         responseListener.onResponse(receivedMessages);
+                    } else {
+                        responseListener.onError("Error 2");
                     }
-                    responseListener.onError("Error");
                 } catch (JSONException e) {
                     Log.e(TAG, "Received error");
                     e.printStackTrace();
-                    responseListener.onError("Error");
+                    responseListener.onError("Error 3");
                 }
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                responseListener.onError("Error");
+                responseListener.onError("Error 4");
             }
         });
 
@@ -191,7 +192,7 @@ public class Frontend {
             @Override
             public void onErrorResponse(VolleyError error) {
                 Log.e(TAG, "Received error");
-                responseListener.onError("Error");
+                responseListener.onError("Error 5");
             }
         });
 

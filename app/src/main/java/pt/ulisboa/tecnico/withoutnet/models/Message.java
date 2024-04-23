@@ -20,12 +20,16 @@ import java.util.List;
 public class Message implements Serializable {
     private short length;
 
+    @NonNull
     private long timestamp;
 
+    @NonNull
     private MessageType messageType;
 
+    @NonNull
     private int sender;
 
+    @NonNull
     private int receiver;
 
     private byte[] payload;

@@ -1,10 +1,13 @@
 package pt.ulisboa.tecnico.withoutnet.db;
 
 import androidx.room.Dao;
+import androidx.room.Delete;
+import androidx.room.Insert;
 import androidx.room.Query;
 
 import java.util.List;
 
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
 import pt.ulisboa.tecnico.withoutnet.models.Message;
 import pt.ulisboa.tecnico.withoutnet.models.MessageType;
@@ -26,4 +29,10 @@ public interface MessageDao {
 
     @Query("SELECT * FROM message WHERE sender = (:senderId) AND receiver = (:receiverId)")
     Single<List<Message>> findBySenderAndReceiver(int senderId, int receiverId);
+
+    @Insert
+    Completable insertAll(Message... messages);
+
+    @Delete
+    Completable delete(Message message);
 }
