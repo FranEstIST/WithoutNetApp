@@ -89,7 +89,13 @@ public class Frontend {
             @Override
             public void onResponse(JSONObject response) {
                 Log.d(TAG, "Received response (sendMessageToServerViaVolley)");
-                responseListener.onResponse(response);
+                try {
+                    int status = response.getInt("status");
+                    responseListener.onResponse(status);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    responseListener.onError("Error 1.1");
+                }
             }
         }, new Response.ErrorListener() {
             @Override

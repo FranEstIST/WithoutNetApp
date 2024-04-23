@@ -256,7 +256,20 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
                             // Add the current message to the cache
                             Message message = new Message(ReceiveAndPropagateUpdatesService.this.currentOutgoingMessageChunks);
-                            globalClass.addMessage(message);
+
+                            WithoutNetAppDatabase withoutNetAppDatabase = globalClass.getWithoutNetAppDatabase();
+
+                            withoutNetAppDatabase.messageDao()
+                                    .insertAll(message)
+                                    .subscribeOn(Schedulers.newThread())
+                                    .observeOn(Schedulers.newThread())
+                                    .onErrorComplete(throwable -> {
+                                        throwable.printStackTrace();
+                                        return true;
+                                    })
+                                    .subscribe(() -> Log.d(TAG, "Added message"));
+
+                            //globalClass.addMessage(message);
 
                             Log.d(TAG, "Message added to message list: " + message);
                             Log.d(TAG, "Message byte array: " + message.byteArrayToString());
@@ -330,6 +343,19 @@ public class ReceiveAndPropagateUpdatesService extends Service {
         }
     });
 
+    private void writeNextChunkToBLCharacteristic() {
+        BluetoothGattCharacteristic incomingMessageCharacteristic = bleService.getIncomingMessageCharacteristic();
+
+        byte[] chunk = currentIncomingMessageChunks.get(0);
+        currentIncomingMessageChunks.remove(chunk);
+
+        incomingMessageCharacteristic.setValue(chunk);
+
+        Log.d(TAG, "Next chunk to be written to node: " + byteArrayToString(chunk));
+
+        bleService.writeCharacteristic(incomingMessageCharacteristic);
+    }
+
     private void writeNextChunk() {
         int receiverUuid = bleService.getCurrentNodeUuid();
 
@@ -338,6 +364,73 @@ public class ReceiveAndPropagateUpdatesService extends Service {
             // so now the next messages chunks must be sent
 
             // Get every message intended for this node not yet sent
+            //
+
+            WithoutNetAppDatabase withoutNetAppDatabase = globalClass.getWithoutNetAppDatabase();
+
+            disposable.add(withoutNetAppDatabase.messageDao()
+                    .findByReceiver(receiverUuid)
+                    .subscribeOn(Schedulers.newThread())
+                    .observeOn(Schedulers.io())
+                    .subscribe(messagesToBeWritten -> {
+
+                        if (messageToBeWritten != null && messagesToBeWritten.contains(messageToBeWritten)) {
+                            // The previous message to be written to the node has been written, so now
+                            // it should be removed from the cache and ACKed by the receiver
+                            disposable.add(withoutNetAppDatabase.messageDao()
+                                    .delete(messageToBeWritten)
+                                    .subscribeOn(Schedulers.newThread())
+                                    .subscribe());
+
+                            //messagesToBeWritten.remove(messageToBeWritten);
+
+                            if (messageToBeWritten.getMessageType().equals(MessageType.DATA)) {
+                                // Add the corresponding ACK message to the sender's queue
+                                // of pending messages to be written
+
+                                disposable.add(withoutNetAppDatabase.messageDao()
+                                        .insertAll(messageToBeWritten.getAckMessage())
+                                        .subscribeOn(Schedulers.newThread())
+                                        .observeOn(Schedulers.newThread())
+                                        .onErrorComplete(throwable -> {
+                                            throwable.printStackTrace();
+                                            return true;
+                                        })
+                                        .subscribe(() -> Log.d(TAG, "Added ACK message")));
+
+                                //globalClass.addMessage(messageToBeWritten.getAckMessage());
+                            }
+                        }
+
+                        if (messagesToBeWritten != null && messagesToBeWritten.size() > 0) {
+                            BluetoothGattCharacteristic incomingMessageCharacteristic = bleService.getIncomingMessageCharacteristic();
+
+                            // TODO: It should be checked if incomingMessageCharacteristic != null
+
+                            messageToBeWritten = messagesToBeWritten.get(0);
+
+                            Log.d(TAG, "Next message to be written to node: " + messageToBeWritten.toString());
+
+                            currentIncomingMessageChunks = messageToBeWritten.toChunks();
+                        } else {
+                            Log.d(TAG, "No more messages to be written to node");
+
+                            // All messages meant for the node have been written
+                            // Time to read the node's pending messages
+                            BluetoothGattCharacteristic outgoingMessageCharacteristic = bleService.getOutgoingMessageCharacteristic();
+                            bleService.readCharacteristic(outgoingMessageCharacteristic);
+
+                            return;
+                        }
+
+                        writeNextChunkToBLCharacteristic();
+                    }));
+        } else {
+            writeNextChunkToBLCharacteristic();
+        }
+
+        /*if(currentIncomingMessageChunks.isEmpty()) {
+
             TreeSet<Message> messagesToBeWritten = globalClass.getAllMessagesForReceiver(receiverUuid);
 
             if(messageToBeWritten != null && messagesToBeWritten.contains(messageToBeWritten)) {
@@ -383,7 +476,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
         Log.d(TAG, "Next chunk to be written to node: " + byteArrayToString(chunk));
 
-        bleService.writeCharacteristic(incomingMessageCharacteristic);
+        bleService.writeCharacteristic(incomingMessageCharacteristic);*/
     }
 
     private void writeNextMessage() {
@@ -465,11 +558,15 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                 if (messagesInServer != null) {
                     for (Message message : messagesInServer) {
                         message.setInServer(true);
-                        globalClass.addMessage(message);
+                        //globalClass.addMessage(message);
 
                         disposable.add(withoutNetAppDatabase.messageDao().insertAll(message)
                                 .subscribeOn(Schedulers.io())
                                 .observeOn(Schedulers.newThread())
+                                .onErrorComplete(throwable -> {
+                                    throwable.printStackTrace();
+                                    return true;
+                                })
                                 .subscribe(() -> Log.d(TAG, "Added message")));
                     }
                 }
