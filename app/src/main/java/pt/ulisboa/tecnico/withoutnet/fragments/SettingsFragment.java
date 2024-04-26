@@ -1,7 +1,14 @@
 package pt.ulisboa.tecnico.withoutnet.fragments;
 
+import static android.app.Activity.RESULT_OK;
+
+import android.content.Intent;
 import android.os.Bundle;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -11,10 +18,13 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import pt.ulisboa.tecnico.withoutnet.GlobalClass;
 import pt.ulisboa.tecnico.withoutnet.R;
+import pt.ulisboa.tecnico.withoutnet.activities.Nodes.AddNodeToNetworkActivity;
 import pt.ulisboa.tecnico.withoutnet.adapters.SettingsListAdapter;
+import pt.ulisboa.tecnico.withoutnet.constants.ErrorMessages;
 import pt.ulisboa.tecnico.withoutnet.databinding.FragmentSettingsBinding;
 
 /**
@@ -34,6 +44,8 @@ public class SettingsFragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
+
+    SettingsListAdapter settingsListAdapter;
 
     public SettingsFragment() {
         // Required empty public constructor
@@ -79,7 +91,21 @@ public class SettingsFragment extends Fragment {
 
         GlobalClass globalClass = (GlobalClass) getActivity().getApplicationContext();
 
-        SettingsListAdapter settingsListAdapter = new SettingsListAdapter(globalClass);
+        ActivityResultLauncher<Intent> createNewNodeResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
+            @Override
+            public void onActivityResult(ActivityResult result) {
+                if(result.getResultCode() == RESULT_OK) {
+                    settingsListAdapter.notifyDataSetChanged();
+                } else {
+                    Toast.makeText(SettingsFragment.this.getActivity()
+                                    , ErrorMessages.ERROR_CREATING_NODE
+                                    , Toast.LENGTH_SHORT)
+                            .show();
+                }
+            }
+        });
+
+        settingsListAdapter = new SettingsListAdapter(globalClass, createNewNodeResultLauncher);
 
         binding.settingsListRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         binding.settingsListRecyclerView.setAdapter(settingsListAdapter);

@@ -1,6 +1,8 @@
 package pt.ulisboa.tecnico.withoutnet;
 
 import android.app.Application;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
@@ -22,11 +24,20 @@ public class GlobalClass extends Application {
     private HashMap<Node, TreeSet<Update>> updatesByNode;
     private HashMap<Integer, TreeSet<Message>> messagesByReceiver;
 
+    private String serverURL;
+    private int nodeScanPeriod;
+    private int serverMessageExchangePeriod;
+
+    private SharedPreferences WNAppSharedPrefs;
+
     private Frontend frontend;
-
     private RequestQueue requestQueue;
-
     private WithoutNetAppDatabase withoutNetAppDatabase;
+
+    private static final String DEFAULT_SERVER_URL = "http://192.168.1.102:8081/";
+    private static final int DEFAULT_NODE_SCANNING_INTERVAL = 10;
+    private static final int DEFAULT_MESSAGE_TRANSMISSION_TO_SERVER_INTERVAL = 10;
+    private static final int DEFAULT_MAXIMUM_NUM_OF_MESSAGES_IN_CACHE = 1000;
 
     @Override
     public void onCreate() {
@@ -34,6 +45,9 @@ public class GlobalClass extends Application {
         updatesByNode = new HashMap<>();
         messagesByReceiver = new HashMap<>();
         frontend = new Frontend(this);
+
+        WNAppSharedPrefs = getSharedPreferences("WNAppSharedPrefs", MODE_PRIVATE);
+        getSharedPreferences("serverURL", MODE_PRIVATE).getString("serverURL", "http");
     }
 
     public Update getMostRecentUpdate(Node node) {
@@ -140,6 +154,62 @@ public class GlobalClass extends Application {
         }
 
         return this.requestQueue;
+    }
+
+    public String getServerURL() {
+        return WNAppSharedPrefs
+                .getString("serverURL"
+                        , DEFAULT_SERVER_URL);
+    }
+
+    public void setServerURL(String serverURL) {
+        WNAppSharedPrefs
+                .edit()
+                .putString("serverURL"
+                        , serverURL)
+                .apply();
+    }
+
+    public int getNodeScanningInterval() {
+        return WNAppSharedPrefs
+                .getInt("nodeScanningInterval"
+                        , DEFAULT_NODE_SCANNING_INTERVAL);
+    }
+
+    public void setNodeScanningInterval(int nodeScanningInterval) {
+        WNAppSharedPrefs
+                .edit()
+                .putInt("nodeScanningInterval"
+                        , nodeScanningInterval)
+                .apply();
+    }
+
+    public int getMessageTransmissionToServerInterval() {
+        return WNAppSharedPrefs
+                .getInt("messageTransmissionToServerInterval"
+                        , DEFAULT_MESSAGE_TRANSMISSION_TO_SERVER_INTERVAL);
+    }
+
+    public void setMessageTransmissionToServerInterval(int messageTransmissionToServerInterval) {
+        WNAppSharedPrefs
+                .edit()
+                .putInt("messageTransmissionToServerInterval"
+                        , messageTransmissionToServerInterval)
+                .apply();
+    }
+
+    public int getMaximumNumOfMessagesInCache() {
+        return WNAppSharedPrefs
+                .getInt("maximumNumOfMessagesInCache"
+                        , DEFAULT_MAXIMUM_NUM_OF_MESSAGES_IN_CACHE);
+    }
+
+    public void setMaximumNumOfMessagesInCache(int maximumNumOfMessagesInCache) {
+        WNAppSharedPrefs
+                .edit()
+                .putInt("maximumNumOfMessagesInCache"
+                        , maximumNumOfMessagesInCache)
+                .apply();
     }
 
     @Override
