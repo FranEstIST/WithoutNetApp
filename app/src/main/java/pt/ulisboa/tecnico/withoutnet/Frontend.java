@@ -69,7 +69,7 @@ public class Frontend {
         // This should check whether or not the smartphone is connected to the internet
         if (getConnectionType() == -1) return;
 
-        String url = BASE_URL + "add-message";
+        String url = globalClass.getServerURL() + "add-message";
 
         JSONObject jsonRequest = new JSONObject();
 
@@ -111,7 +111,7 @@ public class Frontend {
     public void getAllMessagesInServerViaVolley(FrontendResponseListener responseListener) {
         if (getConnectionType() == -1) return;
 
-        String url = BASE_URL + "get-all-messages";
+        String url = globalClass.getServerURL() + "get-all-messages";
 
         JsonObjectRequest request = new JsonObjectRequest(url, new Response.Listener<JSONObject>() {
             @Override
@@ -171,7 +171,7 @@ public class Frontend {
     public void sendMessageBatchToServer(List<Message> messageBatch, FrontendResponseListener responseListener) {
         if (getConnectionType() == -1) return;
 
-        String url = BASE_URL + "add-message-batch";
+        String url = globalClass.getServerURL() + "add-message-batch";
 
         JSONObject jsonRequest = new JSONObject();
 
@@ -240,7 +240,7 @@ public class Frontend {
             return;
         }
 
-        String url = BASE_URL + "add-node";
+        String url = globalClass.getServerURL() + "add-node";
 
         JSONObject jsonRequest = new JSONObject();
 
@@ -284,7 +284,7 @@ public class Frontend {
             return;
         }
 
-        String url = BASE_URL + "update-node";
+        String url = globalClass.getServerURL() + "update-node";
 
         JSONObject jsonRequest = new JSONObject();
 
@@ -329,7 +329,7 @@ public class Frontend {
             return;
         }
 
-        String url = BASE_URL + "get-all-nodes";
+        String url = globalClass.getServerURL() + "get-all-nodes";
 
         JsonObjectRequest request = new JsonObjectRequest(url, new Response.Listener<JSONObject>() {
             @Override
@@ -373,7 +373,7 @@ public class Frontend {
             return;
         }
 
-        String url = BASE_URL + "find-nodes-by-search-term" + "/" + substring;
+        String url = globalClass.getServerURL() + "find-nodes-by-search-term" + "/" + substring;
 
         JsonObjectRequest request = new JsonObjectRequest(url, new Response.Listener<JSONObject>() {
             @Override
@@ -422,7 +422,7 @@ public class Frontend {
             return;
         }
 
-        String url = BASE_URL + "add-network";
+        String url = globalClass.getServerURL() + "add-network";
 
         JSONObject jsonRequest = new JSONObject();
 
@@ -465,7 +465,7 @@ public class Frontend {
             return;
         }
 
-        String url = BASE_URL + "find-networks-by-search-term" + "/" + substring;
+        String url = globalClass.getServerURL() + "find-networks-by-search-term" + "/" + substring;
 
         JsonObjectRequest request = new JsonObjectRequest(url, new Response.Listener<JSONObject>() {
             @Override
@@ -514,7 +514,7 @@ public class Frontend {
             return;
         }
 
-        String url = BASE_URL + "find-nodes-by-network-id-and-search-term" + "/" + network.getId() + "/" + substring;
+        String url = globalClass.getServerURL() + "find-nodes-by-network-id-and-search-term" + "/" + network.getId() + "/" + substring;
 
         JsonObjectRequest request = new JsonObjectRequest(url, new Response.Listener<JSONObject>() {
             @Override
@@ -563,7 +563,7 @@ public class Frontend {
             return;
         }
 
-        String url = BASE_URL + "get-network-by-id/" + network.getId();
+        String url = globalClass.getServerURL() + "get-network-by-id/" + network.getId();
 
         JsonObjectRequest request = new JsonObjectRequest(url, new Response.Listener<JSONObject>() {
             @Override

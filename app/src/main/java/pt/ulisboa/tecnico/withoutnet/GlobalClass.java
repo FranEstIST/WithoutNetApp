@@ -34,10 +34,10 @@ public class GlobalClass extends Application {
     private RequestQueue requestQueue;
     private WithoutNetAppDatabase withoutNetAppDatabase;
 
-    private static final String DEFAULT_SERVER_URL = "http://192.168.1.102:8081/";
-    private static final int DEFAULT_NODE_SCANNING_INTERVAL = 10;
-    private static final int DEFAULT_MESSAGE_TRANSMISSION_TO_SERVER_INTERVAL = 10;
-    private static final int DEFAULT_MAXIMUM_NUM_OF_MESSAGES_IN_CACHE = 1000;
+    private static final String DEFAULT_SERVER_URL = "https://192.168.1.102:8081/";
+    private static final int DEFAULT_NODE_SCANNING_INTERVAL_MS = 10000;
+    private static final int DEFAULT_MESSAGE_TRANSMISSION_TO_SERVER_INTERVAL_MS = 10000;
+    private static final int DEFAULT_MAXIMUM_NUM_OF_MESSAGES_IN_CACHE = 10000;
 
     @Override
     public void onCreate() {
@@ -173,7 +173,7 @@ public class GlobalClass extends Application {
     public int getNodeScanningInterval() {
         return WNAppSharedPrefs
                 .getInt("nodeScanningInterval"
-                        , DEFAULT_NODE_SCANNING_INTERVAL);
+                        , DEFAULT_NODE_SCANNING_INTERVAL_MS);
     }
 
     public void setNodeScanningInterval(int nodeScanningInterval) {
@@ -187,7 +187,7 @@ public class GlobalClass extends Application {
     public int getMessageTransmissionToServerInterval() {
         return WNAppSharedPrefs
                 .getInt("messageTransmissionToServerInterval"
-                        , DEFAULT_MESSAGE_TRANSMISSION_TO_SERVER_INTERVAL);
+                        , DEFAULT_MESSAGE_TRANSMISSION_TO_SERVER_INTERVAL_MS);
     }
 
     public void setMessageTransmissionToServerInterval(int messageTransmissionToServerInterval) {

@@ -21,6 +21,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.database.sqlite.SQLiteConstraintException;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
@@ -264,7 +265,9 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                                     .subscribeOn(Schedulers.newThread())
                                     .observeOn(Schedulers.newThread())
                                     .onErrorComplete(throwable -> {
-                                        throwable.printStackTrace();
+                                        if(!throwable.getClass().equals(SQLiteConstraintException.class)) {
+                                            throwable.printStackTrace();
+                                        }
                                         return true;
                                     })
                                     .subscribe(() -> Log.d(TAG, "Added message"));
@@ -334,7 +337,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
             while(true) {
                 ReceiveAndPropagateUpdatesService.this.exchangeMessagesWithServer();
                 try {
-                    Thread.sleep(10000);
+                    Thread.sleep(globalClass.getMessageTransmissionToServerInterval());
                 } catch (InterruptedException e) {
                     // TODO: Handle this exception properly
                     e.printStackTrace();
@@ -393,7 +396,9 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                                         .subscribeOn(Schedulers.newThread())
                                         .observeOn(Schedulers.newThread())
                                         .onErrorComplete(throwable -> {
-                                            throwable.printStackTrace();
+                                            if(!throwable.getClass().equals(SQLiteConstraintException.class)) {
+                                                throwable.printStackTrace();
+                                            }
                                             return true;
                                         })
                                         .subscribe(() -> Log.d(TAG, "Added ACK message")));
@@ -564,7 +569,9 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                                 .subscribeOn(Schedulers.io())
                                 .observeOn(Schedulers.newThread())
                                 .onErrorComplete(throwable -> {
-                                    throwable.printStackTrace();
+                                    if(!throwable.getClass().equals(SQLiteConstraintException.class)) {
+                                        throwable.printStackTrace();
+                                    }
                                     return true;
                                 })
                                 .subscribe(() -> Log.d(TAG, "Added message")));
@@ -666,7 +673,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
     public void onCreate() {
         super.onCreate();
         this.globalClass = (GlobalClass) getApplicationContext();
-        this.scanner = new BleScanner(getApplicationContext(), this.scanCallback, SCAN_PERIOD);
+        this.scanner = new BleScanner(getApplicationContext(), this.scanCallback, globalClass.getNodeScanningInterval());
         /*handler.postDelayed(new Runnable() {
             @SuppressLint("MissingPermission")
             @Override
