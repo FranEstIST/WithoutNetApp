@@ -51,6 +51,7 @@ public class ChangeSettingValuePopUpActivity extends AppCompatActivity {
                 binding.newSettingValueInputText.setHint(getResources().getText(R.string.enter_new)
                         + " "
                         + getResources().getText(R.string.server_url));
+                binding.newSettingValueInputText.setText(globalClass.getServerURL());
                 break;
             case NODE_SCANNING_INTERVAL:
                 binding.changeSettingValueTextView.setText(getResources().getText(R.string.change)
@@ -59,6 +60,7 @@ public class ChangeSettingValuePopUpActivity extends AppCompatActivity {
                 binding.newSettingValueInputText.setHint(getResources().getText(R.string.enter_new)
                         + " "
                         + getResources().getText(R.string.node_scanning_interval));
+                binding.newSettingValueInputText.setText(globalClass.getNodeScanningInterval() + "");
                 break;
             case MESSAGE_TRANSMISSION_TO_SERVER_INTERVAL:
                 binding.changeSettingValueTextView.setText(getResources().getText(R.string.change)
@@ -67,6 +69,7 @@ public class ChangeSettingValuePopUpActivity extends AppCompatActivity {
                 binding.newSettingValueInputText.setHint(getResources().getText(R.string.enter_new)
                         + " "
                         + getResources().getText(R.string.message_transmission_to_server_interval));
+                binding.newSettingValueInputText.setText(globalClass.getMessageTransmissionToServerInterval() + "");
                 break;
             case MAXIMUM_NUM_OF_MESSAGES_IN_CACHE:
                 binding.changeSettingValueTextView.setText(getResources().getText(R.string.change)
@@ -75,6 +78,7 @@ public class ChangeSettingValuePopUpActivity extends AppCompatActivity {
                 binding.newSettingValueInputText.setHint(getResources().getText(R.string.enter_new)
                         + " "
                         + getResources().getText(R.string.maximum_number_of_messages_in_cache));
+                binding.newSettingValueInputText.setText(globalClass.getMaximumNumOfMessagesInCache() + "");
                 break;
         }
 

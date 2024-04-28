@@ -335,12 +335,17 @@ public class ReceiveAndPropagateUpdatesService extends Service {
         @Override
         public void run() {
             while(true) {
+                Log.d(TAG, "Sending messages to the server.");
+                Log.d(TAG, "Sending messages to the server..");
+                Log.d(TAG, "Sending messages to the server...");
                 ReceiveAndPropagateUpdatesService.this.exchangeMessagesWithServer();
                 try {
                     Thread.sleep(globalClass.getMessageTransmissionToServerInterval());
                 } catch (InterruptedException e) {
                     // TODO: Handle this exception properly
                     e.printStackTrace();
+                    break;
+                    //Thread.currentThread().interrupt();
                 }
             }
         }

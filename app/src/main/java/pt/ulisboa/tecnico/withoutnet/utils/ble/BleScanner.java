@@ -31,6 +31,8 @@ public class BleScanner {
     private ScanCallback scanCallback;
     private long scanPeriod;
 
+    private Timer timer;
+
     public BleScanner(Context context, ScanCallback scanCallback, long scanPeriod) {
         this.context = context;
         this.scanCallback = scanCallback;
@@ -40,6 +42,8 @@ public class BleScanner {
         BluetoothManager bluetoothManager = this.context.getSystemService(BluetoothManager.class);
         BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
         bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
+
+        timer = new Timer("Timer");
     }
 
     // TODO: Is scan required to be synchronized?
@@ -49,7 +53,11 @@ public class BleScanner {
             return;
         }
 
-        ScanSettings settings = new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_POWER).build();
+        ScanSettings settings = new ScanSettings
+                .Builder()
+                .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
+                .build();
+
         ArrayList<ScanFilter> filters = new ArrayList();
 
         ScanFilter filter = new ScanFilter
@@ -78,8 +86,13 @@ public class BleScanner {
             }
         };
 
-        Timer timer = new Timer("Timer");
-        timer.schedule(task, this.scanPeriod);
+        //Timer timer = new Timer("Timer");
+
+        try {
+            timer.schedule(task, this.scanPeriod);
+        } catch (IllegalStateException e) {
+            Log.e(TAG, "Trying to schedule task on cancelled timer");
+        }
 
     }
 
@@ -101,8 +114,14 @@ public class BleScanner {
             }
         };
 
-        Timer timer = new Timer("Timer");
-        timer.schedule(task, this.scanPeriod);
+        //Timer timer = new Timer("Timer");
+
+        try {
+            timer.schedule(task, this.scanPeriod);
+        } catch (IllegalStateException e) {
+            Log.e(TAG, "Trying to schedule task on cancelled timer");
+        }
+
     }
 
     @SuppressLint("MissingPermission")
@@ -115,6 +134,11 @@ public class BleScanner {
 
         bluetoothLeScanner.stopScan(this.scanCallback);
         scanning = false;
+
+        timer.cancel();
+
+        timer = new Timer("Timer");
+        //timer.purge();
     }
 
     private boolean checkBLPermissions() {
