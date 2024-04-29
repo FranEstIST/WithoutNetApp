@@ -7,6 +7,7 @@ import androidx.activity.result.contract.ActivityResultContract;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.core.app.ActivityOptionsCompat;
@@ -14,6 +15,7 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -32,6 +34,7 @@ import pt.ulisboa.tecnico.withoutnet.adapters.NodesListAdapter;
 import pt.ulisboa.tecnico.withoutnet.databinding.ActivityNodesListBinding;
 import pt.ulisboa.tecnico.withoutnet.models.Network;
 import pt.ulisboa.tecnico.withoutnet.models.Node;
+import pt.ulisboa.tecnico.withoutnet.network.StatusCodes;
 
 public class NodesListActivity extends AppCompatActivity {
     private static final String TAG = "NodesListActivity";
@@ -46,6 +49,8 @@ public class NodesListActivity extends AppCompatActivity {
     private Network network;
 
     private ActivityResultLauncher<Intent> addNodeResultLauncher;
+
+    private ArrayList<Node> nodes;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -145,6 +150,57 @@ public class NodesListActivity extends AppCompatActivity {
             }
         });
 
+        binding.deleteNetworkButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(NodesListActivity.this);
+
+                builder.setMessage(R.string.delete_network_warning_message)
+                        .setTitle(R.string.delete_network)
+                        .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                Frontend.FrontendResponseListener responseListener = new Frontend.FrontendResponseListener() {
+                                    @Override
+                                    public void onResponse(Object response) {
+                                        int responseCode = (int) response;
+                                        if(responseCode == StatusCodes.OK) {
+                                            Toast.makeText(NodesListActivity.this
+                                                            , getResources().getText(R.string.deletion_success_message) + network.getName()
+                                                            , Toast.LENGTH_SHORT)
+                                                    .show();
+                                            finish();
+                                        } else {
+                                            Toast.makeText(NodesListActivity.this
+                                                            , getResources().getText(R.string.deletion_failure_message) + network.getName()
+                                                            , Toast.LENGTH_SHORT)
+                                                    .show();
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onError(String errorMessage) {
+                                        Toast.makeText(NodesListActivity.this
+                                                        , getResources().getText(R.string.deletion_failure_message) + network.getName()
+                                                        , Toast.LENGTH_SHORT)
+                                                .show();
+                                    }
+                                };
+
+                                globalClass.getFrontend().deleteNetwork(network, responseListener);
+                            }
+                        })
+                        .setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.dismiss();
+                            }
+                        });
+
+                AlertDialog dialog = builder.create();
+
+                dialog.show();
+            }
+        });
+
         //getNodesFromServer();
     }
 
@@ -166,12 +222,19 @@ public class NodesListActivity extends AppCompatActivity {
 
     private void updateActivityView() {
         Log.d(TAG, "Nodes in list: " + nodesListAdapter.getItemCount());
-        if(nodesListAdapter.getItemCount() == 0) {
+        if(nodes.size() == 0) {
+            binding.nodesInNetworkSearchTextView.setText(R.string.no_nodes_in_network);
+            binding.nodesInNetworkSearchTextView.setVisibility(View.VISIBLE);
+            binding.deleteNetworkButton.setVisibility(View.VISIBLE);
+            binding.networkNodesListRecyclerView.setVisibility(View.GONE);
+        } else if(nodesListAdapter.getItemCount() == 0) {
             binding.nodesInNetworkSearchTextView.setText(R.string.no_nodes_found);
             binding.nodesInNetworkSearchTextView.setVisibility(View.VISIBLE);
+            binding.deleteNetworkButton.setVisibility(View.GONE);
             binding.networkNodesListRecyclerView.setVisibility(View.GONE);
         } else {
             binding.nodesInNetworkSearchTextView.setVisibility(View.GONE);
+            binding.deleteNetworkButton.setVisibility(View.GONE);
             binding.networkNodesListRecyclerView.setVisibility(View.VISIBLE);
         }
     }
@@ -180,8 +243,8 @@ public class NodesListActivity extends AppCompatActivity {
         Frontend.FrontendResponseListener responseListener = new Frontend.FrontendResponseListener() {
             @Override
             public void onResponse(Object response) {
-                ArrayList<Node> receivedNodes = (ArrayList<Node>) response;
-                nodesListAdapter.setNodes(receivedNodes);
+                nodes = (ArrayList<Node>) response;
+                nodesListAdapter.setNodes(nodes);
                 filterNodes("");
             }
 

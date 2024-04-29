@@ -37,6 +37,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import pt.ulisboa.tecnico.withoutnet.constants.ErrorMessages;
 import pt.ulisboa.tecnico.withoutnet.constants.StatusCodes;
 import pt.ulisboa.tecnico.withoutnet.models.Message;
 import pt.ulisboa.tecnico.withoutnet.models.Network;
@@ -278,6 +279,40 @@ public class Frontend {
         this.requestQueue.add(request);
     }
 
+    public void deleteNode(Node node, FrontendResponseListener responseListener) {
+        if(getConnectionType() == -1) {
+            responseListener.onError(null);
+            return;
+        }
+
+        String url = globalClass.getServerURL() + "delete-node/" + node.getId();
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    int status = response.getInt("status");
+                    if(status == StatusCodes.OK) {
+                        responseListener.onResponse(StatusCodes.OK);
+                    } else {
+                        responseListener.onError(FrontendErrorMessages.fromStatusCode(status));
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    responseListener.onError(ErrorMessages.AN_ERROR_OCCURRED);
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+                responseListener.onError(FrontendErrorMessages.VOLLEY_ERROR);
+            }
+        });
+
+        this.requestQueue.add(request);
+    }
+
     public void updateNode(Node node, FrontendResponseListener responseListener) {
         if(getConnectionType() == -1) {
             responseListener.onError(null);
@@ -446,6 +481,40 @@ public class Frontend {
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+                responseListener.onError(FrontendErrorMessages.VOLLEY_ERROR);
+            }
+        });
+
+        this.requestQueue.add(request);
+    }
+
+    public void deleteNetwork(Network network, FrontendResponseListener responseListener) {
+        if(getConnectionType() == -1) {
+            responseListener.onError(null);
+            return;
+        }
+
+        String url = globalClass.getServerURL() + "delete-network/" + network.getId();
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    int status = response.getInt("status");
+                    if(status == StatusCodes.OK) {
+                        responseListener.onResponse(StatusCodes.OK);
+                    } else {
+                        responseListener.onError(FrontendErrorMessages.fromStatusCode(status));
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    responseListener.onError(ErrorMessages.AN_ERROR_OCCURRED);
                 }
             }
         }, new Response.ErrorListener() {

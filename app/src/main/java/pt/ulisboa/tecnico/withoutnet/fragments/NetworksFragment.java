@@ -212,7 +212,7 @@ public class NetworksFragment extends Fragment {
                 networksListAdapter.setFilteredNetworks(filteredNetworks);
 
                 if(networksListAdapter.getItemCount() == 0) {
-                    binding.networkSearchTextView.setText(R.string.no_nodes_found);
+                    binding.networkSearchTextView.setText(R.string.no_network_found);
                     binding.networkSearchTextView.setVisibility(View.VISIBLE);
                     binding.networksListRecyclerView.setVisibility(View.GONE);
                 } else {

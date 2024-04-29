@@ -60,6 +60,7 @@ public class BleService extends Service {
 
     private int connectionState;
 
+    // Flag that ensures only one node can be connected at a time
     private boolean hasAttemptedToConnect = false;
 
     private String currentConnectionAddress = null;
