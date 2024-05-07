@@ -614,6 +614,12 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                                     if(status == StatusCodes.OK) {
                                         message.setInServer(true);
                                         Log.d(TAG, "Added message to server");
+
+                                        withoutNetAppDatabase.messageDao()
+                                                .update(message)
+                                                .subscribeOn(Schedulers.newThread())
+                                                .observeOn(Schedulers.newThread())
+                                                .subscribe(() -> Log.d(TAG, "Updated message in database"));
                                     }
                                 }
 

@@ -474,6 +474,7 @@ public class Message implements Serializable {
                 + "#" + this.messageType.ordinal()
                 + "#" + this.sender
                 + "#" + this.receiver
-                + "#" + byteArrayToIntRev(this.payload);
+                + "#" + byteArrayToIntRev(this.payload)
+                + "#" + (inServer ? "In Server" : "Not in server");
     }
 }
