@@ -47,7 +47,6 @@ public class GlobalClass extends Application {
         frontend = new Frontend(this);
 
         WNAppSharedPrefs = getSharedPreferences("WNAppSharedPrefs", MODE_PRIVATE);
-        getSharedPreferences("serverURL", MODE_PRIVATE).getString("serverURL", "http");
     }
 
     public Update getMostRecentUpdate(Node node) {

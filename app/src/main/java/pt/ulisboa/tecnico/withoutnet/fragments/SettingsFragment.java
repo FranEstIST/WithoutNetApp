@@ -18,10 +18,12 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import pt.ulisboa.tecnico.withoutnet.GlobalClass;
 import pt.ulisboa.tecnico.withoutnet.R;
+import pt.ulisboa.tecnico.withoutnet.activities.Main.MainActivity;
 import pt.ulisboa.tecnico.withoutnet.activities.Nodes.AddNodeToNetworkActivity;
 import pt.ulisboa.tecnico.withoutnet.adapters.SettingsListAdapter;
 import pt.ulisboa.tecnico.withoutnet.constants.ErrorMessages;
@@ -88,6 +90,13 @@ public class SettingsFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        MainActivity mainActivity = (MainActivity) getActivity();
+
+        if(mainActivity != null && mainActivity.binding != null) {
+            TextView appBarTitleTextView = mainActivity.binding.appBarTitle;
+            appBarTitleTextView.setText(R.string.settings);
+        }
 
         GlobalClass globalClass = (GlobalClass) getActivity().getApplicationContext();
 

@@ -113,6 +113,15 @@
 
     <string name="change">Change</string>
 
+    <string name="delete_all_messages_in_database">Delete all messages in the database</string>
+    <string name="delete_all_messages_in_server">Delete all messages in the server</string>
+
+    <string name="all_messages_in_database">all messages in the database</string>
+    <string name="all_messages_in_server">all messages in the server</string>
+
+    <string name="delete_all_messages_in_database_explanation">Are you sure you wish to delete all messages in the database?</string>
+    <string name="delete_all_messages_in_server_explanation">Are you sure you wish like to delete all messages in the server?</string>
+
     <string name="home">Home</string>
     <string name="networks">Networks</string>
     <string name="nodes">Nodes</string>

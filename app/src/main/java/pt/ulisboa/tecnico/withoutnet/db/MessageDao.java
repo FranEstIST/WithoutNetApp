@@ -40,4 +40,7 @@ public interface MessageDao {
 
     @Delete
     Completable delete(Message message);
+
+    @Query("DELETE FROM message")
+    Completable deleteAll();
 }
