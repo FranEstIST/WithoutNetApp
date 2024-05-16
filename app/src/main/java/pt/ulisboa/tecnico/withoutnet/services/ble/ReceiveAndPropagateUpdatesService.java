@@ -38,6 +38,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.core.Scheduler;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -85,9 +86,12 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
     private Message messageToBeWritten = null;
 
+    private List<Message> messagesToBeWritten = new ArrayList<>();
+    private List<Message> messagesToBeDeleted = new ArrayList<>();
+
     private final CompositeDisposable disposable = new CompositeDisposable();
 
-    private ScanCallback scanCallback  = new ScanCallback() {
+    private ScanCallback scanCallback = new ScanCallback() {
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
             super.onScanResult(callbackType, result);
@@ -108,7 +112,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
             Log.d(TAG, "Found ble device with address: " + address);
 
-            if(enoughTimeHasPassedSinceLastConnection(address)) {
+            if (enoughTimeHasPassedSinceLastConnection(address)) {
                 // Connect to node
                 final boolean connectResult = bleService.connect(address);
                 Log.d(TAG, "Connect request result = " + connectResult);
@@ -214,7 +218,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                 // Step 2: Write the messages meant for this node to the respective characteristic
                 // Step 3: Read the node's pending messages
 
-                if(nodeUuidCharacteristic!= null
+                if (nodeUuidCharacteristic != null
                         && incomingMessageCharacteristic != null
                         && outgoingMessageCharacteristic != null) {
                     // TODO: Is it possible for a characteristic to be read before
@@ -233,7 +237,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
                 String characteristicId = intent.getStringExtra("id");
 
-                if(characteristicId.equals(BleGattIDs.NODE_UUID_CHARACTERISTIC_ID)) {
+                if (characteristicId.equals(BleGattIDs.NODE_UUID_CHARACTERISTIC_ID)) {
                     Log.d(TAG, "Node UUID read");
 
                     int nodeUuid = intent.getIntExtra("int-value", -1);
@@ -242,14 +246,47 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
                     bleService.setCurrentNodeUuid(nodeUuid);
 
-                    writeNextChunk();
-                } else if(characteristicId.equals(BleGattIDs.OUTGOING_MESSAGE_CHARACTERISTIC_ID)) {
+                    // TODO: Read the node's pending messages in the database and the server here
+                    globalClass.getWithoutNetAppDatabase()
+                            .messageDao()
+                            .findByReceiver(nodeUuid)
+                            .observeOn(Schedulers.newThread())
+                            .subscribeOn(Schedulers.newThread())
+                            .subscribe(messagesInTheDB -> {
+
+                                Frontend.FrontendResponseListener getMessagesResponseListener = new Frontend.FrontendResponseListener() {
+                                    @Override
+                                    public void onResponse(Object response) {
+                                        List<Message> messagesInTheServer = (List<Message>) response;
+
+                                        // Remove the messages that are already in the server from the local message list
+                                        messagesToBeWritten = messagesInTheDB.stream().filter(message -> !message.isInServer()).collect(Collectors.toList());
+
+                                        // Add the messages in the server to the list of messages to be written
+                                        messagesToBeWritten.addAll(messagesInTheServer);
+
+                                        writeNextChunk();
+                                    }
+
+                                    @Override
+                                    public void onError(String errorMessage) {
+                                        messagesToBeWritten = messagesInTheDB;
+
+                                        writeNextChunk();
+                                    }
+                                };
+
+                                globalClass.getFrontend().getMessagesByReceiver(nodeUuid, getMessagesResponseListener);
+                            });
+
+                    //writeNextChunk();
+                } else if (characteristicId.equals(BleGattIDs.OUTGOING_MESSAGE_CHARACTERISTIC_ID)) {
                     Log.d(TAG, "Message read");
 
                     byte[] chunkByteArray = intent.getByteArrayExtra("byte-array-value");
 
-                    if(chunkByteArray.length >= 4 && chunkByteArray[0] == 0 && chunkByteArray[1] == 0) {
-                        if(!ReceiveAndPropagateUpdatesService.this.currentOutgoingMessageChunks.isEmpty()) {
+                    if (chunkByteArray.length >= 4 && chunkByteArray[0] == 0 && chunkByteArray[1] == 0) {
+                        if (!ReceiveAndPropagateUpdatesService.this.currentOutgoingMessageChunks.isEmpty()) {
                             // The message chunks' list is not empty and the current chunk's length is 0,
                             // which means all of the current message's chunks have been received
 
@@ -265,7 +302,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                                     .subscribeOn(Schedulers.newThread())
                                     .observeOn(Schedulers.newThread())
                                     .onErrorComplete(throwable -> {
-                                        if(!throwable.getClass().equals(SQLiteConstraintException.class)) {
+                                        if (!throwable.getClass().equals(SQLiteConstraintException.class)) {
                                             throwable.printStackTrace();
                                         }
                                         return true;
@@ -285,7 +322,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                         // If the message chunk's list is empty, then the node must not have any messages
                         // to send, meaning the code in the if clause below should be executed
 
-                        if(!(chunkByteArray[2] == 0 && chunkByteArray[3] == 0)) {
+                        if (!(chunkByteArray[2] == 0 && chunkByteArray[3] == 0)) {
                             // The "isLastMessage" flag on this end chunk has been set to true, meaning
                             // there are no more messages to be read from the node
 
@@ -324,7 +361,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
         byte[] messageByteArray = byteArray;
         String messageByteArrayString = "";
 
-        for(byte messageByte : messageByteArray) {
+        for (byte messageByte : messageByteArray) {
             messageByteArrayString += messageByte + " # ";
         }
 
@@ -334,7 +371,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
     private Thread exchangeMessagesWithServerThread = new Thread(new Runnable() {
         @Override
         public void run() {
-            while(true) {
+            while (true) {
                 Log.d(TAG, "Sending messages to the server.");
                 Log.d(TAG, "Sending messages to the server..");
                 Log.d(TAG, "Sending messages to the server...");
@@ -364,129 +401,68 @@ public class ReceiveAndPropagateUpdatesService extends Service {
         bleService.writeCharacteristic(incomingMessageCharacteristic);
     }
 
-    private void writeNextChunk() {
-        int receiverUuid = bleService.getCurrentNodeUuid();
+    private void deleteMessage(Message message) {
+        globalClass.getWithoutNetAppDatabase().messageDao()
+                .delete(message)
+                .observeOn(Schedulers.newThread())
+                .subscribeOn(Schedulers.newThread())
+                .subscribe(() -> {
+                    Log.d(TAG, "Deleted message in database: " + message);
+                });
 
-        if(currentIncomingMessageChunks.isEmpty()) {
+        if (message.isInServer()) {
+            Frontend.FrontendResponseListener deleteMessageResponseListener = new Frontend.FrontendResponseListener() {
+                @Override
+                public void onResponse(Object response) {
+                    Log.d(TAG, "Deleted message in server: " + message);
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    Log.e(TAG, "Delete message in server: " + errorMessage);
+                }
+            };
+
+            globalClass.getFrontend().deleteMessage(message, deleteMessageResponseListener);
+        }
+    }
+
+    private void writeNextChunk() {
+        if (currentIncomingMessageChunks.isEmpty()) {
             // The previous incoming message's chunks have all been sent,
             // so now the next messages chunks must be sent
 
-            // Get every message intended for this node not yet sent
-            //
-
-            WithoutNetAppDatabase withoutNetAppDatabase = globalClass.getWithoutNetAppDatabase();
-
-            disposable.add(withoutNetAppDatabase.messageDao()
-                    .findByReceiver(receiverUuid)
-                    .subscribeOn(Schedulers.newThread())
-                    .observeOn(Schedulers.io())
-                    .subscribe(messagesToBeWritten -> {
-
-                        if (messageToBeWritten != null && messagesToBeWritten.contains(messageToBeWritten)) {
-                            // The previous message to be written to the node has been written, so now
-                            // it should be removed from the cache and ACKed by the receiver
-                            disposable.add(withoutNetAppDatabase.messageDao()
-                                    .delete(messageToBeWritten)
-                                    .subscribeOn(Schedulers.newThread())
-                                    .subscribe());
-
-                            //messagesToBeWritten.remove(messageToBeWritten);
-
-                            if (messageToBeWritten.getMessageType().equals(MessageType.DATA)) {
-                                // Add the corresponding ACK message to the sender's queue
-                                // of pending messages to be written
-
-                                disposable.add(withoutNetAppDatabase.messageDao()
-                                        .insertAll(messageToBeWritten.getAckMessage())
-                                        .subscribeOn(Schedulers.newThread())
-                                        .observeOn(Schedulers.newThread())
-                                        .onErrorComplete(throwable -> {
-                                            if(!throwable.getClass().equals(SQLiteConstraintException.class)) {
-                                                throwable.printStackTrace();
-                                            }
-                                            return true;
-                                        })
-                                        .subscribe(() -> Log.d(TAG, "Added ACK message")));
-
-                                //globalClass.addMessage(messageToBeWritten.getAckMessage());
-                            }
-                        }
-
-                        if (messagesToBeWritten != null && messagesToBeWritten.size() > 0) {
-                            BluetoothGattCharacteristic incomingMessageCharacteristic = bleService.getIncomingMessageCharacteristic();
-
-                            // TODO: It should be checked if incomingMessageCharacteristic != null
-
-                            messageToBeWritten = messagesToBeWritten.get(0);
-
-                            Log.d(TAG, "Next message to be written to node: " + messageToBeWritten.toString());
-
-                            currentIncomingMessageChunks = messageToBeWritten.toChunks();
-                        } else {
-                            Log.d(TAG, "No more messages to be written to node");
-
-                            // All messages meant for the node have been written
-                            // Time to read the node's pending messages
-                            BluetoothGattCharacteristic outgoingMessageCharacteristic = bleService.getOutgoingMessageCharacteristic();
-                            bleService.readCharacteristic(outgoingMessageCharacteristic);
-
-                            return;
-                        }
-
-                        writeNextChunkToBLCharacteristic();
-                    }));
-        } else {
-            writeNextChunkToBLCharacteristic();
-        }
-
-        /*if(currentIncomingMessageChunks.isEmpty()) {
-
-            TreeSet<Message> messagesToBeWritten = globalClass.getAllMessagesForReceiver(receiverUuid);
-
-            if(messageToBeWritten != null && messagesToBeWritten.contains(messageToBeWritten)) {
+            if (messageToBeWritten != null && messagesToBeWritten.contains(messageToBeWritten)) {
                 // The previous message to be written to the node has been written, so now
-                // it should be removed from the cache and ACKed by the receiver
+                // it should be removed from the list of messages to be written, the db
+                // and the server
                 messagesToBeWritten.remove(messageToBeWritten);
 
-                if(messageToBeWritten.getMessageType().equals(MessageType.DATA)) {
-                    // Add the corresponding ACK message to the sender's queue
-                    // of pending messages to be written
-                    globalClass.addMessage(messageToBeWritten.getAckMessage());
-                }
+                deleteMessage(messageToBeWritten);
             }
 
             if (messagesToBeWritten != null && messagesToBeWritten.size() > 0) {
-                BluetoothGattCharacteristic incomingMessageCharacteristic = bleService.getIncomingMessageCharacteristic();
+                // There are still messages left to write to the node
 
-                // TODO: It should be checked if incomingMessageCharacteristic != null
-
-                messageToBeWritten = messagesToBeWritten.first();
+                messageToBeWritten = messagesToBeWritten.get(0);
 
                 Log.d(TAG, "Next message to be written to node: " + messageToBeWritten.toString());
 
                 currentIncomingMessageChunks = messageToBeWritten.toChunks();
-            } else {
-                Log.d(TAG, "No more messages to be written to node");
 
+                writeNextChunkToBLCharacteristic();
+            } else {
                 // All messages meant for the node have been written
                 // Time to read the node's pending messages
+
+                Log.d(TAG, "No more messages to be written to node");
+
                 BluetoothGattCharacteristic outgoingMessageCharacteristic = bleService.getOutgoingMessageCharacteristic();
                 bleService.readCharacteristic(outgoingMessageCharacteristic);
-
-                return;
             }
+        } else {
+            writeNextChunkToBLCharacteristic();
         }
-
-        BluetoothGattCharacteristic incomingMessageCharacteristic = bleService.getIncomingMessageCharacteristic();
-
-        byte[] chunk = currentIncomingMessageChunks.get(0);
-        currentIncomingMessageChunks.remove(chunk);
-
-        incomingMessageCharacteristic.setValue(chunk);
-
-        Log.d(TAG, "Next chunk to be written to node: " + byteArrayToString(chunk));
-
-        bleService.writeCharacteristic(incomingMessageCharacteristic);*/
     }
 
     private void writeNextMessage() {
@@ -541,57 +517,6 @@ public class ReceiveAndPropagateUpdatesService extends Service {
         Frontend frontend = globalClass.getFrontend();
         WithoutNetAppDatabase withoutNetAppDatabase = globalClass.getWithoutNetAppDatabase();
 
-        // Read the messages in the server
-
-        /*GardenDatabase gardenDatabase = GardenDatabase.getInstance(this.context);
-        GardenDashboardViewModel gardenDashboardViewModel = new ViewModelFactory(
-                gardenDatabase.gardenDao(),
-                gardenDatabase.deviceDao(),
-                gardenDatabase.readingDao()
-        ).create(GardenDashboardViewModel.class);
-
-        this.disposable.add(gardenDashboardViewModel.getAllDevicesWithReadings()
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.newThread())
-                .subscribe(devicesWithReadings -> {
-                    Log.d(TAG, devicesWithReadings + "");
-                    this.devicesWithReadings.addAll(devicesWithReadings);
-                }));*/
-
-        Frontend.FrontendResponseListener getAllMessagesInServerResponseListener = new Frontend.FrontendResponseListener() {
-            @Override
-            public void onResponse(Object response) {
-                Log.d(TAG, "Received messages from server");
-
-                List<Message> messagesInServer = (List<Message>) response;
-
-                if (messagesInServer != null) {
-                    for (Message message : messagesInServer) {
-                        message.setInServer(true);
-                        //globalClass.addMessage(message);
-
-                        disposable.add(withoutNetAppDatabase.messageDao().insertAll(message)
-                                .subscribeOn(Schedulers.io())
-                                .observeOn(Schedulers.newThread())
-                                .onErrorComplete(throwable -> {
-                                    if(!throwable.getClass().equals(SQLiteConstraintException.class)) {
-                                        throwable.printStackTrace();
-                                    }
-                                    return true;
-                                })
-                                .subscribe(() -> Log.d(TAG, "Added message")));
-                    }
-                }
-            }
-
-            @Override
-            public void onError(String errorMessage) {
-                Log.e(TAG, errorMessage);
-            }
-        };
-
-        frontend.getAllMessagesInServerViaVolley(getAllMessagesInServerResponseListener);
-
         // Write the messages in cache to the server
         // TODO: Messages should be sent to the server in bulk
         HashMap<Integer, TreeSet<Message>> messagesByReceiver = globalClass.getAllMessages();
@@ -602,8 +527,8 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.newThread())
                 .subscribe(messages -> {
-                    for(Message message : messages) {
-                        if(!message.isInServer()) {
+                    for (Message message : messages) {
+                        if (!message.isInServer()) {
                             Frontend.FrontendResponseListener sendMessageToServerResponseListener = new Frontend.FrontendResponseListener() {
                                 @Override
                                 public void onResponse(Object response) {
@@ -611,7 +536,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
                                     int status = (int) response;
 
-                                    if(status == StatusCodes.OK) {
+                                    if (status == StatusCodes.OK) {
                                         message.setInServer(true);
                                         Log.d(TAG, "Added message to server");
 
@@ -639,35 +564,6 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                         }
                     }
                 }));
-
-        /*for(Integer receiver : receivers) {
-            TreeSet<Message> messages = messagesByReceiver.get(receiver);
-
-            for(Message message : messages) {
-                if(!message.isInServer()) {
-
-                    responseListener[0] = new Frontend.FrontendResponseListener() {
-                        @Override
-                        public void onResponse(Object response) {
-                            Log.d(TAG, "Received a response to add message request");
-
-                            int status = (int) response;
-
-                            if(status == StatusCodes.OK) {
-                                message.setInServer(true);
-                                Log.d(TAG, "Added message to server");
-                            }
-                        }
-
-                        @Override
-                        public void onError(String errorMessage) {
-                            Log.e(TAG, errorMessage);
-                        }
-                    };
-
-                    frontend.sendMessageToServerViaVolley(message, responseListener[0]);
-                }
-            }*/
     }
 
     private static IntentFilter makeGattUpdateIntentFilter() {

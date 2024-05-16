@@ -15,6 +15,7 @@ import com.android.volley.Response;
 import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.JsonRequest;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -169,6 +170,65 @@ public class Frontend {
         this.requestQueue.add(request);
     }
 
+    public void getMessagesByReceiver(int receiverId, FrontendResponseListener responseListener) {
+        String url = globalClass.getServerURL() + "get-messages-by-receiver/" + receiverId;
+
+        JsonObjectRequest request = new JsonObjectRequest(url, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                Log.d(TAG, "Received response (getMessagesByReceiver)");
+
+                try {
+                    int statusCode = response.getInt("status");
+
+                    List<Message> receivedMessages = null;
+
+                    // if status is OK, create an ArrayList with all the messages
+                    if (statusCode == StatusCodes.OK) {
+                        JSONArray messagesJsonArray = response.getJSONArray("messages");
+
+                        if (messagesJsonArray == null)
+                            responseListener.onResponse(receivedMessages);
+
+                        receivedMessages = new ArrayList<>();
+
+                        for (int i = 0; i < messagesJsonArray.length(); i++) {
+                            // TODO: Fix this
+
+                            JSONObject messageJson = messagesJsonArray.getJSONObject(i);
+                            short length = (short) messageJson.getInt("length");
+                            long timestamp = messageJson.getLong("timestamp");
+                            int messageType = messageJson.getInt("messageType");
+                            int sender = messageJson.getInt("sender");
+                            int receiver = messageJson.getInt("receiver");
+                            String payload = messageJson.getString("payload");
+
+                            Message receivedMessage = new Message(length, timestamp, messageType, sender, receiver, payload);
+                            receivedMessage.setInServer(true);
+
+                            receivedMessages.add(receivedMessage);
+                        }
+
+                        responseListener.onResponse(receivedMessages);
+                    } else {
+                        responseListener.onError("Error 2");
+                    }
+                } catch (JSONException e) {
+                    Log.e(TAG, "Received error");
+                    e.printStackTrace();
+                    responseListener.onError("Error 3");
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                responseListener.onError("Error 4");
+            }
+        });
+
+        this.requestQueue.add(request);
+    }
+
     public void sendMessageBatchToServer(List<Message> messageBatch, FrontendResponseListener responseListener) {
         if (getConnectionType() == -1) return;
 
@@ -206,37 +266,48 @@ public class Frontend {
         this.requestQueue.add(request);
     }
 
-    /*public Update getMostRecentUpdateByNodeFromServer(Node node) {
-        //if (getConnectionType() == -1) return -1;
+    public void deleteMessage(Message message, FrontendResponseListener responseListener) {
+        String url = globalClass.getServerURL() + "delete-message";
 
-        // Create the node's json object
-        JsonObject sendUpdateJson = getNodeJson(node);
+        JSONObject jsonRequest = new JSONObject();
 
-        // Send request and extract status code
-        JsonObject response = getRequest("get-most-recent-update-by-node-id/" + node.getId(), sendUpdateJson.toString());
-
-        int statusCode = response.get("status").getAsInt();
-
-        Update receivedUpdate = null;
-
-        // if status is OK, create an ArrayList with all the acl users
-        if (statusCode == StatusCodes.OK) {
-            JsonObject updateJson = response.get("update").getAsJsonObject();
-
-            if (updateJson == null) return receivedUpdate;  // avoids empty jsons
-
-            long timestamp = updateJson.get("timestamp").getAsLong();
-            String reading = updateJson.get("reading").getAsString();
-            Node sender = buildNodefromJson(updateJson.get("sender").getAsJsonObject());
-
-            receivedUpdate = new Update(timestamp, sender, reading);
+        try {
+            jsonRequest.put("timestamp", message.getTimestamp());
+            jsonRequest.put("senderId", message.getSender());
+            jsonRequest.put("receiverId", message.getReceiver());
+        } catch (JSONException e) {
+            responseListener.onError("Error");
+            return;
         }
 
-        return receivedUpdate;
-    }*/
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, jsonRequest, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    int status = response.getInt("status");
+
+                    if (status == StatusCodes.OK) {
+                        responseListener.onResponse(status);
+                    } else {
+                        responseListener.onError("Error");
+                    }
+                } catch (JSONException e) {
+                    responseListener.onError("Error");
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                responseListener.onError("Error");
+            }
+        });
+
+        this.requestQueue.add(request);
+
+    }
 
     public void addNode(Node node, FrontendResponseListener responseListener) {
-        if(getConnectionType() == -1) {
+        if (getConnectionType() == -1) {
             responseListener.onError(null);
             return;
         }
@@ -258,7 +329,7 @@ public class Frontend {
             public void onResponse(JSONObject response) {
                 try {
                     int status = response.getInt("status");
-                    if(status == StatusCodes.OK) {
+                    if (status == StatusCodes.OK) {
                         Node addedNode = buildNodeFromJson(response.getJSONObject("node"));
                         responseListener.onResponse(addedNode);
                     } else {
@@ -280,7 +351,7 @@ public class Frontend {
     }
 
     public void deleteNode(Node node, FrontendResponseListener responseListener) {
-        if(getConnectionType() == -1) {
+        if (getConnectionType() == -1) {
             responseListener.onError(null);
             return;
         }
@@ -292,7 +363,7 @@ public class Frontend {
             public void onResponse(JSONObject response) {
                 try {
                     int status = response.getInt("status");
-                    if(status == StatusCodes.OK) {
+                    if (status == StatusCodes.OK) {
                         responseListener.onResponse(StatusCodes.OK);
                     } else {
                         responseListener.onError(FrontendErrorMessages.fromStatusCode(status));
@@ -314,7 +385,7 @@ public class Frontend {
     }
 
     public void updateNode(Node node, FrontendResponseListener responseListener) {
-        if(getConnectionType() == -1) {
+        if (getConnectionType() == -1) {
             responseListener.onError(null);
             return;
         }
@@ -337,7 +408,7 @@ public class Frontend {
             public void onResponse(JSONObject response) {
                 try {
                     int status = response.getInt("status");
-                    if(status == StatusCodes.OK) {
+                    if (status == StatusCodes.OK) {
                         Node updatedNode = buildNodeFromJson(response.getJSONObject("node"));
                         responseListener.onResponse(updatedNode);
                     } else {
@@ -359,7 +430,7 @@ public class Frontend {
     }
 
     public void getAllNodesInServer(FrontendResponseListener responseListener) {
-        if(getConnectionType() == -1) {
+        if (getConnectionType() == -1) {
             responseListener.onError(null);
             return;
         }
@@ -372,11 +443,11 @@ public class Frontend {
                 try {
                     int status = response.getInt("status");
 
-                    if(status == StatusCodes.OK) {
+                    if (status == StatusCodes.OK) {
                         JSONArray nodesJsonArray = response.getJSONArray("nodes");
                         ArrayList<Node> nodes = new ArrayList<>();
 
-                        for(int i = 0; i < nodesJsonArray.length(); i++) {
+                        for (int i = 0; i < nodesJsonArray.length(); i++) {
                             Node node = buildNodeFromJson(nodesJsonArray.getJSONObject(i));
                             nodes.add(node);
                         }
@@ -403,7 +474,7 @@ public class Frontend {
     }
 
     public void getNodesInServerContainingSubstring(String substring, FrontendResponseListener responseListener) {
-        if(getConnectionType() == -1) {
+        if (getConnectionType() == -1) {
             responseListener.onError(null);
             return;
         }
@@ -416,11 +487,11 @@ public class Frontend {
                 try {
                     int status = response.getInt("status");
 
-                    if(status == StatusCodes.OK) {
+                    if (status == StatusCodes.OK) {
                         JSONArray nodesJsonArray = response.getJSONArray("nodes");
                         ArrayList<Node> nodes = new ArrayList<>();
 
-                        for(int i = 0; i < nodesJsonArray.length(); i++) {
+                        for (int i = 0; i < nodesJsonArray.length(); i++) {
                             Node node = buildNodeFromJson(nodesJsonArray.getJSONObject(i));
                             nodes.add(node);
                         }
@@ -440,7 +511,7 @@ public class Frontend {
             public void onErrorResponse(VolleyError error) {
                 error.printStackTrace();
 
-                if(error.getCause() instanceof TimeoutError) {
+                if (error.getCause() instanceof TimeoutError) {
                     responseListener.onError(FrontendErrorMessages.TIMEOUT_ERROR);
                 } else {
                     responseListener.onError(FrontendErrorMessages.VOLLEY_ERROR);
@@ -452,7 +523,7 @@ public class Frontend {
     }
 
     public void addNetwork(String networkName, FrontendResponseListener responseListener) {
-        if(getConnectionType() == -1) {
+        if (getConnectionType() == -1) {
             responseListener.onError(null);
             return;
         }
@@ -473,7 +544,7 @@ public class Frontend {
             public void onResponse(JSONObject response) {
                 try {
                     int status = response.getInt("status");
-                    if(status == StatusCodes.OK) {
+                    if (status == StatusCodes.OK) {
                         Network addedNetwork = buildNetworkFromJson(response.getJSONObject("network"));
                         responseListener.onResponse(addedNetwork);
                     } else {
@@ -495,7 +566,7 @@ public class Frontend {
     }
 
     public void deleteNetwork(Network network, FrontendResponseListener responseListener) {
-        if(getConnectionType() == -1) {
+        if (getConnectionType() == -1) {
             responseListener.onError(null);
             return;
         }
@@ -507,7 +578,7 @@ public class Frontend {
             public void onResponse(JSONObject response) {
                 try {
                     int status = response.getInt("status");
-                    if(status == StatusCodes.OK) {
+                    if (status == StatusCodes.OK) {
                         responseListener.onResponse(StatusCodes.OK);
                     } else {
                         responseListener.onError(FrontendErrorMessages.fromStatusCode(status));
@@ -529,7 +600,7 @@ public class Frontend {
     }
 
     public void getNetworksInServerContainingSubstring(String substring, FrontendResponseListener responseListener) {
-        if(getConnectionType() == -1) {
+        if (getConnectionType() == -1) {
             responseListener.onError(null);
             return;
         }
@@ -542,11 +613,11 @@ public class Frontend {
                 try {
                     int status = response.getInt("status");
 
-                    if(status == StatusCodes.OK) {
+                    if (status == StatusCodes.OK) {
                         JSONArray networksJsonArray = response.getJSONArray("networks");
                         ArrayList<Network> networks = new ArrayList<>();
 
-                        for(int i = 0; i < networksJsonArray.length(); i++) {
+                        for (int i = 0; i < networksJsonArray.length(); i++) {
                             Network network = buildNetworkFromJson(networksJsonArray.getJSONObject(i));
                             networks.add(network);
                         }
@@ -566,7 +637,7 @@ public class Frontend {
             public void onErrorResponse(VolleyError error) {
                 error.printStackTrace();
 
-                if(error.getCause() instanceof TimeoutError) {
+                if (error.getCause() instanceof TimeoutError) {
                     responseListener.onError(FrontendErrorMessages.TIMEOUT_ERROR);
                 } else {
                     responseListener.onError(FrontendErrorMessages.VOLLEY_ERROR);
@@ -578,7 +649,7 @@ public class Frontend {
     }
 
     public void getNodesInServerContainingSubstringInNetwork(String substring, Network network, FrontendResponseListener responseListener) {
-        if(getConnectionType() == -1) {
+        if (getConnectionType() == -1) {
             responseListener.onError(null);
             return;
         }
@@ -591,11 +662,11 @@ public class Frontend {
                 try {
                     int status = response.getInt("status");
 
-                    if(status == StatusCodes.OK) {
+                    if (status == StatusCodes.OK) {
                         JSONArray nodesJsonArray = response.getJSONArray("nodes");
                         ArrayList<Node> nodes = new ArrayList<>();
 
-                        for(int i = 0; i < nodesJsonArray.length(); i++) {
+                        for (int i = 0; i < nodesJsonArray.length(); i++) {
                             Node node = buildNodeFromJson(nodesJsonArray.getJSONObject(i));
                             nodes.add(node);
                         }
@@ -615,7 +686,7 @@ public class Frontend {
             public void onErrorResponse(VolleyError error) {
                 error.printStackTrace();
 
-                if(error.getCause() instanceof TimeoutError) {
+                if (error.getCause() instanceof TimeoutError) {
                     responseListener.onError(FrontendErrorMessages.TIMEOUT_ERROR);
                 } else {
                     responseListener.onError(FrontendErrorMessages.VOLLEY_ERROR);
@@ -627,7 +698,7 @@ public class Frontend {
     }
 
     public void getNodesInNetwork(Network network, FrontendResponseListener responseListener) {
-        if(getConnectionType() == -1) {
+        if (getConnectionType() == -1) {
             responseListener.onError(null);
             return;
         }
@@ -640,12 +711,12 @@ public class Frontend {
                 try {
                     int status = response.getInt("status");
 
-                    if(status == StatusCodes.OK) {
+                    if (status == StatusCodes.OK) {
                         JSONObject networkJson = response.getJSONObject("network");
                         JSONArray nodesJsonArray = networkJson.getJSONArray("nodes");
                         ArrayList<Node> nodes = new ArrayList<>();
 
-                        for(int i = 0; i < nodesJsonArray.length(); i++) {
+                        for (int i = 0; i < nodesJsonArray.length(); i++) {
                             Node node = buildNodeFromJson(nodesJsonArray.getJSONObject(i));
                             nodes.add(node);
                         }
@@ -665,7 +736,7 @@ public class Frontend {
             public void onErrorResponse(VolleyError error) {
                 error.printStackTrace();
 
-                if(error.getCause() instanceof TimeoutError) {
+                if (error.getCause() instanceof TimeoutError) {
                     responseListener.onError(FrontendErrorMessages.TIMEOUT_ERROR);
                 } else {
                     responseListener.onError(FrontendErrorMessages.VOLLEY_ERROR);
@@ -733,7 +804,8 @@ public class Frontend {
         String uuid = nodeJson.getString("id");
         String commonName = nodeJson.getString("common-name");
         int networkId = nodeJson.getInt("network-id");
-        String networkName = nodeJson.getString("network-name");;
+        String networkName = nodeJson.getString("network-name");
+        ;
 
         Network network = new Network(networkId, networkName);
 
@@ -747,7 +819,7 @@ public class Frontend {
 
         ArrayList<Node> nodes = new ArrayList<>();
 
-        for(int i = 0; i < nodesJsonArray.length(); i++) {
+        for (int i = 0; i < nodesJsonArray.length(); i++) {
             nodes.add(buildNodeFromJson(nodesJsonArray.getJSONObject(i)));
         }
 
