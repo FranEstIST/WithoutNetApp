@@ -33,6 +33,8 @@ public class BleScanner {
     private ScanCallback scanCallback;
     private long scanPeriod;
 
+    private long lastStartScanTime;
+
     private Timer timer;
 
     public BleScanner(Context context, ScanCallback scanCallback, long scanPeriod) {
@@ -72,6 +74,34 @@ public class BleScanner {
 
         if(scanning) {
             bluetoothLeScanner.stopScan(scanCallback);
+        }
+
+        long currentTime = System.currentTimeMillis();
+
+        if((currentTime - lastStartScanTime) >= 6000) {
+            bluetoothLeScanner.startScan(filters, settings, scanCallback);
+            scanning = true;
+        } else {
+            // Ensure that scans are are started at most every 6s
+
+            TimerTask task = new TimerTask() {
+                @SuppressLint("MissingPermission")
+                public void run() {
+                    startScan();
+                }
+            };
+
+            // Clear any scheduled tasks on the timer
+            timer.cancel();
+            timer = new Timer("ScanTimer");
+
+            try {
+                timer.schedule(task, 6000 - (currentTime - lastStartScanTime));
+            } catch (IllegalStateException e) {
+                Log.e(TAG, "Trying to schedule task on cancelled timer");
+            }
+
+            return;
         }
 
         bluetoothLeScanner.startScan(filters, settings, scanCallback);

@@ -88,7 +88,7 @@ public class BleService extends Service {
         @SuppressLint("MissingPermission")
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-            resetConnectionTimeoutTimer();
+            resetConnectionTimeoutTimer(CONNECTION_TIMEOUT);
 
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 // successfully connected to the GATT Server
@@ -199,13 +199,14 @@ public class BleService extends Service {
         bluetoothAdapter.getBondedDevices()
     }*/
 
-    private void resetConnectionTimeoutTimer() {
+    private void resetConnectionTimeoutTimer(long timeout) {
         TimerTask task = new TimerTask() {
             @SuppressLint("MissingPermission")
             public void run() {
                 //BleService.this.disconnect();
-                Log.d(TAG, "BLE connection timeout with device: " + bluetoothGatt.getDevice().getAddress());
                 connectionState = STATE_DISCONNECTED;
+                Log.d(TAG, "BLE connection timeout with device: " + bluetoothGatt.getDevice().getAddress());
+                broadcastUpdate(ACTION_GATT_DISCONNECTED);
                 bluetoothGatt.close();
                 connectionTimeoutTimer.cancel();
                 resetFlags();
@@ -217,7 +218,7 @@ public class BleService extends Service {
         }
 
         connectionTimeoutTimer = new Timer("connectionTimeoutTimer");
-        connectionTimeoutTimer.schedule(task, CONNECTION_TIMEOUT);
+        connectionTimeoutTimer.schedule(task, timeout);
     }
 
     // TODO: Check if permission is granted
@@ -240,7 +241,8 @@ public class BleService extends Service {
 
         connectionState = STATE_WAITING_FOR_CONNECTION;
 
-        resetConnectionTimeoutTimer();
+        // The node has 2s to connect
+        resetConnectionTimeoutTimer(2000);
 
         try {
             final BluetoothDevice device = bluetoothAdapter.getRemoteDevice(address);
