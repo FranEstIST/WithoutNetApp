@@ -173,7 +173,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                 // This should not be done, because the scan is going to have to
                 // be resumed after the current node is diconnected, and
                 // "BLE scan may not be called more than 5 times per 30 seconds"
-                //ReceiveAndPropagateUpdatesService.this.scanner.pauseScan(BleService.CONNECTION_TIMEOUT);
+                ReceiveAndPropagateUpdatesService.this.scanner.pauseScan(BleService.CONNECTION_TIMEOUT);
 
                 // These lists, which allow for the collection of message chunks, must
                 // be cleared upon a new connection, in case a previous connection
@@ -187,7 +187,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
             } else if (BleService.ACTION_GATT_DISCONNECTED.equals(action)) {
                 // Resume scanning after a connection is closed
-                //ReceiveAndPropagateUpdatesService.this.scanner.startScan();
+                ReceiveAndPropagateUpdatesService.this.scanner.startScan();
 
                 connected = false;
                 Log.d(TAG, "Disconnected from node");
@@ -663,7 +663,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
         Intent gattServiceIntent = new Intent(getApplicationContext(), BleService.class);
         getApplicationContext().bindService(gattServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
         // TODO: Start uploading and downloading messages to the central server
-        this.exchangeMessagesWithServerThread.start();
+        //this.exchangeMessagesWithServerThread.start();
         return true;
     }
 

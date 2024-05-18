@@ -35,7 +35,7 @@ import pt.ulisboa.tecnico.withoutnet.utils.ble.BleScanner;
 
 public class BleService extends Service {
     // Connections can last at most 10s
-    public static final long CONNECTION_TIMEOUT = 20000;
+    public static final long CONNECTION_TIMEOUT = 10000;
 
     private Binder binder = new LocalBinder();
     private BluetoothAdapter bluetoothAdapter;
