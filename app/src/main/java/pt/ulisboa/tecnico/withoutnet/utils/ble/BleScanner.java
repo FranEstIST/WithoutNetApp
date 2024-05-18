@@ -25,6 +25,8 @@ import pt.ulisboa.tecnico.withoutnet.services.ble.ReceiveAndPropagateUpdatesServ
 public class BleScanner {
     private static final String TAG = "BleScanner";
 
+    //private static final long SCAN_TIMEOUT = 10000;
+
     private Context context;
     private BluetoothLeScanner bluetoothLeScanner;
     private boolean scanning;
@@ -43,12 +45,12 @@ public class BleScanner {
         BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
         bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
 
-        timer = new Timer("Timer");
+        timer = new Timer("ScanTimer");
     }
 
     // TODO: Is scan required to be synchronized?
     @SuppressLint("MissingPermission")
-    public synchronized void scan() {
+    public synchronized void startScan() {
         if(!checkBLPermissions()) {
             return;
         }
@@ -70,75 +72,78 @@ public class BleScanner {
 
         if(scanning) {
             bluetoothLeScanner.stopScan(scanCallback);
-            synchronized (this) {
-                this.notifyAll();
-            }
         }
 
         bluetoothLeScanner.startScan(filters, settings, scanCallback);
-        Log.d(TAG, "Scanning for BLE devices...\n");
         scanning = true;
 
-        TimerTask task = new TimerTask() {
-            @SuppressLint("MissingPermission")
-            public void run() {
-                BleScanner.this.stopScanning();
-            }
-        };
-
-        //Timer timer = new Timer("Timer");
-
-        try {
-            timer.schedule(task, this.scanPeriod);
-        } catch (IllegalStateException e) {
-            Log.e(TAG, "Trying to schedule task on cancelled timer");
-        }
-
-    }
-
-    @SuppressLint("MissingPermission")
-    public void stopScanning() {
-        Log.d(TAG, "Bluetooth scan stopping (manually)...\n");
-
-        if(!checkBLPermissions()) {
-            return;
-        }
-
-        bluetoothLeScanner.stopScan(this.scanCallback);
-        scanning = false;
+        Log.d(TAG, "Scanning for BLE devices...");
 
         TimerTask task = new TimerTask() {
             @SuppressLint("MissingPermission")
             public void run() {
-                BleScanner.this.scan();
+                pauseScan(scanPeriod);
             }
         };
 
-        //Timer timer = new Timer("Timer");
-
-        try {
-            timer.schedule(task, this.scanPeriod);
-        } catch (IllegalStateException e) {
-            Log.e(TAG, "Trying to schedule task on cancelled timer");
-        }
-
-    }
-
-    @SuppressLint("MissingPermission")
-    public void stopScanningDefinitely() {
-        Log.d(TAG, "Bluetooth scan stopping (manually)...\n");
-
-        if(!checkBLPermissions()) {
-            return;
-        }
-
-        bluetoothLeScanner.stopScan(this.scanCallback);
-        scanning = false;
-
+        // Clear any scheduled tasks on the timer
         timer.cancel();
+        timer = new Timer("ScanTimer");
 
-        timer = new Timer("Timer");
-        //timer.purge();
+        try {
+            timer.schedule(task, scanPeriod);
+        } catch (IllegalStateException e) {
+            Log.e(TAG, "Trying to schedule task on cancelled timer");
+        }
+
+    }
+
+    @SuppressLint("MissingPermission")
+    public void pauseScan(long pausePeriod) {
+        Log.d(TAG, "Bluetooth scan pausing...");
+
+        if(!checkBLPermissions()) {
+            return;
+        }
+
+        bluetoothLeScanner.stopScan(this.scanCallback);
+        scanning = false;
+
+        TimerTask task = new TimerTask() {
+            @SuppressLint("MissingPermission")
+            public void run() {
+                startScan();
+            }
+        };
+
+        // Clear any scheduled tasks on the timer
+        timer.cancel();
+        timer = new Timer("ScanTimer");
+
+        try {
+            timer.schedule(task, pausePeriod);
+        } catch (IllegalStateException e) {
+            Log.e(TAG, "Trying to schedule task on cancelled timer");
+        }
+
+    }
+
+    @SuppressLint("MissingPermission")
+    public void stopScan() {
+        Log.d(TAG, "Bluetooth scan stopping...");
+
+        if(!checkBLPermissions()) {
+            return;
+        }
+
+        if(scanning) {
+            bluetoothLeScanner.stopScan(scanCallback);
+            scanning = false;
+        }
+
+        // Clear any scheduled tasks on the timer
+        timer.cancel();
+        timer = new Timer("ScanTimer");
     }
 
     private boolean checkBLPermissions() {

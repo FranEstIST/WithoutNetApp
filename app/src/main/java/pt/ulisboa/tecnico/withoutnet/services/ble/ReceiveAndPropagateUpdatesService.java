@@ -62,7 +62,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
     private static final long SCAN_PERIOD = 10000;
 
-    private static final long CONNECTION_INTERVAL = 1000;
+    private static final long MIN_CONNECTION_INTERVAL = 1000;
 
     private LocalBinder binder = new LocalBinder();
 
@@ -117,7 +117,9 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                 final boolean connectResult = bleService.connect(address);
                 Log.d(TAG, "Connect request result = " + connectResult);
 
-                ReceiveAndPropagateUpdatesService.this.lastConnectionTimesByAddress.put(address, System.currentTimeMillis());
+                if(connectResult == true) {
+                    ReceiveAndPropagateUpdatesService.this.lastConnectionTimesByAddress.put(address, System.currentTimeMillis());
+                }
             } else {
                 Log.d(TAG, "Can't connect to a device because not enough time between connections has passed");
             }
@@ -146,7 +148,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                     return;
                 }
 
-                ReceiveAndPropagateUpdatesService.this.scanner.scan();
+                ReceiveAndPropagateUpdatesService.this.scanner.startScan();
 
                 Log.d(TAG, "bleService successfully initialized.");
 
@@ -168,7 +170,10 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
             if (BleService.ACTION_GATT_CONNECTED.equals(action)) {
                 // Stop scanning while a connection is ongoing
-                // ReceiveAndPropagateUpdatesService.this.scanner.stopScanning();
+                // This should not be done, because the scan is going to have to
+                // be resumed after the current node is diconnected, and
+                // "BLE scan may not be called more than 5 times per 30 seconds"
+                //ReceiveAndPropagateUpdatesService.this.scanner.pauseScan(BleService.CONNECTION_TIMEOUT);
 
                 // These lists, which allow for the collection of message chunks, must
                 // be cleared upon a new connection, in case a previous connection
@@ -182,7 +187,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
             } else if (BleService.ACTION_GATT_DISCONNECTED.equals(action)) {
                 // Resume scanning after a connection is closed
-                //ReceiveAndPropagateUpdatesService.this.scanner.scan();
+                //ReceiveAndPropagateUpdatesService.this.scanner.startScan();
 
                 connected = false;
                 Log.d(TAG, "Disconnected from node");
@@ -331,6 +336,10 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
                             final boolean result = bleService.disconnect();
                             Log.d(TAG, "Disconnect request result = " + result);
+
+                            /*if(result == true) {
+                                ReceiveAndPropagateUpdatesService.this.scanner.startScan();
+                            }*/
 
                             return;
                         }
@@ -659,7 +668,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
     }
 
     public boolean stop() {
-        this.scanner.stopScanningDefinitely();
+        this.scanner.stopScan();
         unregisterReceiver(gattUpdateReceiver);
         getApplicationContext().unbindService(serviceConnection);
         this.exchangeMessagesWithServerThread.interrupt();
@@ -673,7 +682,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
             return true;
         }
 
-        return (System.currentTimeMillis() - lastConnectionTime) >= CONNECTION_INTERVAL;*/
+        return (System.currentTimeMillis() - lastConnectionTime) >= MIN_CONNECTION_INTERVAL;*/
 
         return true;
     }

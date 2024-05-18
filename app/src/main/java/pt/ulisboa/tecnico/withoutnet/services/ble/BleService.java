@@ -35,7 +35,7 @@ import pt.ulisboa.tecnico.withoutnet.utils.ble.BleScanner;
 
 public class BleService extends Service {
     // Connections can last at most 10s
-    private static final long CONNECTION_TIMEOUT = 10000;
+    public static final long CONNECTION_TIMEOUT = 20000;
 
     private Binder binder = new LocalBinder();
     private BluetoothAdapter bluetoothAdapter;
@@ -54,6 +54,7 @@ public class BleService extends Service {
             "com.example.bluetooth.le.ACTION_CHARACTERISTIC_WRITTEN";
 
     private static final int STATE_DISCONNECTED = 0;
+    private static final int STATE_WAITING_FOR_CONNECTION = 5;
     private static final int STATE_CONNECTED = 2;
     private static final int STATE_CHAR_READ = 3;
     private static final int STATE_CHAR_WRITTEN = 4;
@@ -87,11 +88,15 @@ public class BleService extends Service {
         @SuppressLint("MissingPermission")
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+            resetConnectionTimeoutTimer();
+
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 // successfully connected to the GATT Server
                 connectionState = STATE_CONNECTED;
                 Log.d(TAG, "Connected to node");
                 broadcastUpdate(ACTION_GATT_CONNECTED);
+
+                hasAttemptedToConnect = true;
 
                 if(!checkBLPermissions()) {
                     return;
@@ -106,13 +111,18 @@ public class BleService extends Service {
 
                 //BleService.this.close();
 
-                //BleService.this.hasAttemptedToConnect = false;
+                connectionTimeoutTimer.cancel();
 
-                String nextAddress = addressQueue.poll();
+                gatt.close();
+                bluetoothGatt.close();
 
+                resetFlags();
+
+
+                /*String nextAddress = addressQueue.poll();
                 if (nextAddress != null) {
                     BleService.this.connect(nextAddress);
-                }
+                }*/
             }
         }
 
@@ -189,6 +199,27 @@ public class BleService extends Service {
         bluetoothAdapter.getBondedDevices()
     }*/
 
+    private void resetConnectionTimeoutTimer() {
+        TimerTask task = new TimerTask() {
+            @SuppressLint("MissingPermission")
+            public void run() {
+                //BleService.this.disconnect();
+                Log.d(TAG, "BLE connection timeout with device: " + bluetoothGatt.getDevice().getAddress());
+                connectionState = STATE_DISCONNECTED;
+                bluetoothGatt.close();
+                connectionTimeoutTimer.cancel();
+                resetFlags();
+            }
+        };
+
+        if(connectionTimeoutTimer != null) {
+            connectionTimeoutTimer.cancel();
+        }
+
+        connectionTimeoutTimer = new Timer("connectionTimeoutTimer");
+        connectionTimeoutTimer.schedule(task, CONNECTION_TIMEOUT);
+    }
+
     // TODO: Check if permission is granted
     @SuppressLint("MissingPermission")
     public boolean connect(final String address) {
@@ -197,28 +228,19 @@ public class BleService extends Service {
             return false;
         }
 
-        /*if(connectionState == STATE_CONNECTED) {
+        if(connectionState == STATE_CONNECTED) {
             Log.w(TAG, "Already connected to a node.");
-            addressQueue.add(address);
-            return false;
-        }*/
-
-        if (hasAttemptedToConnect) {
-            // TODO: See if this can be fixed (i.e. if there is a way to stop too many reconnection attempts from happening)
-            //addressQueue.add(address);
             return false;
         }
 
-        hasAttemptedToConnect = true;
+        if (connectionState == STATE_WAITING_FOR_CONNECTION) {
+            Log.w(TAG, "Already sent a connection request to a node.");
+            return false;
+        }
 
-        TimerTask task = new TimerTask() {
-            public void run() {
-                BleService.this.disconnect();
-            }
-        };
+        connectionState = STATE_WAITING_FOR_CONNECTION;
 
-        this.connectionTimeoutTimer = new Timer("connectionTimeoutTimer");
-        this.connectionTimeoutTimer.schedule(task, CONNECTION_TIMEOUT);
+        resetConnectionTimeoutTimer();
 
         try {
             final BluetoothDevice device = bluetoothAdapter.getRemoteDevice(address);
@@ -234,11 +256,16 @@ public class BleService extends Service {
         }
     }
 
+    private void resetFlags() {
+        mtuSet = false;
+        firstWrite = true;
+    }
+
     // TODO: Should this method really be synchronized?
     @SuppressLint("MissingPermission")
     public synchronized boolean disconnect() {
-        this.hasAttemptedToConnect = false;
-        this.connectionTimeoutTimer.cancel();
+        //this.hasAttemptedToConnect = false;
+        //this.connectionTimeoutTimer.cancel();
 
         if (bluetoothGatt == null) {
             Log.d(TAG, "BLGATT is null.");
@@ -257,10 +284,11 @@ public class BleService extends Service {
         }
 
         bluetoothGatt.disconnect();
-        bluetoothGatt.close();
+        //connectionTimeoutTimer.cancel();
+        //bluetoothGatt.close();
 
-        mtuSet = false;
-        firstWrite = true;
+        /*mtuSet = false;
+        firstWrite = true;*/
 
         return true;
     }

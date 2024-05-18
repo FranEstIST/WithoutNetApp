@@ -184,7 +184,7 @@ public class ReceiveAndPropagateUpdatesWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-        this.scanner.scan();
+        this.scanner.startScan();
 
         synchronized (this.scanner) {
             try {
