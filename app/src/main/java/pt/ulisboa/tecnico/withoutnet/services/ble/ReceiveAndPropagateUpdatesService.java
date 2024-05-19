@@ -33,7 +33,9 @@ import androidx.core.app.ActivityCompat;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.TreeSet;
@@ -76,6 +78,8 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
     private HashMap<String, Long> lastConnectionTimesByAddress = new HashMap<>();
 
+    private Queue<String> connectAddressQueue = new LinkedList<>();
+
     private boolean allOutgoingMessagesRead = false;
 
     private boolean allIncomingMessagesWritten = false;
@@ -91,7 +95,7 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
     private final CompositeDisposable disposable = new CompositeDisposable();
 
-    private ScanCallback scanCallback = new ScanCallback() {
+    /*private ScanCallback scanCallback = new ScanCallback() {
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
             super.onScanResult(callbackType, result);
@@ -129,13 +133,14 @@ public class ReceiveAndPropagateUpdatesService extends Service {
         @Override
         public void onBatchScanResults(List<ScanResult> results) {
             super.onBatchScanResults(results);
+            Log.d(TAG, "Batch scan results: " + results);
         }
 
         @Override
         public void onScanFailed(int errorCode) {
             super.onScanFailed(errorCode);
         }
-    };
+    };*/
 
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
@@ -173,7 +178,8 @@ public class ReceiveAndPropagateUpdatesService extends Service {
                 // This should not be done, because the scan is going to have to
                 // be resumed after the current node is diconnected, and
                 // "BLE scan may not be called more than 5 times per 30 seconds"
-                ReceiveAndPropagateUpdatesService.this.scanner.pauseScan(BleService.CONNECTION_TIMEOUT);
+                //ReceiveAndPropagateUpdatesService.this.scanner.pauseScan(BleService.CONNECTION_TIMEOUT);
+                //ReceiveAndPropagateUpdatesService.this.scanner.stopScan();
 
                 // These lists, which allow for the collection of message chunks, must
                 // be cleared upon a new connection, in case a previous connection
@@ -187,10 +193,11 @@ public class ReceiveAndPropagateUpdatesService extends Service {
 
             } else if (BleService.ACTION_GATT_DISCONNECTED.equals(action)) {
                 // Resume scanning after a connection is closed
-                ReceiveAndPropagateUpdatesService.this.scanner.startScan();
-
+                //ReceiveAndPropagateUpdatesService.this.scanner.startScan();
                 connected = false;
                 Log.d(TAG, "Disconnected from node");
+
+                connectToNextNodeInQueue();
             } else if (BleService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                 Log.d(TAG, "GATT Services discovered");
 
@@ -365,6 +372,24 @@ public class ReceiveAndPropagateUpdatesService extends Service {
             }
         }
     };
+
+    private void connectToNextNodeInQueue() {
+        if(connectAddressQueue.size() > 0) {
+            scanner.setConnectionOngoing(true);
+
+            String address = connectAddressQueue.poll();
+            boolean connectionSuccessful = bleService.connect(address);
+
+            Log.d(TAG, "Connect request result = " + connectionSuccessful);
+
+            if(!connectionSuccessful) {
+                connectToNextNodeInQueue();
+            }
+        } else {
+            scanner.setConnectionOngoing(false);
+            scanner.startScan();
+        }
+    }
 
     public String byteArrayToString(byte[] byteArray) {
         byte[] messageByteArray = byteArray;
@@ -589,7 +614,19 @@ public class ReceiveAndPropagateUpdatesService extends Service {
     public void onCreate() {
         super.onCreate();
         this.globalClass = (GlobalClass) getApplicationContext();
-        this.scanner = new BleScanner(getApplicationContext(), this.scanCallback, globalClass.getNodeScanningInterval());
+
+        BleScanner.OnScanEventListener onScanEventListener = new BleScanner.OnScanEventListener() {
+            @Override
+            public void onScanComplete(Queue<String> addressQueue) {
+                connectAddressQueue = addressQueue;
+                connectToNextNodeInQueue();
+            }
+        };
+
+        this.scanner = new BleScanner(getApplicationContext()
+                , onScanEventListener
+                , globalClass.getNodeScanningInterval());
+
         /*handler.postDelayed(new Runnable() {
             @SuppressLint("MissingPermission")
             @Override

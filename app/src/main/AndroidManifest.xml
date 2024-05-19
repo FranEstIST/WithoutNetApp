@@ -94,7 +94,6 @@
 
         <service android:name=".services.ble.BleService" />
         <service android:name=".services.ble.ReceiveAndPropagateUpdatesService" />
-        <service android:name=".services.ble.TestService" />
     </application>
 
 </manifest>

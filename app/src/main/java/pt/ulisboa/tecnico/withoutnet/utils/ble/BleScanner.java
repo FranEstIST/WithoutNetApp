@@ -3,10 +3,12 @@ package pt.ulisboa.tecnico.withoutnet.utils.ble;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
+import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -17,31 +19,78 @@ import android.util.Log;
 import androidx.core.app.ActivityCompat;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.PriorityQueue;
+import java.util.Queue;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import pt.ulisboa.tecnico.withoutnet.GlobalClass;
 import pt.ulisboa.tecnico.withoutnet.services.ble.ReceiveAndPropagateUpdatesService;
 
 public class BleScanner {
     private static final String TAG = "BleScanner";
 
-    //private static final long SCAN_TIMEOUT = 10000;
+    private static final long SCAN_PERIOD = 2000;
+
+    private GlobalClass globalClass;
 
     private Context context;
     private BluetoothLeScanner bluetoothLeScanner;
     private boolean scanning;
     private ScanCallback scanCallback;
+    private OnScanEventListener onScanEventListener;
     private long scanPeriod;
 
-    private long lastStartScanTime;
+    private long lastStopScanTime;
 
     private Timer timer;
 
-    public BleScanner(Context context, ScanCallback scanCallback, long scanPeriod) {
+    private Queue<String> addressQueue;
+
+    private boolean connectionOngoing;
+
+    public BleScanner(Context context, OnScanEventListener onScanEventListener, long scanPeriod) {
         this.context = context;
-        this.scanCallback = scanCallback;
+        this.globalClass = (GlobalClass) context.getApplicationContext();
         this.scanning = false;
         this.scanPeriod = scanPeriod;
+        this.addressQueue = new LinkedList<>();
+        this.onScanEventListener = onScanEventListener;
+        this.connectionOngoing = false;
+
+        this.scanCallback = new ScanCallback() {
+            @Override
+            public void onScanResult(int callbackType, ScanResult result) {
+                super.onScanResult(callbackType, result);
+
+                BluetoothDevice device = result.getDevice();
+
+                if (Build.VERSION.SDK_INT >= 31
+                        && ActivityCompat.checkSelfPermission(context.getApplicationContext(), Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                    Log.e(TAG, "Bluetooth permissions not granted");
+                }
+
+                String address = device.getAddress();
+
+                Log.d(TAG, "Found ble device with address: " + address);
+
+                if(!addressQueue.contains(address)) {
+                    addressQueue.add(address);
+                }
+            }
+
+            @Override
+            public void onBatchScanResults(List<ScanResult> results) {
+                super.onBatchScanResults(results);
+            }
+
+            @Override
+            public void onScanFailed(int errorCode) {
+                super.onScanFailed(errorCode);
+            }
+        };
 
         BluetoothManager bluetoothManager = this.context.getSystemService(BluetoothManager.class);
         BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
@@ -53,6 +102,10 @@ public class BleScanner {
     // TODO: Is scan required to be synchronized?
     @SuppressLint("MissingPermission")
     public synchronized void startScan() {
+        if(connectionOngoing) {
+            return;
+        }
+
         if(!checkBLPermissions()) {
             return;
         }
@@ -78,14 +131,9 @@ public class BleScanner {
 
         long currentTime = System.currentTimeMillis();
 
-        if((currentTime - lastStartScanTime) >= 6000) {
-            bluetoothLeScanner.startScan(filters, settings, scanCallback);
-            scanning = true;
-            lastStartScanTime = System.currentTimeMillis();
-        } else {
-            // To ensure that scans are are started at most every 6s
-            // scan only after enough time has passed since last scan
-            // was started
+        if((currentTime - lastStopScanTime) < globalClass.getNodeScanningInterval()) {
+            // To ensure that scans are are started only after
+            // enough time has passed since last scan was stopped
 
             TimerTask task = new TimerTask() {
                 @SuppressLint("MissingPermission")
@@ -99,7 +147,7 @@ public class BleScanner {
             timer = new Timer("ScanTimer");
 
             try {
-                timer.schedule(task, 6000 - (currentTime - lastStartScanTime));
+                timer.schedule(task, globalClass.getNodeScanningInterval() - (currentTime - lastStopScanTime));
             } catch (IllegalStateException e) {
                 Log.e(TAG, "Trying to schedule task on cancelled timer");
             }
@@ -109,13 +157,14 @@ public class BleScanner {
 
         bluetoothLeScanner.startScan(filters, settings, scanCallback);
         scanning = true;
+        addressQueue = new LinkedList<>();
 
         Log.d(TAG, "Scanning for BLE devices...");
 
         TimerTask task = new TimerTask() {
             @SuppressLint("MissingPermission")
             public void run() {
-                pauseScan(scanPeriod);
+                pauseScan(globalClass.getNodeScanningInterval());
             }
         };
 
@@ -124,7 +173,7 @@ public class BleScanner {
         timer = new Timer("ScanTimer");
 
         try {
-            timer.schedule(task, scanPeriod);
+            timer.schedule(task, SCAN_PERIOD);
         } catch (IllegalStateException e) {
             Log.e(TAG, "Trying to schedule task on cancelled timer");
         }
@@ -139,8 +188,11 @@ public class BleScanner {
             return;
         }
 
-        bluetoothLeScanner.stopScan(this.scanCallback);
-        scanning = false;
+        if(scanning) {
+            bluetoothLeScanner.stopScan(this.scanCallback);
+            scanning = false;
+            lastStopScanTime = System.currentTimeMillis();
+        }
 
         TimerTask task = new TimerTask() {
             @SuppressLint("MissingPermission")
@@ -159,6 +211,7 @@ public class BleScanner {
             Log.e(TAG, "Trying to schedule task on cancelled timer");
         }
 
+        onScanEventListener.onScanComplete(addressQueue);
     }
 
     @SuppressLint("MissingPermission")
@@ -172,6 +225,7 @@ public class BleScanner {
         if(scanning) {
             bluetoothLeScanner.stopScan(scanCallback);
             scanning = false;
+            lastStopScanTime = System.currentTimeMillis();
         }
 
         // Clear any scheduled tasks on the timer
@@ -191,5 +245,13 @@ public class BleScanner {
         }
 
         return true;
+    }
+
+    public void setConnectionOngoing(boolean connectionOngoing) {
+        this.connectionOngoing = connectionOngoing;
+    }
+
+    public interface OnScanEventListener {
+        void onScanComplete(Queue<String> addressQueue);
     }
 }
