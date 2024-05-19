@@ -76,12 +76,7 @@ public class Frontend {
         JSONObject jsonRequest = new JSONObject();
 
         try {
-            jsonRequest.put("length", message.getLength());
-            jsonRequest.put("timestamp", message.getTimestamp());
-            jsonRequest.put("messageType", message.getMessageTypeAsInt());
-            jsonRequest.put("sender", message.getSender());
-            jsonRequest.put("receiver", message.getReceiver());
-            jsonRequest.put("payload", message.getPayloadAsByteString());
+            jsonRequest = getMessageJson(message);
         } catch (JSONException e) {
             e.printStackTrace();
             return;
@@ -110,60 +105,43 @@ public class Frontend {
         this.requestQueue.add(request);
     }
 
-    public void getAllMessagesInServerViaVolley(FrontendResponseListener responseListener) {
+    public void sendMessageBatchToServer(List<Message> messageBatch, FrontendResponseListener responseListener) {
         if (getConnectionType() == -1) return;
 
-        String url = globalClass.getServerURL() + "get-all-messages";
+        String url = globalClass.getServerURL() + "add-message-batch";
 
-        JsonObjectRequest request = new JsonObjectRequest(url, new Response.Listener<JSONObject>() {
+        JSONObject jsonRequest = new JSONObject();
+
+        JSONArray messageBatchJsonArray = new JSONArray();
+        try {
+            for (Message message : messageBatch) {
+                messageBatchJsonArray.put(getMessageJson(message));
+            }
+
+            jsonRequest.put("messageBatch", messageBatchJsonArray);
+        } catch (JSONException e) {
+            e.printStackTrace();
+            responseListener.onError(FrontendErrorMessages.JSON_ERROR);
+            return;
+        }
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, jsonRequest, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-                Log.d(TAG, "Received response (getAllMessagesInServerViaVolley)");
-
+                Log.d(TAG, "Received response (sendMessageBatchToServer)");
                 try {
-                    int statusCode = response.getInt("status");
-
-                    List<Message> receivedMessages = null;
-
-                    // if status is OK, create an ArrayList with all the messages
-                    if (statusCode == StatusCodes.OK) {
-                        JSONArray messagesJsonArray = response.getJSONArray("messages");
-
-                        if (messagesJsonArray == null)
-                            responseListener.onResponse(receivedMessages);
-
-                        receivedMessages = new ArrayList<>();
-
-                        for (int i = 0; i < messagesJsonArray.length(); i++) {
-                            // TODO: Fix this
-
-                            JSONObject messageJson = messagesJsonArray.getJSONObject(i);
-                            short length = (short) messageJson.getInt("length");
-                            long timestamp = messageJson.getLong("timestamp");
-                            int messageType = messageJson.getInt("messageType");
-                            int sender = messageJson.getInt("sender");
-                            int receiver = messageJson.getInt("receiver");
-                            String payload = messageJson.getString("payload");
-
-                            Message receivedMessage = new Message(length, timestamp, messageType, sender, receiver, payload);
-
-                            receivedMessages.add(receivedMessage);
-                        }
-
-                        responseListener.onResponse(receivedMessages);
-                    } else {
-                        responseListener.onError("Error 2");
-                    }
+                    int status = response.getInt("status");
+                    responseListener.onResponse(status);
                 } catch (JSONException e) {
-                    Log.e(TAG, "Received error");
                     e.printStackTrace();
-                    responseListener.onError("Error 3");
+                    responseListener.onError("Error 1.1");
                 }
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                responseListener.onError("Error 4");
+                Log.e(TAG, "Received error");
+                responseListener.onError("Error 5");
             }
         });
 
@@ -228,43 +206,6 @@ public class Frontend {
             @Override
             public void onErrorResponse(VolleyError error) {
                 responseListener.onError("Error 4");
-            }
-        });
-
-        this.requestQueue.add(request);
-    }
-
-    public void sendMessageBatchToServer(List<Message> messageBatch, FrontendResponseListener responseListener) {
-        if (getConnectionType() == -1) return;
-
-        String url = globalClass.getServerURL() + "add-message-batch";
-
-        JSONObject jsonRequest = new JSONObject();
-
-        JSONArray messageBatchJsonArray = new JSONArray();
-        try {
-            for (Message message : messageBatch) {
-                messageBatchJsonArray.put(getMessageJson(message));
-            }
-
-            jsonRequest.put("messageBatch", messageBatchJsonArray);
-        } catch (JSONException e) {
-            e.printStackTrace();
-            responseListener.onError(FrontendErrorMessages.JSON_ERROR);
-            return;
-        }
-
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, jsonRequest, new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-                Log.d(TAG, "Received response (sendMessageToServerViaVolley)");
-                responseListener.onResponse(response);
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.e(TAG, "Received error");
-                responseListener.onError("Error 5");
             }
         });
 

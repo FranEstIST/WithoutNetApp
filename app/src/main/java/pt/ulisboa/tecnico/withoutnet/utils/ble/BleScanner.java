@@ -32,6 +32,11 @@ import pt.ulisboa.tecnico.withoutnet.services.ble.ReceiveAndPropagateUpdatesServ
 public class BleScanner {
     private static final String TAG = "BleScanner";
 
+    // This is the time that the smartphone should
+    // be listening for advertisement packages
+    // i.e. it is different from the node scanning
+    // interval which sets the min time between
+    // scans
     private static final long SCAN_PERIOD = 2000;
 
     private GlobalClass globalClass;
@@ -74,9 +79,8 @@ public class BleScanner {
 
                 String address = device.getAddress();
 
-                Log.d(TAG, "Found ble device with address: " + address);
-
                 if(!addressQueue.contains(address)) {
+                    Log.d(TAG, "Found new ble device with address: " + address);
                     addressQueue.add(address);
                 }
             }
@@ -133,7 +137,7 @@ public class BleScanner {
 
         if((currentTime - lastStopScanTime) < globalClass.getNodeScanningInterval()) {
             // To ensure that scans are are started only after
-            // enough time has passed since last scan was stopped
+            // enough time has passed since the last scan was stopped
 
             TimerTask task = new TimerTask() {
                 @SuppressLint("MissingPermission")
