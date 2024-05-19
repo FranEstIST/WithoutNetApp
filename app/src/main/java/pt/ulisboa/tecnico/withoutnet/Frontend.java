@@ -171,6 +171,11 @@ public class Frontend {
     }
 
     public void getMessagesByReceiver(int receiverId, FrontendResponseListener responseListener) {
+        if (getConnectionType() == -1) {
+            responseListener.onError(ErrorMessages.NO_INTERNET_CONNECTION);
+            return;
+        }
+
         String url = globalClass.getServerURL() + "get-messages-by-receiver/" + receiverId;
 
         JsonObjectRequest request = new JsonObjectRequest(url, new Response.Listener<JSONObject>() {
