@@ -111,6 +111,8 @@
     <string name="message_transmission_to_server_interval">Message Transmission to Server Interval</string>
     <string name="maximum_number_of_messages_in_cache">Maximum Number of Messages in Cache</string>
 
+    <string name="ms">ms</string>
+
     <string name="change">Change</string>
 
     <string name="delete_all_messages_in_database">Delete all messages in the database</string>

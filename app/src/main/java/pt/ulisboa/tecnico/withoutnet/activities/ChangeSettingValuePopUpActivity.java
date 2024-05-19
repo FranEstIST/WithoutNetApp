@@ -56,19 +56,31 @@ public class ChangeSettingValuePopUpActivity extends AppCompatActivity {
             case NODE_SCANNING_INTERVAL:
                 binding.changeSettingValueTextView.setText(getResources().getText(R.string.change)
                         + " "
-                        + getResources().getText(R.string.node_scanning_interval));
+                        + getResources().getText(R.string.node_scanning_interval)
+                        + " ("
+                        + getResources().getText(R.string.ms)
+                        + ")");
                 binding.newSettingValueInputText.setHint(getResources().getText(R.string.enter_new)
                         + " "
-                        + getResources().getText(R.string.node_scanning_interval));
+                        + getResources().getText(R.string.node_scanning_interval)
+                        + " ("
+                        + getResources().getText(R.string.ms)
+                        + ")");
                 binding.newSettingValueInputText.setText(globalClass.getNodeScanningInterval() + "");
                 break;
             case MESSAGE_TRANSMISSION_TO_SERVER_INTERVAL:
                 binding.changeSettingValueTextView.setText(getResources().getText(R.string.change)
                         + " "
-                        + getResources().getText(R.string.message_transmission_to_server_interval));
+                        + getResources().getText(R.string.message_transmission_to_server_interval)
+                        + " ("
+                        + getResources().getText(R.string.ms)
+                        + ")");
                 binding.newSettingValueInputText.setHint(getResources().getText(R.string.enter_new)
                         + " "
-                        + getResources().getText(R.string.message_transmission_to_server_interval));
+                        + getResources().getText(R.string.message_transmission_to_server_interval)
+                        + " ("
+                        + getResources().getText(R.string.ms)
+                        + ")");
                 binding.newSettingValueInputText.setText(globalClass.getMessageTransmissionToServerInterval() + "");
                 break;
             case MAXIMUM_NUM_OF_MESSAGES_IN_CACHE:
@@ -98,9 +110,16 @@ public class ChangeSettingValuePopUpActivity extends AppCompatActivity {
                     case NODE_SCANNING_INTERVAL:
                         try {
                             int newNodeScanningInterval = Integer.valueOf(newSettingValueString);
-                            globalClass.setNodeScanningInterval(newNodeScanningInterval);
+
+                            if(newNodeScanningInterval >= 10000) {
+                                globalClass.setNodeScanningInterval(newNodeScanningInterval);
+                            } else {
+                                Toast.makeText(ChangeSettingValuePopUpActivity.this, "Invalid interval. It should be at least 10000ms long.", Toast.LENGTH_SHORT).show();
+                                return;
+                            }
                         } catch (NumberFormatException e) {
                             Toast.makeText(ChangeSettingValuePopUpActivity.this, "Invalid interval. It should be an integer.", Toast.LENGTH_SHORT).show();
+                            return;
                         }
                         break;
                     case MESSAGE_TRANSMISSION_TO_SERVER_INTERVAL:
@@ -109,6 +128,7 @@ public class ChangeSettingValuePopUpActivity extends AppCompatActivity {
                             globalClass.setMessageTransmissionToServerInterval(newMessageTransmissionToServerInterval);
                         } catch (NumberFormatException e) {
                             Toast.makeText(ChangeSettingValuePopUpActivity.this, "Invalid interval. It should be an integer.", Toast.LENGTH_SHORT).show();
+                            return;
                         }
                         break;
                     case MAXIMUM_NUM_OF_MESSAGES_IN_CACHE:
@@ -117,6 +137,7 @@ public class ChangeSettingValuePopUpActivity extends AppCompatActivity {
                             globalClass.setMaximumNumOfMessagesInCache(newMaximumNumOfMessagesInCache);
                         } catch (NumberFormatException e) {
                             Toast.makeText(ChangeSettingValuePopUpActivity.this, "Invalid number. It should be an integer.", Toast.LENGTH_SHORT).show();
+                            return;
                         }
                         break;
                 }

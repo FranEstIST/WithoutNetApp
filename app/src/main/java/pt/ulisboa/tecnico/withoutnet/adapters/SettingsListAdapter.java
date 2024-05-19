@@ -53,11 +53,15 @@ public class SettingsListAdapter extends RecyclerView.Adapter<SettingsListAdapte
                 break;
             case 1:
                 holder.settingNameTextView.setText(R.string.node_scanning_interval);
-                holder.settingValueTextView.setText(globalClass.getNodeScanningInterval() + "");
+                holder.settingValueTextView.setText(globalClass.getNodeScanningInterval()
+                        + " "
+                        + globalClass.getString(R.string.ms));
                 break;
             case 2:
                 holder.settingNameTextView.setText(R.string.message_transmission_to_server_interval);
-                holder.settingValueTextView.setText(globalClass.getMessageTransmissionToServerInterval() + "");
+                holder.settingValueTextView.setText(globalClass.getMessageTransmissionToServerInterval()
+                        + " "
+                        + globalClass.getString(R.string.ms));
                 break;
             case 3:
                 holder.settingNameTextView.setText(R.string.maximum_number_of_messages_in_cache);

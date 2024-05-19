@@ -105,11 +105,6 @@ public class SettingsFragment extends Fragment {
             public void onActivityResult(ActivityResult result) {
                 if(result.getResultCode() == RESULT_OK) {
                     settingsListAdapter.notifyDataSetChanged();
-                } else {
-                    Toast.makeText(SettingsFragment.this.getActivity()
-                                    , ErrorMessages.ERROR_CREATING_NODE
-                                    , Toast.LENGTH_SHORT)
-                            .show();
                 }
             }
         });
