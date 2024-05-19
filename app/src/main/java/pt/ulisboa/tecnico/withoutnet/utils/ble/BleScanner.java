@@ -81,8 +81,11 @@ public class BleScanner {
         if((currentTime - lastStartScanTime) >= 6000) {
             bluetoothLeScanner.startScan(filters, settings, scanCallback);
             scanning = true;
+            lastStartScanTime = System.currentTimeMillis();
         } else {
-            // Ensure that scans are are started at most every 6s
+            // To ensure that scans are are started at most every 6s
+            // scan only after enough time has passed since last scan
+            // was started
 
             TimerTask task = new TimerTask() {
                 @SuppressLint("MissingPermission")
