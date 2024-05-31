@@ -21,7 +21,7 @@ import pt.ulisboa.tecnico.withoutnet.R;
 import pt.ulisboa.tecnico.withoutnet.activities.ChangeSettingValuePopUpActivity;
 
 public class SettingsListAdapter extends RecyclerView.Adapter<SettingsListAdapter.ViewHolder> {
-    private static final int NUM_OF_SETTINGS = 4;
+    private static final int NUM_OF_SETTINGS = 3;
 
     private Activity activity;
     private GlobalClass globalClass;
