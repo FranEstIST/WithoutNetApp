@@ -69,7 +69,11 @@ public class Frontend {
 
     public void sendMessageToServerViaVolley(Message message, FrontendResponseListener responseListener) {
         // This should check whether or not the smartphone is connected to the internet
-        if (getConnectionType() == -1) return;
+        if (getConnectionType() == -1){
+            Log.e(TAG, "Not connected to the Internet");
+            responseListener.onError(ErrorMessages.NO_INTERNET_CONNECTION);
+            return;
+        }
 
         String url = globalClass.getServerURL() + "add-message";
 
