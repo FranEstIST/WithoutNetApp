@@ -128,7 +128,7 @@ public class NodesListActivity extends AppCompatActivity {
                     Intent data = result.getData();
 
                     if(!data.hasExtra("added-node")) {
-                        Toast.makeText(NodesListActivity.this, "Error adding node", Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(NodesListActivity.this, "Error adding node", Toast.LENGTH_SHORT).show();
                         return;
                     }
 
@@ -145,7 +145,7 @@ public class NodesListActivity extends AppCompatActivity {
                         filterNodes(currentQueryCharSeq.toString());
                     }*/
                 } else {
-                    Toast.makeText(NodesListActivity.this, "Error adding node", Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(NodesListActivity.this, "Error adding node", Toast.LENGTH_SHORT).show();
                 }
             }
         });

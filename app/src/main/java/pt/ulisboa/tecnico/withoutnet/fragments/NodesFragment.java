@@ -139,7 +139,7 @@ public class NodesFragment extends Fragment {
         nodesListAdapter = new NodesListAdapter(nodes, new NodesListAdapter.OnNodeClickListener() {
             @Override
             public void onNodeClick(Node clickedNode) {
-                Toast.makeText(NodesFragment.this.getContext(), "Clicked on node " + clickedNode.getCommonName(), Toast.LENGTH_SHORT).show();
+                //Toast.makeText(NodesFragment.this.getContext(), "Clicked on node " + clickedNode.getCommonName(), Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(NodesFragment.this.getActivity(), NodeDetailsActivity.class);
                 intent.putExtra("node", clickedNode);
                 startActivity(intent);
@@ -164,17 +164,17 @@ public class NodesFragment extends Fragment {
                     Intent returnIntent = result.getData();
 
                     if(!returnIntent.hasExtra("added-node")) {
-                        Toast.makeText(NodesFragment.this.getActivity()
+                        /*Toast.makeText(NodesFragment.this.getActivity()
                                         , ErrorMessages.ERROR_CREATING_NODE
                                         , Toast.LENGTH_SHORT)
-                                .show();
+                                .show();*/
                     }
 
                 } else {
-                    Toast.makeText(NodesFragment.this.getActivity()
+                    /*Toast.makeText(NodesFragment.this.getActivity()
                                     , ErrorMessages.ERROR_CREATING_NODE
                                     , Toast.LENGTH_SHORT)
-                            .show();
+                            .show();*/
                 }
             }
         });

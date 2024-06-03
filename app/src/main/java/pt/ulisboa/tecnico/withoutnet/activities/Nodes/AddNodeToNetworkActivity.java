@@ -121,17 +121,17 @@ public class AddNodeToNetworkActivity extends AppCompatActivity {
         ActivityResultLauncher<Intent> createNewNodeResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
             @Override
             public void onActivityResult(ActivityResult result) {
-                if(result.getResultCode() == RESULT_OK) {
-                    Intent returnIntent = result.getData();
-
-                    AddNodeToNetworkActivity.this.setResult(RESULT_OK, returnIntent);
-                    AddNodeToNetworkActivity.this.finish();
-                } else {
-                    Toast.makeText(AddNodeToNetworkActivity.this
+                if(result.getResultCode() != RESULT_OK) {
+                    /*Toast.makeText(AddNodeToNetworkActivity.this
                                     , ErrorMessages.ERROR_CREATING_NODE
                                     , Toast.LENGTH_SHORT)
-                            .show();
+                            .show();*/
                 }
+
+                Intent returnIntent = result.getData();
+
+                AddNodeToNetworkActivity.this.setResult(RESULT_OK, returnIntent);
+                AddNodeToNetworkActivity.this.finish();
             }
         });
 

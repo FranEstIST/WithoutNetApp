@@ -50,7 +50,7 @@ public class CreateNewNetworkPopUpActivity extends AppCompatActivity {
                 String networkName = binding.editNetworkNameTextView.getText().toString();
 
                 if(networkName.equals("") || networkName.contains(" ")) {
-                    Toast.makeText(CreateNewNetworkPopUpActivity.this, "Invalid network name", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(CreateNewNetworkPopUpActivity.this, "Invalid network name. Should not contain spaces.", Toast.LENGTH_SHORT).show();
                     return;
                 }
 

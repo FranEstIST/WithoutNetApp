@@ -136,7 +136,7 @@ public class NetworksFragment extends Fragment {
         NetworksListAdapter.OnNetworkClickListener onNetworkClickListener = new NetworksListAdapter.OnNetworkClickListener() {
             @Override
             public void onNetworkClick(Network network) {
-                Toast.makeText(NetworksFragment.this.getActivity(), "Clicked on network " + network.getName(), Toast.LENGTH_SHORT).show();
+                //Toast.makeText(NetworksFragment.this.getActivity(), "Clicked on network " + network.getName(), Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(NetworksFragment.this.getActivity(), NodesListActivity.class);
                 intent.putExtra("network-id", network.getId());
                 intent.putExtra("network-name", network.getName());
