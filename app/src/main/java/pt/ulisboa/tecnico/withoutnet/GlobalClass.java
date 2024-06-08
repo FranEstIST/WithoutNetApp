@@ -24,9 +24,7 @@ public class GlobalClass extends Application {
     private HashMap<Node, TreeSet<Update>> updatesByNode;
     private HashMap<Integer, TreeSet<Message>> messagesByReceiver;
 
-    private String serverURL;
-    private int nodeScanPeriod;
-    private int serverMessageExchangePeriod;
+    private boolean isParticipating;
 
     private SharedPreferences WNAppSharedPrefs;
 
@@ -45,6 +43,7 @@ public class GlobalClass extends Application {
         updatesByNode = new HashMap<>();
         messagesByReceiver = new HashMap<>();
         frontend = new Frontend(this);
+        isParticipating = false;
 
         WNAppSharedPrefs = getSharedPreferences("WNAppSharedPrefs", MODE_PRIVATE);
     }
@@ -153,6 +152,14 @@ public class GlobalClass extends Application {
         }
 
         return this.requestQueue;
+    }
+
+    public boolean isParticipating() {
+        return isParticipating;
+    }
+
+    public void setParticipating(boolean participating) {
+        isParticipating = participating;
     }
 
     public String getServerURL() {

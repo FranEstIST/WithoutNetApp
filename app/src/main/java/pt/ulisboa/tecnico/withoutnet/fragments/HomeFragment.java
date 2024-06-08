@@ -47,65 +47,12 @@ import pt.ulisboa.tecnico.withoutnet.services.ble.ReceiveAndPropagateUpdatesServ
  * create an instance of this fragment.
  */
 public class HomeFragment extends Fragment {
-
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-
     private static final String TAG = "MainActivity";
     private static final int REQUEST_BLUETOOTH_PERMISSIONS = 1;
 
     private GlobalClass globalClass;
 
     private FragmentHomeBinding binding;
-    private boolean isParticipating;
-    private boolean testServiceIsOn;
-    private ReceiveAndPropagateUpdatesService receiveAndPropagateUpdatesService;
-
-    private ServiceConnection serviceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.d(TAG, "Service was connected.");
-
-            receiveAndPropagateUpdatesService = ((ReceiveAndPropagateUpdatesService.LocalBinder) service).getService();
-
-            if (receiveAndPropagateUpdatesService != null) {
-
-                binding.startStopParticipatingButton.setOnClickListener(v -> {
-                    Button button = (Button) v;
-
-                    if(isParticipating) {
-                        isParticipating = false;
-                        button.setText(R.string.start_participating);
-
-                        boolean result = receiveAndPropagateUpdatesService.stop();
-                        Log.d(TAG, "Stop request result = " + result);
-                    } else {
-                        isParticipating = true;
-                        button.setText(R.string.stop_participating);
-
-                        boolean result = receiveAndPropagateUpdatesService.start();
-                        Log.d(TAG, "Start request result = " + result);
-                    }
-
-                });
-
-            }
-            Log.d(TAG, "bleService is null.");
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            receiveAndPropagateUpdatesService = null;
-        }
-    };
-
-    private WorkRequest receiveAndPropagateUpdatesWorkReq;
 
     private ActivityResultLauncher<Intent> bluetoothAdapterActivityResultLauncher;
 
@@ -113,31 +60,14 @@ public class HomeFragment extends Fragment {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment HomeFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static HomeFragment newInstance(String param1, String param2) {
+    public static HomeFragment newInstance() {
         HomeFragment fragment = new HomeFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
         return fragment;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
     }
 
     @Override
@@ -149,12 +79,10 @@ public class HomeFragment extends Fragment {
 
         globalClass = (GlobalClass) getActivity().getApplicationContext();
 
-        isParticipating = false;
-
-        testServiceIsOn = false;
+        updateStartStopParticipatingButton();
 
         binding.startStopParticipatingButton.setOnClickListener(v -> {
-            if(isParticipating) {
+            if(globalClass.isParticipating()) {
                 stopParticipating();
             } else {
                 startParticipating();
@@ -201,11 +129,23 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    private void startParticipating() {
+    private void updateStartStopParticipatingButton() {
         ImageButton imageButton = binding.startStopParticipatingButton;
         TextView participationStatusTextView = binding.participationStatusTextView;
         TextView pressButtonTextView = binding.pressButtonTextView;
 
+        if(globalClass.isParticipating()) {
+            imageButton.setForeground(getActivity().getDrawable(R.drawable.wn_button_on));
+            participationStatusTextView.setText(R.string.participating);
+            pressButtonTextView.setText(R.string.press_to_stop_participating);
+        } else {
+            imageButton.setForeground(getActivity().getDrawable(R.drawable.wn_button_off));
+            participationStatusTextView.setText(R.string.not_participating);
+            pressButtonTextView.setText(R.string.press_to_start_participating);
+        }
+    }
+
+    private void startParticipating() {
         ArrayList<String> permissionsList = new ArrayList<>();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
@@ -249,11 +189,9 @@ public class HomeFragment extends Fragment {
             return;
         }
 
-        isParticipating = true;
+        globalClass.setParticipating(true);
 
-        imageButton.setForeground(getActivity().getDrawable(R.drawable.wn_button_on));
-        participationStatusTextView.setText(R.string.participating);
-        pressButtonTextView.setText(R.string.press_to_stop_participating);
+        updateStartStopParticipatingButton();
 
         if(!isServiceRunning(ReceiveAndPropagateUpdatesService.class)) {
             Intent intent = new Intent(getActivity(), ReceiveAndPropagateUpdatesService.class);
@@ -262,15 +200,9 @@ public class HomeFragment extends Fragment {
     }
 
     private void stopParticipating() {
-        ImageButton imageButton = binding.startStopParticipatingButton;
-        TextView participationStatusTextView = binding.participationStatusTextView;
-        TextView pressButtonTextView = binding.pressButtonTextView;
+        globalClass.setParticipating(false);
 
-        isParticipating = false;
-
-        imageButton.setForeground(getActivity().getDrawable(R.drawable.wn_button_off));
-        participationStatusTextView.setText(R.string.not_participating);
-        pressButtonTextView.setText(R.string.press_to_start_participating);
+        updateStartStopParticipatingButton();
 
         if (isServiceRunning(ReceiveAndPropagateUpdatesService.class)) {
             Intent intent = new Intent(getActivity(), ReceiveAndPropagateUpdatesService.class);
