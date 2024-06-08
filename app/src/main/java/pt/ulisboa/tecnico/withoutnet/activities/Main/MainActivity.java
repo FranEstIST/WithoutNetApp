@@ -84,51 +84,8 @@ public class MainActivity extends AppCompatActivity {
         this.menu = menu;
 
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
+        //getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        Intent intent;
-
-        switch(item.getItemId()) {
-            case R.id.action_start_test_service:
-                return true;
-            case R.id.action_scan_nodes:
-                intent = new Intent(getApplicationContext(), DebugActivity.class);
-                startActivity(intent);
-                return true;
-            case R.id.action_upload_updates:
-                /*new Thread(() -> {
-                    GlobalClass globalClass = MainActivity.this.globalClass;
-                    for (Node node : globalClass.getAllUpdates().keySet()) {
-                        int status = globalClass.getFrontend().sendUpdateToServer(globalClass.getMostRecentUpdate(node));
-                        Log.d(TAG, "Upload updates status: " + status);
-                    }
-                }).start();*/
-                return true;
-            case R.id.action_download_updates:
-                /*new Thread(() -> {
-                    GlobalClass globalClass = MainActivity.this.globalClass;
-                    for (Node node : globalClass.getAllUpdates().keySet()) {
-                        Update update = globalClass.getFrontend().getMostRecentUpdateByNodeFromServer(node);
-                        if(update != null) {
-                            globalClass.addUpdate(update);
-                            Log.d(TAG, "Downloaded update from server: " + update);
-                        } else {
-                            Log.d(TAG, "No update was found on the server for node: " + node);
-                        }
-                    }
-                }).start();*/
-                return true;
-            case R.id.action_view_cached_updates:
-                intent = new Intent(getApplicationContext(), CachedUpdatesActivity.class);
-                startActivity(intent);
-                return true;
-            default:
-                return false;
-        }
     }
 
     @Override
